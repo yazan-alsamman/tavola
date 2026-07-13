@@ -1,4 +1,4 @@
-package com.example.tavla
+package com.example.tavola
 
 import io.flutter.embedding.android.FlutterActivity
 

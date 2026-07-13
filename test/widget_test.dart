@@ -10,7 +10,7 @@ import 'package:tavla/main.dart';
 
 void main() {
   testWidgets('App loads with splash screen', (WidgetTester tester) async {
-    await tester.pumpWidget(const TavlaApp());
+    await tester.pumpWidget(const TavolaApp());
 
     expect(find.text(AppStrings.splashTitle), findsOneWidget);
 

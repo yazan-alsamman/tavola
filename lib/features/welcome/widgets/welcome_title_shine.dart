@@ -43,20 +43,26 @@ class _WelcomeTitleShineState extends State<WelcomeTitleShine>
         return ShaderMask(
           blendMode: BlendMode.srcIn,
           shaderCallback: (Rect bounds) {
-            return SweepGradient(
-              center: Alignment.center,
-              startAngle: angle,
-              endAngle: angle + AppDimensions.welcomeShineSweepAngle,
+            return LinearGradient(
+              begin: Alignment(
+                -AppDimensions.welcomeShineBandExtent,
+                0,
+              ),
+              end: Alignment(
+                AppDimensions.welcomeShineBandExtent,
+                0,
+              ),
               colors: const [
                 AppColors.accent,
                 AppColors.accent,
                 AppColors.textLight,
-                AppColors.secondary,
+                AppColors.textLight,
                 AppColors.textLight,
                 AppColors.accent,
                 AppColors.accent,
               ],
               stops: AppDimensions.welcomeShineStops,
+              transform: GradientRotation(angle),
             ).createShader(bounds);
           },
           child: child,

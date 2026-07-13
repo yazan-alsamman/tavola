@@ -10,11 +10,11 @@ import 'features/auth/controller/auth_session_controller.dart';
 
 void main() {
   Get.put(AuthSessionController());
-  runApp(const TavlaApp());
+  runApp(const TavolaApp());
 }
 
-class TavlaApp extends StatelessWidget {
-  const TavlaApp({super.key});
+class TavolaApp extends StatelessWidget {
+  const TavolaApp({super.key});
 
   @override
   Widget build(BuildContext context) {

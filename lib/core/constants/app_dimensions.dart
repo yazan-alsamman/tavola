@@ -230,15 +230,15 @@ class AppDimensions {
   static const double welcomeBottomGradientHeight = 320.0;
   static const double welcomeBottomGradientStart = 0.0;
   static const double welcomeBottomGradientMid = 0.55;
-  static const double welcomeShineSweepAngle = 2.4;
-  static const Duration welcomeShineDuration = Duration(milliseconds: 2800);
+  static const double welcomeShineBandExtent = 0.85;
+  static const Duration welcomeShineDuration = Duration(milliseconds: 5200);
   static const List<double> welcomeShineStops = [
     0.0,
-    0.28,
-    0.42,
+    0.34,
+    0.44,
     0.5,
-    0.58,
-    0.72,
+    0.56,
+    0.66,
     1.0,
   ];
 }

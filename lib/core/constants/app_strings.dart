@@ -1,6 +1,6 @@
 class AppStrings {
-  static const String appTitle = 'Tavla';
-  static const String splashTitle = 'TAVLA';
+  static const String appTitle = 'TAVOLA';
+  static const String splashTitle = 'TAVOLA';
   static const String signIn = 'SIGN IN';
   static const String loginSignUp = 'LOGIN / SIGN UP';
   static const String login = 'LOGIN';
@@ -258,10 +258,10 @@ class AppStrings {
   static const String tableLabelT7 = 'T7';
   static const String tableLabelM8 = 'M8';
 
-  static const String conciergeTitle = 'TAVLA Concierge';
+  static const String conciergeTitle = 'TAVOLA Concierge';
   static const String conciergeStatus = 'Active always';
   static const String conciergeGreeting =
-      'Good afternoon. I am your TAVLA Concierge. I can guide you through premium seating, suggest perfect wine pairings, or coordinate an exquisite table reservation at any of our Mayfair partners.';
+      'Good afternoon. I am your TAVOLA Concierge. I can guide you through premium seating, suggest perfect wine pairings, or coordinate an exquisite table reservation at any of our Mayfair partners.';
   static const String conciergeRecommendation =
       'Would you like to review availability for "The Gilded Olive" tonight, or shall I recommend some curated Japanese plates at "Oma Sushi"?';
   static const String exploreGildedOlive = 'EXPLORE THE GILDED OLIVE';

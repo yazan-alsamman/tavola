@@ -565,13 +565,13 @@ class AppTextStyles {
     height: 1,
   );
 
-  static final splashTitle = GoogleFonts.cormorantGaramond(
+  static const TextStyle splashTitle = TextStyle(
     color: AppColors.primaryDark,
     fontSize: 58,
     fontWeight: FontWeight.w700,
     letterSpacing: 10,
     height: 1,
-    shadows: const [Shadow(color: AppColors.accent, blurRadius: 24)],
+    shadows: [Shadow(color: AppColors.accent, blurRadius: 24)],
   );
 
   static final logo = GoogleFonts.cormorantGaramond(
@@ -581,13 +581,13 @@ class AppTextStyles {
     letterSpacing: 2,
   );
 
-  static final welcomeHeroTitle = GoogleFonts.cormorantGaramond(
+  static const TextStyle welcomeHeroTitle = TextStyle(
     color: AppColors.accent,
     fontSize: AppDimensions.welcomeTitleFontSize,
     fontWeight: FontWeight.w700,
     letterSpacing: AppDimensions.welcomeTitleLetterSpacing,
     height: 1,
-    shadows: const [
+    shadows: [
       Shadow(
         color: AppColors.textLight80,
         blurRadius: 10,
