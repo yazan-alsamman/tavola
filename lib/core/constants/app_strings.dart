@@ -6,6 +6,115 @@ class AppStrings {
   static const String login = 'LOGIN';
   static const String signUp = 'SIGN UP';
   static const String continueAsGuest = 'CONTINUE AS GUEST';
+
+  static const String onboardingWelcomeTo = 'WELCOME TO';
+  static const String onboardingWelcomeBrand = 'TAVOLA';
+  static const String onboardingSwipeHint = 'SWIPE TO EXPLORE';
+  static const String onboardingGetStarted = 'GET STARTED';
+  static const String onboardingPartySize = 'Party size';
+  static const String onboardingSelectDate = 'Select date';
+  static const String onboardingInviteFriends = 'Invite friends';
+  static const String onboardingInviteFriendsHint =
+      'Make it group experience! (Optional)';
+  static const String onboardingInviteFriendsAction = 'Invite friends';
+  static const String onboardingBookHeadline = 'BOOK IN A FEW TAPS';
+  static const String onboardingBookHint =
+      'Live availability, instant booking, and smart reminders.';
+  static const String onboardingPlanHeadline = 'PLAN WITH FRIENDS';
+  static const String onboardingPlanHint =
+      'Invite, coordinate, and share plans in one place.';
+  static const String onboardingRewardsHeadline = 'EARN REWARDS';
+  static const String onboardingRewardsHint =
+      'Collect points and unlock perks as you dine.';
+  static const String onboardingDinemateHeadline =
+      'Not finding a place to eat? Ask Dinemate AI';
+  static const String onboardingDinemateHint =
+      'Dinemate AI will help you find the perfect restaurant.';
+  static const String onboardingDinemateTitle = 'Dinemate AI';
+  static const String onboardingDinemateUserMessage =
+      'I want sushi tonight near the marina.';
+  static const String onboardingDinemateAiMessage =
+      'Otako Sushi looks perfect — refined omakase, marina views, and a table still open at 8:00 PM.';
+  static const String onboardingLoyaltyRewards = 'Loyalty Rewards';
+  static const String onboardingLoyaltyTierBronze = 'Bronze';
+  static const String onboardingLoyaltyPointsValue = '50 points';
+  static const String onboardingLoyaltyProgressTitle = 'Progress to Silver';
+  static const String onboardingLoyaltyPointsToSilver = '450 points to Silver';
+  static const String onboardingLoyaltyTotalPointsValue = '50';
+  static const String onboardingLoyaltyTotalPointsLabel = 'Total Points';
+  static const String onboardingLoyaltyClaimedValue = '1';
+  static const String onboardingLoyaltyClaimedLabel = 'Claimed';
+  static const String onboardingLoyaltyAvailableValue = '0';
+  static const String onboardingLoyaltyAvailableLabel = 'Available';
+  static const String onboardingLoyaltyDiscounts = 'Discounts';
+  static const String onboardingLoyaltyDiscountsCount = '2';
+  static const String onboardingLoyaltyOfferOneTitle = '10\$ OFF from bill';
+  static const String onboardingLoyaltyOfferOnePoints = '240';
+  static const String onboardingLoyaltyOfferOnePlace = 'Available at Saffron House';
+  static const String onboardingLoyaltyOfferOneNeed = 'Need 190 more points';
+  static const String onboardingLoyaltyOfferTwoTitle = 'Complimentary dessert';
+  static const String onboardingLoyaltyOfferTwoPoints = '100';
+  static const String onboardingLoyaltyOfferTwoPlace = 'Available at Otako Sushi';
+  static const String onboardingLoyaltyOfferClaimedTag = 'Claimed';
+  static const String onboardingLoyaltyBenefitsTitle = 'Your Bronze Benefits';
+  static const String onboardingLoyaltyBenefitOne = 'Basic rewards';
+  static const String onboardingLoyaltyBenefitTwo = 'Birthday discount';
+  static const String onboardingConfirmedMessage =
+      'Your table has been accepted. Settle in, savor the moment, and enjoy a beautifully prepared dining experience.';
+  static const String onboardingBookingInformations = 'Booking informations';
+  static const String onboardingConfirmationCode = 'Confirmation Code';
+  static const String onboardingContactRestaurant = 'Contact Restaurant';
+  static const String onboardingCall = 'Call';
+  static const String onboardingDirections = 'Directions';
+  static const String onboardingCancel = 'Cancel';
+  static const String onboardingPartyGuestsLabel = '4 Guests';
+  static const String onboardingBookingDateLabel = 'Fri, 19 Aug · 8:30 PM';
+  static const String onboardingRestaurantCuisine = 'Indian · Fine dining';
+  static const String onboardingToday = 'TODAY';
+  static const String onboardingTomorrow = 'TOMORROW';
+  static const String onboardingMonthAug = 'AUG';
+  static const String onboardingDayOneWeekday = 'WED';
+  static const String onboardingDayOneNumber = '17';
+  static const String onboardingDayTwoWeekday = 'THU';
+  static const String onboardingDayTwoNumber = '18';
+  static const String onboardingDayThreeWeekday = 'FRI';
+  static const String onboardingDayThreeNumber = '19';
+  static const String onboardingDayFourWeekday = 'SAT';
+  static const String onboardingDayFourNumber = '20';
+  static const String onboardingCompletedKey = 'onboarding_completed';
+  static const String favoriteCuisinesCompletedKey =
+      'favorite_cuisines_completed';
+  static const String favoriteCuisinesSelectedKey =
+      'favorite_cuisines_selected';
+  static const String favoriteCuisinesTitle = 'Favorite Cuisines';
+  static const String favoriteCuisinesSubtitle =
+      'Select the cuisines you enjoy the most to get personalized recommendations.';
+  static const String favoriteCuisinesSkip = 'Skip for Now';
+  static const String favoriteCuisinesConfirm = 'Confirm';
+  static const String cuisineAmerican = 'American';
+  static const String cuisineCafe = 'Cafe';
+  static const String cuisineChinese = 'Chinese';
+  static const String cuisineFrench = 'French';
+  static const String cuisineGreek = 'Greek';
+  static const String cuisineLebanese = 'Lebanese';
+  static const String cuisineMexican = 'Mexican';
+  static const String cuisineSpanish = 'Spanish';
+  static const String cuisineThai = 'Thai';
+  static const String cuisineEmirati = 'Emirati';
+  static const List<String> onboardingPartySizes = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    '11',
+    '12',
+  ];
   static const String loginInstruction =
       'Login with your phone number and password';
   static const String signUpInstruction =
@@ -103,6 +212,26 @@ class AppStrings {
   static const String asian = 'Asian';
   static const String contemporary = 'Contemporary';
   static const String steakhouse = 'Steakhouse';
+  static const List<String> favoriteCuisineOptions = [
+    cuisineAmerican,
+    cuisineCafe,
+    cuisineChinese,
+    cuisineFrench,
+    cuisineGreek,
+    indian,
+    asian,
+    italian,
+    japanese,
+    cuisineLebanese,
+    mediterranean,
+    barbecue,
+    cuisineMexican,
+    seafood,
+    cuisineSpanish,
+    cuisineThai,
+    cuisineEmirati,
+    sushi,
+  ];
   static const String lunch = 'Lunch';
   static const String dinner = 'Dinner';
   static const String brunch = 'Brunch';

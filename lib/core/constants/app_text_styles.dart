@@ -600,4 +600,270 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
     letterSpacing: 0.9,
   );
+
+  static const TextStyle onboardingWelcomeSubtitle = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 4.0,
+    color: AppColors.textSecondary,
+  );
+
+  static final onboardingWelcomeBrand = GoogleFonts.cormorantGaramond(
+    color: AppColors.primaryDark,
+    fontSize: AppDimensions.onboardingWelcomeBrandSize,
+    fontWeight: FontWeight.w700,
+    letterSpacing: AppDimensions.onboardingWelcomeLetterSpacing,
+    height: 1,
+  );
+
+  static const TextStyle onboardingSwipeHint = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.4,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingSectionTitle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.2,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingSectionHint = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    height: 1.35,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingPartyChip = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: AppColors.primaryDark,
+  );
+
+  static const TextStyle onboardingDateWeekday = TextStyle(
+    fontSize: 9,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.6,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingDateNumber = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingDateLabel = TextStyle(
+    fontSize: 8,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.4,
+    color: AppColors.primaryDark,
+  );
+
+  static const TextStyle onboardingInviteLabel = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    color: AppColors.primaryDark,
+  );
+
+  static const TextStyle onboardingBookHeadline = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 1.0,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingBookHint = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w500,
+    height: 1.45,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingConfirmedTitle = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.4,
+    color: AppColors.textLight,
+  );
+
+  static const TextStyle onboardingConfirmedMessage = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    height: 1.35,
+    color: AppColors.textLight80,
+  );
+
+  static const TextStyle onboardingInfoSectionTitle = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.3,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingInfoLabel = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.4,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingInfoValue = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingCodeField = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.6,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingActionButton = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+  );
+
+  static const TextStyle onboardingMiniCardTitle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingMiniCardSubtitle = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingRewardsHeader = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.2,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingRewardsTier = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.4,
+    color: AppColors.primaryDark,
+  );
+
+  static const TextStyle onboardingRewardsPoints = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingRewardsProgressLabel = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.8,
+    color: AppColors.accent,
+  );
+
+  static const TextStyle onboardingRewardsProgressHint = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingRewardsStatValue = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingRewardsStatLabel = TextStyle(
+    fontSize: 9,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.3,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingRewardsSectionTitle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 1.0,
+    color: AppColors.accent,
+  );
+
+  static const TextStyle onboardingRewardsOfferTitle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingRewardsOfferMeta = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle onboardingRewardsNeedMore = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    color: AppColors.warning,
+  );
+
+  static const TextStyle onboardingRewardsChip = TextStyle(
+    fontSize: 9,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.2,
+  );
+
+  static const TextStyle onboardingRewardsBadge = TextStyle(
+    fontSize: 9,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textLight,
+  );
+
+  static const TextStyle onboardingRewardsBenefit = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle onboardingDinemateUserBubble = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    height: 1.4,
+    color: AppColors.textLight,
+  );
+
+  static const TextStyle favoriteCuisinesTitle = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle favoriteCuisinesSubtitle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    height: 1.45,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle favoriteCuisineChip = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+  );
+
+  static const TextStyle favoriteCuisinesSkip = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.3,
+  );
+
+  static const TextStyle onboardingGetStarted = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.8,
+  );
 }

@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../../features/cuisine_preferences/controller/favorite_cuisines_controller.dart';
+import '../../features/cuisine_preferences/view/favorite_cuisines_screen.dart';
 import '../../features/details/controller/details_controller.dart';
 import '../../features/details/view/details_screen.dart';
 import '../../features/concierge/controller/concierge_controller.dart';
@@ -10,6 +12,8 @@ import '../../features/home/controller/home_controller.dart';
 import '../../features/home/view/home_screen.dart';
 import '../../features/map/controller/restaurant_map_controller.dart';
 import '../../features/map/view/restaurant_map_screen.dart';
+import '../../features/onboarding/controller/onboarding_controller.dart';
+import '../../features/onboarding/view/onboarding_screen.dart';
 import '../../features/profile/controller/profile_controller.dart';
 import '../../features/profile/view/profile_screen.dart';
 import '../../features/reservation/controller/reservation_controller.dart';
@@ -31,6 +35,8 @@ import '../../features/welcome/view/welcome_screen.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
+  static const String onboarding = '/onboarding';
+  static const String favoriteCuisines = '/favorite-cuisines';
   static const String welcome = '/welcome';
   static const String login = '/login';
   static const String signUp = '/sign-up';
@@ -52,6 +58,20 @@ class AppRoutes {
       page: () => const SplashScreen(),
       binding: BindingsBuilder(() {
         Get.put(SplashController());
+      }),
+    ),
+    GetPage(
+      name: onboarding,
+      page: () => const OnboardingScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(OnboardingController());
+      }),
+    ),
+    GetPage(
+      name: favoriteCuisines,
+      page: () => const FavoriteCuisinesScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(FavoriteCuisinesController());
       }),
     ),
     GetPage(

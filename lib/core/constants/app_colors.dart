@@ -26,6 +26,9 @@ class AppColors {
 
   static const Color success = Color(0xFFDFD6ED);
   static const Color online = Color(0xFF2E7D5B);
+  static const Color warning = Color(0xFFC44536);
+  static const Color bronze = Color(0xFFB87333);
+  static const Color info = Color(0xFF4A7FD4);
 
   static const Color primaryDark75 = Color(0xBF280B5A);
   static const Color primaryDark22 = Color(0x38280B5A);

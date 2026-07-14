@@ -9,4 +9,5 @@ class AppImages {
   static const String r6 = 'assets/images/r6.png';
   static const String profileAvatar = 'assets/images/r7.png';
   static const String welcomeHero = 'assets/images/r8.jpg';
+  static const String appIcon = 'assets/images/r10.jpg';
 }
