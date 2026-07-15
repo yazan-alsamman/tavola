@@ -12,10 +12,14 @@ class ProfileReservationCard extends StatelessWidget {
     super.key,
     required this.restaurant,
     required this.details,
+    this.showBottomMargin = true,
+    this.compact = false,
   });
 
   final RestaurantModel restaurant;
   final List<(String, String)> details;
+  final bool showBottomMargin;
+  final bool compact;
 
   static const List<IconData> _detailIcons = [
     Icons.calendar_today,
@@ -23,12 +27,22 @@ class ProfileReservationCard extends StatelessWidget {
     Icons.person,
   ];
 
+  double get _cardHeight => compact
+      ? AppDimensions.onboardingReservationCardHeight
+      : AppDimensions.reservationCardHeight;
+
+  double get _imageWidth => compact
+      ? AppDimensions.onboardingReservationImageWidth
+      : AppDimensions.reservationImageWidth;
+
   @override
   Widget build(BuildContext context) {
     return HoverableCard(
       child: Container(
-        height: AppDimensions.reservationCardHeight,
-        margin: const EdgeInsets.only(bottom: AppDimensions.sectionSpacing),
+        height: _cardHeight,
+        margin: showBottomMargin
+            ? const EdgeInsets.only(bottom: AppDimensions.sectionSpacing)
+            : EdgeInsets.zero,
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
@@ -45,7 +59,7 @@ class ProfileReservationCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(
-              width: AppDimensions.reservationImageWidth,
+              width: _imageWidth,
               height: double.infinity,
               child: restaurant.imageUrl.isNetworkImage
                   ? Image.network(restaurant.imageUrl, fit: BoxFit.cover)
@@ -54,24 +68,36 @@ class ProfileReservationCard extends StatelessWidget {
             Expanded(
               child: Container(
                 color: AppColors.surface,
-                padding: const EdgeInsets.all(AppDimensions.contentPadding),
+                padding: EdgeInsets.all(
+                  compact
+                      ? AppDimensions.compactSpacing
+                      : AppDimensions.contentPadding,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       restaurant.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.reservationTitle,
                     ),
-                    const SizedBox(height: AppDimensions.regularSpacing),
+                    SizedBox(
+                      height: compact
+                          ? AppDimensions.compactSpacing
+                          : AppDimensions.regularSpacing,
+                    ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(
                         details.length,
-                        (index) => _ReservationInfoItem(
-                          icon: _detailIcons[index],
-                          label: details[index].$1,
-                          value: details[index].$2,
+                        (index) => Expanded(
+                          child: _ReservationInfoItem(
+                            icon: _detailIcons[index],
+                            label: details[index].$1,
+                            value: details[index].$2,
+                            compact: compact,
+                          ),
                         ),
                       ),
                     ),
@@ -91,11 +117,13 @@ class _ReservationInfoItem extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.compact = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -105,16 +133,30 @@ class _ReservationInfoItem extends StatelessWidget {
         Icon(
           icon,
           color: AppColors.primary,
-          size: AppDimensions.mediumIconSize,
+          size: compact
+              ? AppDimensions.smallIconSize
+              : AppDimensions.mediumIconSize,
         ),
-        const SizedBox(height: AppDimensions.compactSpacing),
-        Text(label, style: AppTextStyles.label),
+        SizedBox(
+          height: compact
+              ? AppDimensions.tinySpacing
+              : AppDimensions.compactSpacing,
+        ),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.label,
+        ),
         const SizedBox(height: AppDimensions.tinySpacing),
         Text(
           value,
+          maxLines: compact ? 1 : 2,
+          overflow: TextOverflow.ellipsis,
           style: AppTextStyles.body.copyWith(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w600,
+            fontSize: compact ? 12 : null,
           ),
         ),
       ],

@@ -23,6 +23,8 @@ class AppDimensions {
   static const double promoHeight = 190.0;
   static const double reservationCardHeight = 136.0;
   static const double reservationImageWidth = 130.0;
+  static const double onboardingReservationCardHeight = 124.0;
+  static const double onboardingReservationImageWidth = 96.0;
   static const double contentPadding = 16.0;
   static const double compactHorizontalPadding = 14.0;
   static const double compactVerticalPadding = 8.0;
@@ -172,6 +174,8 @@ class AppDimensions {
   static const double detailsLocationIconSize = 28.0;
 
   static const double confirmationOverlayBlurSigma = 12.0;
+  static const double onboardingConciergeGlassBlurSigma = 18.0;
+  static const double onboardingConciergeGlowOrbSize = 112.0;
   static const double confirmationCardMaxWidth = 380.0;
   static const double confirmationHeaderHeight = 196.0;
   static const double confirmationIconContainerSize = 56.0;
@@ -230,6 +234,11 @@ class AppDimensions {
   static const double onboardingSectionPadding = 12.0;
   static const double onboardingPartyChipSize = 30.0;
   static const double onboardingPartyChipRadius = 8.0;
+  static const double onboardingTablePreviewHeight = 58.0;
+  static const double onboardingTablePreviewRadius = 12.0;
+  static const double onboardingFloorPlanPreviewHeight = 148.0;
+  static const double onboardingCompactCounterHeight = 28.0;
+  static const double onboardingQrCodeSize = 76.0;
   static const double onboardingDateChipRadius = 12.0;
   static const double onboardingInviteButtonRadius = 12.0;
   static const double onboardingInviteIconSize = 18.0;
@@ -240,6 +249,9 @@ class AppDimensions {
   static const double onboardingWelcomeBrandSize = 56.0;
   static const double onboardingWelcomeLetterSpacing = 6.0;
   static const Duration onboardingWelcomeDuration = Duration(milliseconds: 1600);
+  static const Duration onboardingPageEntranceDuration =
+      Duration(milliseconds: 1050);
+  static const double onboardingDinematePageTopOffset = 24.0;
   static const Duration onboardingDotAnimDuration = Duration(milliseconds: 280);
   static const double onboardingPageFadeFactor = 0.5;
   static const double onboardingPageScaleFactor = 0.08;
@@ -258,7 +270,7 @@ class AppDimensions {
   static const double onboardingActionTilePaddingVertical = 10.0;
   static const double onboardingRewardsCardRadius = 18.0;
   static const double onboardingRewardsProgressHeight = 6.0;
-  static const double onboardingRewardsProgressValue = 0.1;
+  static const double onboardingRewardsProgressValue = 0.24;
   static const double onboardingRewardsMedalSize = 36.0;
   static const double onboardingRewardsChipRadius = 8.0;
   static const double onboardingRewardsBadgeSize = 18.0;

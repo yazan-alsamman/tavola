@@ -8,7 +8,9 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 
 class OnboardingWelcomeAnimation extends StatefulWidget {
-  const OnboardingWelcomeAnimation({super.key});
+  const OnboardingWelcomeAnimation({this.showBranding = true, super.key});
+
+  final bool showBranding;
 
   @override
   State<OnboardingWelcomeAnimation> createState() =>
@@ -133,59 +135,61 @@ class _OnboardingWelcomeAnimationState extends State<OnboardingWelcomeAnimation>
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                FadeTransition(
-                  opacity: _subtitleOpacity,
-                  child: SlideTransition(
-                    position: _subtitleSlide,
-                    child: const Text(
-                      AppStrings.onboardingWelcomeTo,
-                      style: AppTextStyles.onboardingWelcomeSubtitle,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.regularSpacing),
-                Opacity(
-                  opacity: _brandOpacity.value,
-                  child: Transform.scale(
-                    scale: _brandScale.value,
-                    child: ShaderMask(
-                      blendMode: BlendMode.srcIn,
-                      shaderCallback: (Rect bounds) {
-                        final double shimmer =
-                            (_shimmerController.value * 2) - 0.5;
-                        return LinearGradient(
-                          begin: Alignment(-1 + shimmer, 0),
-                          end: Alignment(shimmer, 0),
-                          colors: const [
-                            AppColors.primaryDark,
-                            AppColors.accent,
-                            AppColors.primaryDark,
-                          ],
-                          stops: const [0.35, 0.5, 0.65],
-                        ).createShader(bounds);
-                      },
+                if (widget.showBranding) ...[
+                  FadeTransition(
+                    opacity: _subtitleOpacity,
+                    child: SlideTransition(
+                      position: _subtitleSlide,
                       child: Text(
-                        AppStrings.onboardingWelcomeBrand,
-                        style: AppTextStyles.onboardingWelcomeBrand,
+                        AppStrings.onboardingWelcomeTo,
+                        style: AppTextStyles.onboardingWelcomeSubtitle,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                FractionallySizedBox(
-                  widthFactor: 0.42 * _lineWidth.value,
-                  child: Container(
-                    height: 2,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.pillRadius,
-                      ),
-                      gradient: const LinearGradient(
-                        colors: [AppColors.accent, AppColors.primaryDark],
+                  const SizedBox(height: AppDimensions.regularSpacing),
+                  Opacity(
+                    opacity: _brandOpacity.value,
+                    child: Transform.scale(
+                      scale: _brandScale.value,
+                      child: ShaderMask(
+                        blendMode: BlendMode.srcIn,
+                        shaderCallback: (Rect bounds) {
+                          final double shimmer =
+                              (_shimmerController.value * 2) - 0.5;
+                          return LinearGradient(
+                            begin: Alignment(-1 + shimmer, 0),
+                            end: Alignment(shimmer, 0),
+                            colors: const [
+                              AppColors.primaryDark,
+                              AppColors.accent,
+                              AppColors.primaryDark,
+                            ],
+                            stops: const [0.35, 0.5, 0.65],
+                          ).createShader(bounds);
+                        },
+                        child: Text(
+                          AppStrings.onboardingWelcomeBrand,
+                          style: AppTextStyles.onboardingWelcomeBrand,
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: AppDimensions.sectionSpacing),
+                  FractionallySizedBox(
+                    widthFactor: 0.42 * _lineWidth.value,
+                    child: Container(
+                      height: 2,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.pillRadius,
+                        ),
+                        gradient: const LinearGradient(
+                          colors: [AppColors.accent, AppColors.primaryDark],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ],

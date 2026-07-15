@@ -565,13 +565,13 @@ class AppTextStyles {
     height: 1,
   );
 
-  static const TextStyle splashTitle = TextStyle(
+  static final splashTitle = GoogleFonts.cormorantGaramond(
     color: AppColors.primaryDark,
     fontSize: 58,
     fontWeight: FontWeight.w700,
     letterSpacing: 10,
     height: 1,
-    shadows: [Shadow(color: AppColors.accent, blurRadius: 24)],
+    shadows: const [Shadow(color: AppColors.accent, blurRadius: 24)],
   );
 
   static final logo = GoogleFonts.cormorantGaramond(
@@ -581,13 +581,13 @@ class AppTextStyles {
     letterSpacing: 2,
   );
 
-  static const TextStyle welcomeHeroTitle = TextStyle(
+  static final welcomeHeroTitle = GoogleFonts.cormorantGaramond(
     color: AppColors.accent,
     fontSize: AppDimensions.welcomeTitleFontSize,
     fontWeight: FontWeight.w700,
     letterSpacing: AppDimensions.welcomeTitleLetterSpacing,
     height: 1,
-    shadows: [
+    shadows: const [
       Shadow(
         color: AppColors.textLight80,
         blurRadius: 10,
@@ -601,7 +601,7 @@ class AppTextStyles {
     letterSpacing: 0.9,
   );
 
-  static const TextStyle onboardingWelcomeSubtitle = TextStyle(
+  static final onboardingWelcomeSubtitle = GoogleFonts.cormorantGaramond(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     letterSpacing: 4.0,
@@ -669,14 +669,14 @@ class AppTextStyles {
     color: AppColors.primaryDark,
   );
 
-  static const TextStyle onboardingBookHeadline = TextStyle(
+  static final onboardingBookHeadline = GoogleFonts.cormorantGaramond(
     fontSize: 24,
     fontWeight: FontWeight.w700,
     letterSpacing: 1.0,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle onboardingBookHint = TextStyle(
+  static final onboardingBookHint = GoogleFonts.cormorantGaramond(
     fontSize: 15,
     fontWeight: FontWeight.w500,
     height: 1.45,
@@ -835,6 +835,18 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
     height: 1.4,
     color: AppColors.textLight,
+  );
+
+  static const TextStyle onboardingDinemateHeaderTitle = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textLight,
+  );
+
+  static const TextStyle onboardingDinemateHeaderStatus = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: AppColors.accent,
   );
 
   static const TextStyle favoriteCuisinesTitle = TextStyle(

@@ -61,45 +61,69 @@ class OnboardingScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: AppDimensions.regularSpacing),
-            const OnboardingPageIndicator(),
-            const SizedBox(height: AppDimensions.sectionSpacing),
             Obx(() {
-              if (!controller.isLastPage) {
-                return const SizedBox(height: AppDimensions.authFieldMinHeight);
-              }
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.pagePadding,
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: HoverableButton(
-                    child: ElevatedButton(
-                      onPressed: controller.completeOnboarding,
-                      style: AppButtonStyles.filledHover(
-                        ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryDark,
-                          foregroundColor: AppColors.textLight,
-                          textStyle: AppTextStyles.onboardingGetStarted,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppDimensions.buttonVerticalPadding,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.cardRadius,
+              final bool isLastPage = controller.isLastPage;
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: isLastPage
+                        ? AppDimensions.compactSpacing
+                        : AppDimensions.regularSpacing,
+                  ),
+                  const OnboardingPageIndicator(),
+                  SizedBox(
+                    height: isLastPage
+                        ? AppDimensions.smallSpacing
+                        : AppDimensions.sectionSpacing,
+                  ),
+                  if (isLastPage)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.pagePadding,
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: HoverableButton(
+                          child: ElevatedButton(
+                            onPressed: controller.completeOnboarding,
+                            style: AppButtonStyles.filledHover(
+                              ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryDark,
+                                foregroundColor: AppColors.textLight,
+                                textStyle:
+                                    AppTextStyles.onboardingGetStarted,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical:
+                                      AppDimensions.buttonVerticalPadding,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppDimensions.cardRadius,
+                                  ),
+                                ),
+                              ),
+                              idleBackground: AppColors.primaryDark,
                             ),
+                            child:
+                                const Text(AppStrings.onboardingGetStarted),
                           ),
                         ),
-                        idleBackground: AppColors.primaryDark,
                       ),
-                      child: const Text(AppStrings.onboardingGetStarted),
+                    )
+                  else
+                    const SizedBox(
+                      height: AppDimensions.authFieldMinHeight,
                     ),
+                  SizedBox(
+                    height: isLastPage
+                        ? AppDimensions.compactSpacing
+                        : AppDimensions.pagePadding,
                   ),
-                ),
+                ],
               );
             }),
-            const SizedBox(height: AppDimensions.pagePadding),
           ],
         ),
       ),
