@@ -19,7 +19,7 @@ class OnboardingWelcomePage extends StatelessWidget {
           const Spacer(flex: 3),
           const OnboardingWelcomeAnimation(),
           const Spacer(flex: 2),
-          const Text(
+          Text(
             AppStrings.onboardingSwipeHint,
             style: AppTextStyles.onboardingSwipeHint,
           ),

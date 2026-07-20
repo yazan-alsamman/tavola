@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../common/widgets/app_safe_image.dart';
 import '../../../common/widgets/hoverable_button.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -25,11 +26,14 @@ class WelcomeScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            AppImages.welcomeHero,
+          AppSafeImage(
+            path: AppImages.welcomeHero,
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
+            backgroundColor: AppColors.primaryDark,
+            iconColor: AppColors.accent,
+            fallbackIcon: Icons.restaurant_menu_rounded,
           ),
           Positioned(
             left: 0,
@@ -72,9 +76,9 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            left: AppDimensions.pagePadding,
-            right: AppDimensions.pagePadding,
+          PositionedDirectional(
+            start: AppDimensions.pagePadding,
+            end: AppDimensions.pagePadding,
             bottom: AppDimensions.pagePadding + bottomPadding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -100,7 +104,7 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                         idleBackground: AppColors.primaryDark,
                       ),
-                      child: const Text(AppStrings.loginSignUp),
+                      child: Text(AppStrings.loginSignUp),
                     ),
                   ),
                 ),
@@ -127,7 +131,7 @@ class WelcomeScreen extends StatelessWidget {
                         idleBackground: AppColors.accent,
                         idleForeground: AppColors.primaryDark,
                       ),
-                      child: const Text(AppStrings.continueAsGuest),
+                      child: Text(AppStrings.continueAsGuest),
                     ),
                   ),
                 ),

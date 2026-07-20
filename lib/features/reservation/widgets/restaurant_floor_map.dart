@@ -79,14 +79,14 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
                     SizedBox.expand(
                       child: CustomPaint(painter: _RestaurantMapPainter()),
                     ),
-                    Positioned(
+                    PositionedDirectional(
                       top: AppDimensions.regularSpacing,
-                      left: AppDimensions.regularSpacing,
+                      start: AppDimensions.regularSpacing,
                       child: const TableStatusLegend(overlay: true),
                     ),
-                    const Positioned(
+                    const PositionedDirectional(
                       top: AppDimensions.regularSpacing,
-                      right: AppDimensions.regularSpacing,
+                      end: AppDimensions.regularSpacing,
                       child: FloorPlanLiveTimeBadge(),
                     ),
                     ...widget.controller.floorPlanTables.map(

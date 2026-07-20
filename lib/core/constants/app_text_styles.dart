@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'app_fonts.dart';
 
 import 'app_colors.dart';
 import 'app_dimensions.dart';
@@ -445,7 +445,7 @@ class AppTextStyles {
     color: AppColors.textPrimary,
   );
 
-  static final detailsHeroTitle = GoogleFonts.cormorantGaramond(
+  static final detailsHeroTitle = AppFonts.cormorantGaramond(
     color: AppColors.textLight,
     fontSize: 34,
     fontWeight: FontWeight.w700,
@@ -466,7 +466,7 @@ class AppTextStyles {
     color: AppColors.textLight80,
   );
 
-  static final detailsAboutBody = GoogleFonts.cormorantGaramond(
+  static final detailsAboutBody = AppFonts.cormorantGaramond(
     color: AppColors.textSecondary,
     fontSize: 18,
     fontWeight: FontWeight.w500,
@@ -506,7 +506,7 @@ class AppTextStyles {
     letterSpacing: 0.3,
   );
 
-  static final detailsMenuTitle = GoogleFonts.cormorantGaramond(
+  static final detailsMenuTitle = AppFonts.cormorantGaramond(
     color: AppColors.textPrimary,
     fontSize: 30,
     fontWeight: FontWeight.w700,
@@ -540,7 +540,7 @@ class AppTextStyles {
   );
 
   static TextStyle appBarTitle(BuildContext context) {
-    return GoogleFonts.cormorantGaramond(
+    return AppFonts.cormorantGaramond(
       textStyle: Theme.of(context).textTheme.titleLarge,
       fontSize: 40,
       fontWeight: FontWeight.w600,
@@ -557,7 +557,7 @@ class AppTextStyles {
     return Theme.of(context).textTheme.titleMedium!;
   }
 
-  static final headerLogo = GoogleFonts.cormorantGaramond(
+  static final headerLogo = AppFonts.cormorantGaramond(
     color: AppColors.primary,
     fontSize: 30,
     fontWeight: FontWeight.w700,
@@ -565,7 +565,7 @@ class AppTextStyles {
     height: 1,
   );
 
-  static final splashTitle = GoogleFonts.cormorantGaramond(
+  static final splashTitle = AppFonts.cormorantGaramond(
     color: AppColors.primaryDark,
     fontSize: 58,
     fontWeight: FontWeight.w700,
@@ -574,14 +574,52 @@ class AppTextStyles {
     shadows: const [Shadow(color: AppColors.accent, blurRadius: 24)],
   );
 
-  static final logo = GoogleFonts.cormorantGaramond(
+  static final splashBrandMark = AppFonts.cormorantGaramond(
+    color: AppColors.primaryDark,
+    fontSize: AppDimensions.splashBrandFontSize,
+    fontWeight: FontWeight.w600,
+    letterSpacing: AppDimensions.splashBrandLetterSpacing,
+    height: 1,
+  );
+
+  static final splashBrandGlyph = AppFonts.cormorantGaramond(
+    color: AppColors.primaryDark,
+    fontSize: AppDimensions.splashBrandFontSize,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0,
+    height: 1,
+  );
+
+  static final languageSwitchBrand = AppFonts.cormorantGaramond(
+    color: AppColors.primary,
+    fontSize: 36,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 6,
+    height: 1,
+  );
+
+  static const TextStyle languageSwitchTitle = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
+
+  static const TextStyle languageSwitchSubtitle = TextStyle(
+    color: AppColors.textSecondary,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    height: 1.4,
+  );
+
+  static final logo = AppFonts.cormorantGaramond(
     color: AppColors.textLight,
     fontSize: 35,
     fontWeight: FontWeight.w500,
     letterSpacing: 2,
   );
 
-  static final welcomeHeroTitle = GoogleFonts.cormorantGaramond(
+  static final welcomeHeroTitle = AppFonts.cormorantGaramond(
     color: AppColors.accent,
     fontSize: AppDimensions.welcomeTitleFontSize,
     fontWeight: FontWeight.w700,
@@ -601,14 +639,14 @@ class AppTextStyles {
     letterSpacing: 0.9,
   );
 
-  static final onboardingWelcomeSubtitle = GoogleFonts.cormorantGaramond(
+  static final onboardingWelcomeSubtitle = AppFonts.cormorantGaramond(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     letterSpacing: 4.0,
     color: AppColors.textSecondary,
   );
 
-  static final onboardingWelcomeBrand = GoogleFonts.cormorantGaramond(
+  static final onboardingWelcomeBrand = AppFonts.cormorantGaramond(
     color: AppColors.primaryDark,
     fontSize: AppDimensions.onboardingWelcomeBrandSize,
     fontWeight: FontWeight.w700,
@@ -669,14 +707,14 @@ class AppTextStyles {
     color: AppColors.primaryDark,
   );
 
-  static final onboardingBookHeadline = GoogleFonts.cormorantGaramond(
+  static final onboardingBookHeadline = AppFonts.cormorantGaramond(
     fontSize: 24,
     fontWeight: FontWeight.w700,
     letterSpacing: 1.0,
     color: AppColors.textPrimary,
   );
 
-  static final onboardingBookHint = GoogleFonts.cormorantGaramond(
+  static final onboardingBookHint = AppFonts.cormorantGaramond(
     fontSize: 15,
     fontWeight: FontWeight.w500,
     height: 1.45,

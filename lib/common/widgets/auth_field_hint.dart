@@ -14,12 +14,12 @@ class AuthFieldHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
+      padding: const EdgeInsetsDirectional.only(
         top: AppDimensions.compactSpacing,
-        left: AppDimensions.tinySpacing,
+        start: AppDimensions.tinySpacing,
       ),
       child: Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: Text(
           message,
           style: AppTextStyles.authFieldErrorHint,

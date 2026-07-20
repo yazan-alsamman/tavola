@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/widgets/app_safe_image.dart';
 import '../../../common/widgets/hoverable_card.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/utils/image_source.dart';
 import '../../home/model/restaurant_model.dart';
 
 class ProfileReservationCard extends StatelessWidget {
@@ -61,9 +61,10 @@ class ProfileReservationCard extends StatelessWidget {
             SizedBox(
               width: _imageWidth,
               height: double.infinity,
-              child: restaurant.imageUrl.isNetworkImage
-                  ? Image.network(restaurant.imageUrl, fit: BoxFit.cover)
-                  : Image.asset(restaurant.imageUrl, fit: BoxFit.cover),
+              child: AppSafeImage(
+                path: restaurant.imageUrl,
+                fit: BoxFit.cover,
+              ),
             ),
             Expanded(
               child: Container(

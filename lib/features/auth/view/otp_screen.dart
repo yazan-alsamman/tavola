@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../common/widgets/app_ltr_text.dart';
 import '../../../common/widgets/circle_back_button.dart';
 import '../../../common/widgets/hoverable_button.dart';
 import '../../../core/constants/app_colors.dart';
@@ -27,7 +28,7 @@ class OtpScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: CircleBackButton(onPressed: Get.back),
               ),
               const SizedBox(height: AppDimensions.sectionSpacing),
@@ -52,19 +53,31 @@ class OtpScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppDimensions.sectionSpacing),
-              const Text(
+              Text(
                 AppStrings.checkYourWhatsapp,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.otpTitle,
               ),
               const SizedBox(height: AppDimensions.regularSpacing),
-              Text(
-                '${AppStrings.otpSentTo} ${controller.phoneNumber}',
+              Text.rich(
+                TextSpan(
+                  style: AppTextStyles.authInstruction,
+                  children: [
+                    TextSpan(text: '${AppStrings.otpSentTo} '),
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.baseline,
+                      baseline: TextBaseline.alphabetic,
+                      child: AppLtrText(
+                        controller.phoneNumber,
+                        style: AppTextStyles.authInstruction,
+                      ),
+                    ),
+                  ],
+                ),
                 textAlign: TextAlign.center,
-                style: AppTextStyles.authInstruction,
               ),
               const SizedBox(height: AppDimensions.smallSpacing),
-              const Text(
+              Text(
                 AppStrings.otpInstruction,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.authInstruction,
@@ -89,7 +102,7 @@ class OtpScreen extends StatelessWidget {
                             : AppColors.disabled,
                         textStyle: AppTextStyles.authLinkEmphasis,
                       ),
-                      child: const Text(AppStrings.resendIt),
+                      child: Text(AppStrings.resendIt),
                     ),
                   ],
                 ),
@@ -116,7 +129,7 @@ class OtpScreen extends StatelessWidget {
                       ),
                       idleBackground: AppColors.primaryDark,
                     ),
-                    child: const Text(AppStrings.verifyOtp),
+                    child: Text(AppStrings.verifyOtp),
                   ),
                 ),
               ),

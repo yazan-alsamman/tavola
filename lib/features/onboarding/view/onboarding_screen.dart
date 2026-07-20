@@ -107,7 +107,7 @@ class OnboardingScreen extends StatelessWidget {
                               idleBackground: AppColors.primaryDark,
                             ),
                             child:
-                                const Text(AppStrings.onboardingGetStarted),
+                                Text(AppStrings.onboardingGetStarted),
                           ),
                         ),
                       ),

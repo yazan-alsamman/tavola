@@ -22,8 +22,8 @@ class ReservationDurationPanel extends StatelessWidget {
             controller.durationOptions.length,
             (index) => Expanded(
               child: Padding(
-                padding: EdgeInsets.only(
-                  right: index == controller.durationOptions.length - 1
+                padding: EdgeInsetsDirectional.only(
+                  end: index == controller.durationOptions.length - 1
                       ? 0
                       : AppDimensions.smallSpacing,
                 ),

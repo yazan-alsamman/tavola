@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_fonts.dart';
 import '../../core/theme/app_button_styles.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
-    final TextTheme cormorantTextTheme =
-        GoogleFonts.cormorantGaramondTextTheme();
+    final TextTheme cormorantTextTheme = AppFonts.cormorantGaramondTextTheme();
 
     return ThemeData(
       useMaterial3: true,
-      fontFamily: GoogleFonts.cormorantGaramond().fontFamily,
+      fontFamily: AppFonts.cormorantGaramondFamily,
       textTheme: cormorantTextTheme.apply(
         bodyColor: AppColors.textPrimary,
         displayColor: AppColors.textPrimary,

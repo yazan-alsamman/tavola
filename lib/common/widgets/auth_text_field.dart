@@ -11,6 +11,7 @@ class AuthTextField extends StatelessWidget {
     required this.hintText,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
+    this.textDirection,
     this.prefixIcon,
     this.prefixIconConstraints,
     this.suffixIcon,
@@ -20,6 +21,7 @@ class AuthTextField extends StatelessWidget {
   final String hintText;
   final TextInputType keyboardType;
   final bool obscureText;
+  final TextDirection? textDirection;
   final Widget? prefixIcon;
   final BoxConstraints? prefixIconConstraints;
   final Widget? suffixIcon;
@@ -34,6 +36,7 @@ class AuthTextField extends StatelessWidget {
         controller: controller,
         keyboardType: keyboardType,
         obscureText: obscureText,
+        textDirection: textDirection,
         style: AppTextStyles.authInput,
         decoration: InputDecoration(
           hintText: hintText,

@@ -30,7 +30,7 @@ class BrowseByOccasionSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           AppStrings.browseByOccasion,
           style: AppTextStyles.occasionTitle,
         ),

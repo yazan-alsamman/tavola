@@ -21,7 +21,7 @@ class ConciergeComposer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: AppColors.surface,
-      padding: const EdgeInsets.fromLTRB(
+      padding: const EdgeInsetsDirectional.fromSTEB(
         AppDimensions.pagePadding,
         AppDimensions.regularSpacing,
         AppDimensions.pagePadding,

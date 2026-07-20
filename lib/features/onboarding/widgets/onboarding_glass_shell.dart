@@ -26,8 +26,8 @@ class OnboardingGlassShell extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                    begin: AlignmentDirectional.topStart,
+                    end: AlignmentDirectional.bottomEnd,
                     colors: [
                       AppColors.primaryDark,
                       AppColors.primaryDark75,
@@ -37,17 +37,17 @@ class OnboardingGlassShell extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(
+            PositionedDirectional(
               top: -AppDimensions.onboardingConciergeGlowOrbSize * 0.35,
-              right: -AppDimensions.onboardingConciergeGlowOrbSize * 0.25,
+              end: -AppDimensions.onboardingConciergeGlowOrbSize * 0.25,
               child: OnboardingGlassGlowOrb(
                 size: AppDimensions.onboardingConciergeGlowOrbSize,
                 color: AppColors.accent.withValues(alpha: 0.34),
               ),
             ),
-            Positioned(
+            PositionedDirectional(
               bottom: -AppDimensions.onboardingConciergeGlowOrbSize * 0.2,
-              left: -AppDimensions.onboardingConciergeGlowOrbSize * 0.15,
+              start: -AppDimensions.onboardingConciergeGlowOrbSize * 0.15,
               child: OnboardingGlassGlowOrb(
                 size: AppDimensions.onboardingConciergeGlowOrbSize * 0.72,
                 color: AppColors.secondary.withValues(alpha: 0.28),

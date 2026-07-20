@@ -2,26 +2,40 @@ import 'package:get/get.dart';
 
 import '../../../core/navigation/bottom_nav_navigation.dart';
 import '../../details/controller/details_controller.dart';
-import '../../home/controller/home_controller.dart';
 import '../../home/model/restaurant_model.dart';
+import '../../home/repository/restaurant_repository.dart';
+import '../repository/favorites_repository.dart';
 
+/// Favorites feature only: favorite list and favorite toggles for this screen.
 class FavoritesController extends GetxController {
-  static const int homeNavigationIndex = BottomNavNavigation.homeIndex;
-  static const int mapNavigationIndex = BottomNavNavigation.mapIndex;
-  static const int bookingNavigationIndex = BottomNavNavigation.bookingIndex;
-  static const int chatNavigationIndex = BottomNavNavigation.chatIndex;
-  static const int profileNavigationIndex = BottomNavNavigation.profileIndex;
+  final RestaurantRepository _restaurantRepository =
+      Get.find<RestaurantRepository>();
+  final FavoritesRepository _favoritesRepository =
+      Get.find<FavoritesRepository>();
 
-  final HomeController homeController = Get.find<HomeController>();
+  final RxList<RestaurantModel> restaurants = <RestaurantModel>[].obs;
 
-  List<RestaurantModel> get favoriteRestaurants {
-    return homeController.defaultFavoriteRestaurants;
+  @override
+  void onInit() {
+    super.onInit();
+    _favoritesRepository.ensureInitializedSync();
+    reloadLocalizedData();
   }
 
-  bool isFavorite(String id) => homeController.isFavorite(id);
+  void reloadLocalizedData() {
+    restaurants.assignAll(_restaurantRepository.getRestaurants());
+  }
+
+  List<RestaurantModel> get favoriteRestaurants {
+    return _favoritesRepository.defaultFavoriteRestaurants(restaurants);
+  }
+
+  bool isFavorite(String id) {
+    return _favoritesRepository.favoriteStates[id] ?? false;
+  }
 
   void toggleFavorite(String id) {
-    homeController.toggleFavorite(id);
+    _favoritesRepository.toggleFavorite(id);
   }
 
   void openDetails(RestaurantModel restaurant) {
@@ -31,7 +45,7 @@ class FavoritesController extends GetxController {
   void handleBottomNavigation(int index) {
     BottomNavNavigation.handle(
       index,
-      currentIndex: homeNavigationIndex,
+      currentIndex: BottomNavNavigation.homeIndex,
     );
   }
 }

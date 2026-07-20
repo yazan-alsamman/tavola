@@ -31,7 +31,7 @@ class ReservationScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: AlignmentDirectional.centerStart,
                       child: IconButton(
                         onPressed: Get.back,
                         icon: const Icon(
@@ -42,13 +42,13 @@ class ReservationScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppDimensions.smallSpacing),
-                    const Text(
+                    Text(
                       AppStrings.reservationPreferences,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.reservationPreferencesTitle,
                     ),
                     const SizedBox(height: AppDimensions.regularSpacing),
-                    const Text(
+                    Text(
                       AppStrings.reservationPreferencesSubtitle,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.reservationPreferencesSubtitle,
@@ -67,7 +67,7 @@ class ReservationScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(
+              padding: const EdgeInsetsDirectional.fromSTEB(
                 AppDimensions.pagePadding,
                 0,
                 AppDimensions.pagePadding,
@@ -98,7 +98,7 @@ class ReservationScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(AppStrings.nextSelectTable),
+                        Text(AppStrings.nextSelectTable),
                         const SizedBox(width: AppDimensions.smallSpacing),
                         const Icon(
                           Icons.arrow_forward_ios_rounded,

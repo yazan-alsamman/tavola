@@ -44,8 +44,8 @@ class CircleBackButton extends StatelessWidget {
             customBorder: const CircleBorder(),
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.only(
-                  left: AppDimensions.circleBackIconOffset,
+                padding: const EdgeInsetsDirectional.only(
+                  start: AppDimensions.circleBackIconOffset,
                 ),
                 child: Icon(
                   Icons.arrow_back_ios_new_rounded,

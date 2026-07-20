@@ -69,7 +69,7 @@ class _FloorPlanLiveTimeBadgeState extends State<FloorPlanLiveTimeBadge> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 AppStrings.floorPlanNowTime,
                 style: AppTextStyles.floorPlanLiveLabel,
               ),

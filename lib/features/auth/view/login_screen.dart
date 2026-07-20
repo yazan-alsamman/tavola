@@ -29,17 +29,17 @@ class LoginScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: CircleBackButton(onPressed: Get.back),
               ),
               const SizedBox(height: AppDimensions.sectionSpacing),
-              const Text(
+              Text(
                 AppStrings.login,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.authScreenTitle,
               ),
               const SizedBox(height: AppDimensions.regularSpacing),
-              const Text(
+              Text(
                 AppStrings.loginInstruction,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.authInstruction,
@@ -49,6 +49,7 @@ class LoginScreen extends StatelessWidget {
                 controller: controller.phoneController,
                 hintText: AppStrings.enterYourNumber,
                 keyboardType: TextInputType.phone,
+                textDirection: TextDirection.ltr,
               ),
               Obx(
                 () => controller.phoneHint.value == null
@@ -71,14 +72,14 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: AppDimensions.regularSpacing),
               Align(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerEnd,
                 child: TextButton(
                   onPressed: controller.forgotPassword,
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     textStyle: AppTextStyles.authLink,
                   ),
-                  child: const Text(AppStrings.forgotPassword),
+                  child: Text(AppStrings.forgotPassword),
                 ),
               ),
               const SizedBox(height: AppDimensions.smallSpacing),
@@ -89,7 +90,7 @@ class LoginScreen extends StatelessWidget {
                     foregroundColor: AppColors.primaryDark,
                     textStyle: AppTextStyles.authLinkEmphasis,
                   ),
-                  child: const Text(AppStrings.signUp),
+                  child: Text(AppStrings.signUp),
                 ),
               ),
               const SizedBox(height: AppDimensions.sectionSpacing),
@@ -118,7 +119,7 @@ class LoginScreen extends StatelessWidget {
                           ? AppColors.textLight
                           : AppColors.textSecondary,
                     ),
-                    child: const Text(AppStrings.login),
+                    child: Text(AppStrings.login),
                   );
 
                   return SizedBox(

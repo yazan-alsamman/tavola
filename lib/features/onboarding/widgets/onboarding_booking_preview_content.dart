@@ -27,7 +27,7 @@ class OnboardingBookingPreviewContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const OnboardingGlassHeader(
+          OnboardingGlassHeader(
             icon: Icons.table_restaurant_rounded,
             title: AppStrings.onboardingSelectTable,
             message: AppStrings.onboardingSelectTableHint,
@@ -37,7 +37,7 @@ class OnboardingBookingPreviewContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
+                Text(
                   AppStrings.floorPlan,
                   style: AppTextStyles.reservationSectionLabel,
                 ),
@@ -76,7 +76,7 @@ class OnboardingBookingPreviewContent extends StatelessWidget {
           OnboardingGlassFrostPanel(
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: OnboardingGlassSectionLabel(
                     text: AppStrings.numberOfDiners,
                   ),
@@ -159,7 +159,7 @@ class _SelectedTableStrip extends StatelessWidget {
               bordered: true,
             ),
             if (table.isWindowSeat)
-              const _StatusChip(
+              _StatusChip(
                 label: AppStrings.windowSeatBadge,
                 background: AppColors.secondaryLight,
                 foreground: AppColors.textPrimary,

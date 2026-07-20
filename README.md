@@ -20,6 +20,7 @@ lib/
     └── <feature>/
         ├── controller/
         ├── model/
+        ├── repository/
         ├── view/
         └── widgets/
 ```

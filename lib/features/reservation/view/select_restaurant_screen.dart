@@ -25,13 +25,13 @@ class SelectRestaurantScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 AppStrings.selectYourRestaurant,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.selectRestaurantTitle,
               ),
               const SizedBox(height: AppDimensions.regularSpacing),
-              const Text(
+              Text(
                 AppStrings.selectYourRestaurantSubtitle,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.selectRestaurantSubtitle,

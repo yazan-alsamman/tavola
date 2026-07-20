@@ -13,7 +13,7 @@ class ConciergeMessageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FractionallySizedBox(
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       widthFactor: AppDimensions.conciergeMessageWidthFactor,
       child: HoverableCard(
         child: Container(

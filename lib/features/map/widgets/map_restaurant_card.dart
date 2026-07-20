@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/widgets/app_safe_image.dart';
 import '../../../common/widgets/hoverable_button.dart';
 import '../../../common/widgets/hoverable_card.dart';
 import '../../../core/constants/app_colors.dart';
@@ -7,7 +8,6 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
-import '../../../core/utils/image_source.dart';
 import '../../home/model/restaurant_model.dart';
 
 class MapRestaurantCard extends StatelessWidget {
@@ -40,9 +40,10 @@ class MapRestaurantCard extends StatelessWidget {
             SizedBox(
               height: AppDimensions.mapCardImageHeight,
               width: double.infinity,
-              child: restaurant.imageUrl.isNetworkImage
-                  ? Image.network(restaurant.imageUrl, fit: BoxFit.cover)
-                  : Image.asset(restaurant.imageUrl, fit: BoxFit.cover),
+              child: AppSafeImage(
+                path: restaurant.imageUrl,
+                fit: BoxFit.cover,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(AppDimensions.contentPadding),
@@ -107,7 +108,10 @@ class MapRestaurantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            child: const Text(AppStrings.reserveTable),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(AppStrings.reserveTable),
+                            ),
                           ),
                         ),
                       ),
@@ -131,7 +135,10 @@ class MapRestaurantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            child: const Text(AppStrings.viewDetails),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(AppStrings.viewDetails),
+                            ),
                           ),
                         ),
                       ),

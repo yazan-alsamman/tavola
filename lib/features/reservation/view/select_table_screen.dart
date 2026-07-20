@@ -33,7 +33,7 @@ class SelectTableScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: AlignmentDirectional.centerStart,
                             child: IconButton(
                               onPressed: Get.back,
                               icon: const Icon(
@@ -44,13 +44,13 @@ class SelectTableScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: AppDimensions.smallSpacing),
-                          const Text(
+                          Text(
                             AppStrings.selectYourTable,
                             textAlign: TextAlign.center,
                             style: AppTextStyles.selectTableTitle,
                           ),
                           const SizedBox(height: AppDimensions.regularSpacing),
-                          const Text(
+                          Text(
                             AppStrings.selectTableSubtitle,
                             textAlign: TextAlign.center,
                             style: AppTextStyles.selectTableSubtitle,
@@ -80,7 +80,7 @@ class SelectTableScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(
+                                  padding: const EdgeInsetsDirectional.fromSTEB(
                                     AppDimensions.contentPadding,
                                     AppDimensions.contentPadding,
                                     AppDimensions.contentPadding,
@@ -109,7 +109,7 @@ class SelectTableScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(
+                                  padding: const EdgeInsetsDirectional.fromSTEB(
                                     AppDimensions.smallSpacing,
                                     0,
                                     AppDimensions.smallSpacing,
@@ -139,7 +139,7 @@ class SelectTableScreen extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
                       AppDimensions.pagePadding,
                       0,
                       AppDimensions.pagePadding,
@@ -166,7 +166,7 @@ class SelectTableScreen extends StatelessWidget {
                             ),
                             idleBackground: AppColors.primaryDark,
                           ),
-                          child: const Text(AppStrings.confirmReservation),
+                          child: Text(AppStrings.confirmReservation),
                         ),
                       ),
                     ),

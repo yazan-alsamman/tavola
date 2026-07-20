@@ -3,8 +3,9 @@ import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/navigation/bottom_nav_navigation.dart';
-import '../../home/controller/home_controller.dart';
+import '../../favorites/repository/favorites_repository.dart';
 import '../../home/model/restaurant_model.dart';
+import '../../home/repository/restaurant_repository.dart';
 import 'reservation_controller.dart';
 
 class SelectRestaurantController extends GetxController {
@@ -14,13 +15,29 @@ class SelectRestaurantController extends GetxController {
   static const int chatNavigationIndex = BottomNavNavigation.chatIndex;
   static const int profileNavigationIndex = BottomNavNavigation.profileIndex;
 
-  final HomeController homeController = Get.find<HomeController>();
+  final RestaurantRepository _restaurantRepository =
+      Get.find<RestaurantRepository>();
+  final FavoritesRepository _favoritesRepository =
+      Get.find<FavoritesRepository>();
 
-  List<RestaurantModel> get restaurants => homeController.restaurants;
+  final RxList<RestaurantModel> restaurants = <RestaurantModel>[].obs;
 
-  bool isFavorite(String id) => homeController.isFavorite(id);
+  @override
+  void onInit() {
+    super.onInit();
+    _favoritesRepository.ensureInitializedSync();
+    reloadLocalizedData();
+  }
 
-  void toggleFavorite(String id) => homeController.toggleFavorite(id);
+  void reloadLocalizedData() {
+    restaurants.assignAll(_restaurantRepository.getRestaurants());
+  }
+
+  bool isFavorite(String id) {
+    return _favoritesRepository.favoriteStates[id] ?? false;
+  }
+
+  void toggleFavorite(String id) => _favoritesRepository.toggleFavorite(id);
 
   void selectRestaurant(RestaurantModel restaurant) {
     if (!restaurant.isAvailable) {

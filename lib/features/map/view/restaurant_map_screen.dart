@@ -55,17 +55,17 @@ class RestaurantMapScreen extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-              const RichAttributionWidget(
+              RichAttributionWidget(
                 attributions: [
                   TextSourceAttribution(AppStrings.openStreetMapContributors),
                 ],
               ),
             ],
           ),
-          Positioned(
+          PositionedDirectional(
             top: AppDimensions.pagePadding,
-            left: AppDimensions.pagePadding,
-            right: AppDimensions.pagePadding,
+            start: AppDimensions.pagePadding,
+            end: AppDimensions.pagePadding,
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
@@ -79,9 +79,9 @@ class RestaurantMapScreen extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            left: AppDimensions.pagePadding,
-            right: AppDimensions.pagePadding,
+          PositionedDirectional(
+            start: AppDimensions.pagePadding,
+            end: AppDimensions.pagePadding,
             bottom: AppDimensions.pagePadding,
             child: Center(
               child: ConstrainedBox(

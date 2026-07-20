@@ -12,11 +12,20 @@ class TableStatusLegend extends StatelessWidget {
 
   final bool overlay;
 
-  static const List<_LegendItem> _items = [
-    _LegendItem(status: TableStatus.available, label: AppStrings.tableAvailable),
-    _LegendItem(status: TableStatus.reserved, label: AppStrings.tableReserved),
-    _LegendItem(status: TableStatus.cleaning, label: AppStrings.tableCleaning),
-  ];
+  static List<_LegendItem> get _items => [
+        _LegendItem(
+          status: TableStatus.available,
+          label: AppStrings.tableAvailable,
+        ),
+        _LegendItem(
+          status: TableStatus.reserved,
+          label: AppStrings.tableReserved,
+        ),
+        _LegendItem(
+          status: TableStatus.cleaning,
+          label: AppStrings.tableCleaning,
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {

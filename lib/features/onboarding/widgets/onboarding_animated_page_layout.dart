@@ -145,64 +145,72 @@ class _OnboardingAnimatedPageLayoutState extends State<OnboardingAnimatedPageLay
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.pagePadding,
       ),
-      child: Column(
-        children: [
-          const Spacer(flex: 2),
-          if (widget.contentTopOffset > 0)
-            SizedBox(height: widget.contentTopOffset),
-          Center(
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: widget.maxWidth),
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (BuildContext context, Widget? child) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizeTransition(
-                        sizeFactor: _previewSize,
-                        alignment: Alignment.topCenter,
-                        child: FadeTransition(
-                          opacity: _previewOpacity,
-                          child: widget.preview,
-                        ),
-                      ),
-                      SizedBox(
-                        height: AppDimensions.regularSpacing *
-                            _spacingFactor.value,
-                      ),
-                      FadeTransition(
-                        opacity: _textOpacity,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.headline,
-                              textAlign: TextAlign.center,
-                              style: headlineStyle,
-                            ),
-                            if (widget.hint != null &&
-                                widget.hint!.isNotEmpty) ...[
-                              const SizedBox(
-                                height: AppDimensions.smallSpacing,
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.contentTopOffset > 0)
+                    SizedBox(height: widget.contentTopOffset),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: widget.maxWidth),
+                      child: AnimatedBuilder(
+                        animation: _controller,
+                        builder: (BuildContext context, Widget? child) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizeTransition(
+                                sizeFactor: _previewSize,
+                                alignment: Alignment.topCenter,
+                                child: FadeTransition(
+                                  opacity: _previewOpacity,
+                                  child: widget.preview,
+                                ),
                               ),
-                              Text(
-                                widget.hint!,
-                                textAlign: TextAlign.center,
-                                style: hintStyle,
+                              SizedBox(
+                                height: AppDimensions.regularSpacing *
+                                    _spacingFactor.value,
+                              ),
+                              FadeTransition(
+                                opacity: _textOpacity,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      widget.headline,
+                                      textAlign: TextAlign.center,
+                                      style: headlineStyle,
+                                    ),
+                                    if (widget.hint != null &&
+                                        widget.hint!.isNotEmpty) ...[
+                                      const SizedBox(
+                                        height: AppDimensions.smallSpacing,
+                                      ),
+                                      Text(
+                                        widget.hint!,
+                                        textAlign: TextAlign.center,
+                                        style: hintStyle,
+                                      ),
+                                    ],
+                                  ],
+                                ),
                               ),
                             ],
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                    ],
-                  );
-                },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          Spacer(flex: widget.bottomSpacerFlex),
-        ],
+          );
+        },
       ),
     );
   }

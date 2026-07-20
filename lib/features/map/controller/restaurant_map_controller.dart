@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../app/routes/app_routes.dart';
-import '../../../core/constants/app_dimensions.dart';
 import '../../../core/navigation/bottom_nav_navigation.dart';
 import '../../details/controller/details_controller.dart';
 import '../../reservation/controller/reservation_controller.dart';
-import '../../home/controller/home_controller.dart';
 import '../../home/model/restaurant_model.dart';
 import '../model/restaurant_map_location.dart';
+import '../repository/restaurant_map_repository.dart';
 
 class RestaurantMapController extends GetxController {
   static const int homeNavigationIndex = BottomNavNavigation.homeIndex;
@@ -17,32 +16,36 @@ class RestaurantMapController extends GetxController {
   static const int chatNavigationIndex = BottomNavNavigation.chatIndex;
   static const int profileNavigationIndex = BottomNavNavigation.profileIndex;
 
-  final HomeController homeController = Get.find<HomeController>();
+  final RestaurantMapRepository _mapRepository =
+      Get.find<RestaurantMapRepository>();
   final TextEditingController searchController = TextEditingController();
   final Rxn<RestaurantModel> selectedRestaurant = Rxn<RestaurantModel>();
   final RxSet<String> savedRestaurantIds = <String>{}.obs;
   final RxString searchQuery = ''.obs;
-
-  late final List<RestaurantMapLocation> restaurantLocations;
+  final RxList<RestaurantMapLocation> restaurantLocations =
+      <RestaurantMapLocation>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    final restaurants = homeController.restaurants;
-    restaurantLocations = [
-      if (restaurants.isNotEmpty)
-        RestaurantMapLocation(
-          restaurant: restaurants.first,
-          latitude: AppDimensions.mapInitialLatitude,
-          longitude: AppDimensions.mapInitialLongitude,
-        ),
-      if (restaurants.length > 1)
-        RestaurantMapLocation(
-          restaurant: restaurants[1],
-          latitude: AppDimensions.mapSecondRestaurantLatitude,
-          longitude: AppDimensions.mapSecondRestaurantLongitude,
-        ),
-    ];
+    reloadLocalizedData();
+  }
+
+  void reloadLocalizedData() {
+    final String? selectedId = selectedRestaurant.value?.id;
+    restaurantLocations.assignAll(_mapRepository.getMapLocations());
+    if (selectedId == null) {
+      return;
+    }
+
+    RestaurantModel? matched;
+    for (final RestaurantMapLocation location in restaurantLocations) {
+      if (location.restaurant.id == selectedId) {
+        matched = location.restaurant;
+        break;
+      }
+    }
+    selectedRestaurant.value = matched;
   }
 
   List<RestaurantMapLocation> get filteredLocations {

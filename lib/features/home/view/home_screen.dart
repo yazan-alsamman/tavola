@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../common/widgets/app_safe_image.dart';
 import '../../../common/widgets/bottom_nav_bar.dart';
 import '../../../common/widgets/custom_app_bar.dart';
 import '../../../common/widgets/hoverable_button.dart';
@@ -13,6 +14,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/navigation/bottom_nav_navigation.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../controller/home_controller.dart';
 import '../widgets/browse_by_occasion_section.dart';
@@ -60,14 +62,18 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     const Icon(Icons.location_on, color: AppColors.primary),
                     const SizedBox(width: AppDimensions.compactSpacing),
-                    const Text(
-                      AppStrings.nearbyLocation,
-                      style: AppTextStyles.locationLabel,
+                    Expanded(
+                      child: Text(
+                        AppStrings.nearbyLocation,
+                        style: AppTextStyles.locationLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: AppDimensions.smallSpacing),
-                const CustomSearchBar(hintText: AppStrings.searchHint),
+                CustomSearchBar(hintText: AppStrings.searchHint),
                 const SizedBox(height: AppDimensions.sectionSpacing),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -76,15 +82,18 @@ class HomeScreen extends StatelessWidget {
                       children: List.generate(
                         controller.restaurantFilters.length,
                         (index) => Padding(
-                          padding: EdgeInsets.only(
-                            right:
+                          padding: EdgeInsetsDirectional.only(
+                            end:
                                 index == controller.restaurantFilters.length - 1
                                 ? 0
                                 : AppDimensions.smallSpacing,
                           ),
-                          child: _filterButton(
-                            controller.restaurantFilters[index],
-                            controller.selectedFilterIndex.value == index,
+                          child: GestureDetector(
+                            onTap: () => controller.selectFilter(index),
+                            child: _filterButton(
+                              controller.restaurantFilters[index],
+                              controller.selectedFilterIndex.value == index,
+                            ),
                           ),
                         ),
                       ),
@@ -102,12 +111,15 @@ class HomeScreen extends StatelessWidget {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          Image.asset(AppImages.r5, fit: BoxFit.cover),
+                          AppSafeImage(
+                            path: AppImages.r5,
+                            fit: BoxFit.cover,
+                          ),
                           Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
+                                begin: AlignmentDirectional.centerStart,
+                                end: AlignmentDirectional.centerEnd,
                                 colors: [
                                   AppColors.primaryDark75,
                                   AppColors.primaryDark22,
@@ -122,39 +134,48 @@ class HomeScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   AppStrings.specialOffer,
                                   style: AppTextStyles.promoTitle,
                                 ),
                                 const SizedBox(
                                   height: AppDimensions.smallSpacing,
                                 ),
-                                const Text(
-                                  AppStrings.specialOfferDescription,
-                                  style: AppTextStyles.promoBody,
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
+                                Flexible(
+                                  child: Text(
+                                    AppStrings.specialOfferDescription,
+                                    style: AppTextStyles.promoBody,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                const Spacer(),
-                                SizedBox(
-                                  height: AppDimensions.iconButtonSize,
-                                  child: HoverableButton(
-                                    child: ElevatedButton(
-                                      onPressed: controller.openReservation,
-                                      style: AppButtonStyles.filledHover(
-                                        ElevatedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal:
-                                                AppDimensions.contentPadding,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              AppDimensions.pillRadius,
+                                const SizedBox(
+                                  height: AppDimensions.smallSpacing,
+                                ),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: SizedBox(
+                                    height: AppDimensions.iconButtonSize,
+                                    child: HoverableButton(
+                                      child: ElevatedButton(
+                                        onPressed: controller.openReservation,
+                                        style: AppButtonStyles.filledHover(
+                                          ElevatedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal:
+                                                  AppDimensions.contentPadding,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                AppDimensions.pillRadius,
+                                              ),
                                             ),
                                           ),
                                         ),
+                                        child: Text(AppStrings.bookNow),
                                       ),
-                                      child: const Text(AppStrings.bookNow),
                                     ),
                                   ),
                                 ),
@@ -167,7 +188,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppDimensions.sectionSpacing),
-                const SectionTitle(title: AppStrings.restaurantsNearYou),
+                SectionTitle(title: AppStrings.restaurantsNearYou),
                 const SizedBox(height: AppDimensions.smallSpacing),
                 Obx(
                   () => ListView.builder(
@@ -200,7 +221,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavBar(
-        currentIndex: HomeController.homeNavigationIndex,
+        currentIndex: BottomNavNavigation.homeIndex,
         onTap: controller.handleBottomNavigation,
       ),
     );

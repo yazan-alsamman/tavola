@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/widgets/app_ltr_text.dart';
 import '../../../common/widgets/reservation_qr_code.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -14,7 +15,7 @@ import 'onboarding_glass_shell.dart';
 class OnboardingConfirmationPreviewContent extends StatelessWidget {
   const OnboardingConfirmationPreviewContent({super.key});
 
-  static final RestaurantModel _restaurant = RestaurantModel(
+  static RestaurantModel get _restaurant => RestaurantModel(
     id: AppStrings.restaurantIdTwo,
     name: AppStrings.otakoSushi,
     cuisine: AppStrings.sushi,
@@ -26,11 +27,11 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
     isAvailable: true,
   );
 
-  static const List<(String, String)> _reservationDetails = [
-    (AppStrings.date, AppStrings.onboardingReservationDateLabel),
-    (AppStrings.time, AppStrings.reservationTime),
-    (AppStrings.guests, AppStrings.onboardingPartyGuestsLabel),
-  ];
+  static List<(String, String)> get _reservationDetails => [
+        (AppStrings.date, AppStrings.onboardingReservationDateLabel),
+        (AppStrings.time, AppStrings.reservationTime),
+        (AppStrings.guests, AppStrings.onboardingPartyGuestsLabel),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,7 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const OnboardingGlassHeader(
+          OnboardingGlassHeader(
             icon: Icons.check_rounded,
             title: AppStrings.confirmed,
             message: AppStrings.onboardingConfirmedMessage,
@@ -56,17 +57,17 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
             child: _ConfirmationCodeRow(),
           ),
           const OnboardingGlassDivider(),
-          const OnboardingGlassSectionLabel(
+          OnboardingGlassSectionLabel(
             text: AppStrings.onboardingContactRestaurant,
           ),
           const SizedBox(height: AppDimensions.compactSpacing),
-          const _QuickActionPill(
+          _QuickActionPill(
             label: AppStrings.onboardingChangeDate,
             icon: Icons.calendar_month_rounded,
             emphasized: true,
           ),
           const SizedBox(height: AppDimensions.compactSpacing),
-          const Row(
+          Row(
             children: [
               Expanded(
                 child: _QuickActionPill(
@@ -105,7 +106,7 @@ class _ConfirmationCodeRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -119,12 +120,12 @@ class _ConfirmationCodeRow extends StatelessWidget {
                 style: AppTextStyles.onboardingSectionHint,
               ),
               SizedBox(height: AppDimensions.compactSpacing),
-              Text(
+              AppLtrText(
                 AppStrings.confirmationReferenceCode,
                 style: AppTextStyles.onboardingCodeField,
               ),
               SizedBox(height: AppDimensions.tinySpacing),
-              Text(
+              AppLtrText(
                 '${AppStrings.referencePrefix}${AppStrings.confirmationReferenceCode}',
                 style: AppTextStyles.onboardingSectionHint,
               ),

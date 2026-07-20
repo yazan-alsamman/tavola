@@ -5,18 +5,19 @@ import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_images.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_text_styles.dart';
+import 'app_safe_image.dart';
 import 'guest_login_button.dart';
 import 'hoverable_button.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
-    this.profileImage,
+    this.profileImagePath,
     this.onNotificationPressed,
     this.onProfilePressed,
   });
 
-  final ImageProvider<Object>? profileImage;
+  final String? profileImagePath;
   final VoidCallback? onNotificationPressed;
   final VoidCallback? onProfilePressed;
 
@@ -67,7 +68,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         const SizedBox(width: AppDimensions.smallSpacing),
         Padding(
-          padding: const EdgeInsets.only(right: AppDimensions.pagePadding),
+          padding: const EdgeInsetsDirectional.only(
+            end: AppDimensions.pagePadding,
+          ),
           child: HoverableButton(
             child: InkResponse(
               onTap: onProfilePressed,
@@ -81,12 +84,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     color: AppColors.border,
                     width: AppDimensions.headerProfileBorderWidth,
                   ),
-                  image: DecorationImage(
-                    image:
-                        profileImage ??
-                        const AssetImage(AppImages.profileAvatar),
-                    fit: BoxFit.cover,
-                  ),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: AppSafeImage(
+                  path: profileImagePath ?? AppImages.profileAvatar,
+                  fit: BoxFit.cover,
+                  width: AppDimensions.headerProfileSize,
+                  height: AppDimensions.headerProfileSize,
+                  fallbackIcon: Icons.person_rounded,
+                  fallbackIconSize: AppDimensions.avatarIconSize,
                 ),
               ),
             ),

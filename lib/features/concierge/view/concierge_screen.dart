@@ -35,7 +35,7 @@ class ConciergeScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
                             DecoratedBox(
                               decoration: BoxDecoration(
@@ -64,11 +64,11 @@ class ConciergeScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: AppDimensions.sectionSpacing),
-                        const ConciergeMessageCard(
+                        ConciergeMessageCard(
                           message: AppStrings.conciergeGreeting,
                         ),
                         const SizedBox(height: AppDimensions.smallSpacing),
-                        const ConciergeMessageCard(
+                        ConciergeMessageCard(
                           message: AppStrings.conciergeRecommendation,
                         ),
                         const SizedBox(height: AppDimensions.sectionSpacing),
@@ -90,7 +90,7 @@ class ConciergeScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            child: const Text(AppStrings.exploreGildedOlive),
+                            child: Text(AppStrings.exploreGildedOlive),
                           ),
                         ),
                       ],
@@ -99,14 +99,19 @@ class ConciergeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppDimensions.conciergeContentMaxWidth,
-                ),
-                child: ConciergeComposer(
-                  controller: controller.messageController,
-                  onSend: controller.sendMessage,
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppDimensions.conciergeContentMaxWidth,
+                  ),
+                  child: ConciergeComposer(
+                    controller: controller.messageController,
+                    onSend: controller.sendMessage,
+                  ),
                 ),
               ),
             ),

@@ -18,7 +18,7 @@ class DetailsAmenitiesSection extends StatelessWidget {
         Text(AppStrings.amenities, style: AppTextStyles.detailsSectionLabel),
         const SizedBox(height: AppDimensions.regularSpacing),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: amenities.map(_buildAmenityChip).toList(),

@@ -41,7 +41,7 @@ class DetailsMenuSection extends StatelessWidget {
                   width: AppDimensions.detailsMenuPriceMinWidth,
                   child: Text(
                     item.price,
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.end,
                     style: AppTextStyles.detailsMenuItemPrice,
                   ),
                 ),

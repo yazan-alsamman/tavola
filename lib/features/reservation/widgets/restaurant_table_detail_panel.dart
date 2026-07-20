@@ -30,7 +30,7 @@ class RestaurantTableDetailPanel extends StatelessWidget {
         curve: Curves.easeOutCubic,
         alignment: Alignment.topCenter,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: const EdgeInsetsDirectional.fromSTEB(
             AppDimensions.contentPadding,
             0,
             AppDimensions.contentPadding,
@@ -70,7 +70,7 @@ class RestaurantTableDetailPanel extends StatelessWidget {
                     style: AppTextStyles.tableSeatCount,
                   ),
                   if (table.isWindowSeat)
-                    const _InfoChip(
+                    _InfoChip(
                       label: AppStrings.windowSeatBadge,
                       background: AppColors.secondaryLight,
                       foreground: AppColors.textPrimary,

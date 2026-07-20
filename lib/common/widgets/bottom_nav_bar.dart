@@ -37,7 +37,7 @@ class BottomNavBar extends StatelessWidget {
         selectedFontSize: AppDimensions.selectedNavFontSize,
         unselectedFontSize: AppDimensions.unselectedNavFontSize,
         elevation: 0,
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home_rounded),

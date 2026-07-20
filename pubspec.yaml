@@ -38,7 +38,6 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   get: ^4.7.3
-  google_fonts: ^8.1.0
   flutter_map: ^8.2.1
   latlong2: ^0.10.1
   flutter_svg: ^2.0.17
@@ -80,6 +79,19 @@ flutter:
 
   assets:
     - assets/images/
+
+  fonts:
+    # LOCKED Hot Restart safety — local Cormorant Garamond only (see AppFonts).
+    - family: CormorantGaramond
+      fonts:
+        - asset: google_fonts/CormorantGaramond-Regular.ttf
+          weight: 400
+        - asset: google_fonts/CormorantGaramond-Medium.ttf
+          weight: 500
+        - asset: google_fonts/CormorantGaramond-SemiBold.ttf
+          weight: 600
+        - asset: google_fonts/CormorantGaramond-Bold.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

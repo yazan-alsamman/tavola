@@ -27,6 +27,7 @@ class AuthPhoneField extends StatelessWidget {
       controller: controller,
       hintText: hintText,
       keyboardType: TextInputType.phone,
+      textDirection: TextDirection.ltr,
       prefixIcon: SizedBox(
         width: AppDimensions.authPhonePrefixWidth,
         height: AppDimensions.authFieldMinHeight,
@@ -40,7 +41,9 @@ class AuthPhoneField extends StatelessWidget {
             Container(
               width: AppDimensions.cardBorderWidth,
               height: AppDimensions.authPhoneDividerHeight,
-              margin: const EdgeInsets.only(left: AppDimensions.compactSpacing),
+              margin: const EdgeInsetsDirectional.only(
+                start: AppDimensions.compactSpacing,
+              ),
               color: AppColors.border,
             ),
           ],

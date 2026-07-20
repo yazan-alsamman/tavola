@@ -17,7 +17,7 @@ class OnboardingRewardsPreviewContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const OnboardingGlassHeader(
+          OnboardingGlassHeader(
             icon: Icons.workspace_premium_rounded,
             title: AppStrings.onboardingLoyaltyRewards,
             message: AppStrings.onboardingRewardsHint,
@@ -55,7 +55,7 @@ class OnboardingRewardsPreviewContent extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppDimensions.compactSpacing),
-          const OnboardingGlassInnerCard(
+          OnboardingGlassInnerCard(
             child: _RewardOfferContent(
               icon: Icons.restaurant_menu_rounded,
               title: AppStrings.onboardingLoyaltyOfferTwoTitle,
@@ -65,7 +65,7 @@ class OnboardingRewardsPreviewContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppDimensions.compactSpacing),
-          const OnboardingGlassInnerCard(
+          OnboardingGlassInnerCard(
             child: _RewardOfferContent(
               icon: Icons.dinner_dining_rounded,
               title: AppStrings.onboardingLoyaltyOfferOneTitle,
@@ -75,12 +75,12 @@ class OnboardingRewardsPreviewContent extends StatelessWidget {
             ),
           ),
           const OnboardingGlassDivider(),
-          const _GlassBenefitRow(
+          _GlassBenefitRow(
             icon: Icons.event_seat_rounded,
             label: AppStrings.onboardingLoyaltyBenefitOne,
           ),
           const SizedBox(height: AppDimensions.compactSpacing),
-          const _GlassBenefitRow(
+          _GlassBenefitRow(
             icon: Icons.cake_rounded,
             label: AppStrings.onboardingLoyaltyBenefitTwo,
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/widgets/app_ltr_text.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
@@ -42,7 +43,7 @@ class DetailsInfoBox extends StatelessWidget {
                   Expanded(
                     child: Text(day.day, style: AppTextStyles.detailsHoursDay),
                   ),
-                  Text(day.hours, style: AppTextStyles.detailsHoursTime),
+                  AppLtrText(day.hours, style: AppTextStyles.detailsHoursTime),
                 ],
               ),
             ),
@@ -55,7 +56,7 @@ class DetailsInfoBox extends StatelessWidget {
           const SizedBox(height: AppDimensions.sectionSpacing),
           Text(AppStrings.contact, style: AppTextStyles.detailsSectionLabel),
           const SizedBox(height: AppDimensions.regularSpacing),
-          Text(phone, style: AppTextStyles.detailsContactPhone),
+          AppLtrText(phone, style: AppTextStyles.detailsContactPhone),
         ],
       ),
     );

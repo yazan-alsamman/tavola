@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../core/utils/app_dependency.dart';
 import '../../features/cuisine_preferences/controller/favorite_cuisines_controller.dart';
 import '../../features/cuisine_preferences/view/favorite_cuisines_screen.dart';
 import '../../features/details/controller/details_controller.dart';
@@ -57,49 +58,49 @@ class AppRoutes {
       name: splash,
       page: () => const SplashScreen(),
       binding: BindingsBuilder(() {
-        Get.put(SplashController());
+        AppDependency.putFresh(SplashController.new);
       }),
     ),
     GetPage(
       name: onboarding,
       page: () => const OnboardingScreen(),
       binding: BindingsBuilder(() {
-        Get.put(OnboardingController());
+        AppDependency.putFresh(OnboardingController.new);
       }),
     ),
     GetPage(
       name: favoriteCuisines,
       page: () => const FavoriteCuisinesScreen(),
       binding: BindingsBuilder(() {
-        Get.put(FavoriteCuisinesController());
+        AppDependency.putFresh(FavoriteCuisinesController.new);
       }),
     ),
     GetPage(
       name: welcome,
       page: () => const WelcomeScreen(),
       binding: BindingsBuilder(() {
-        Get.put(WelcomeController());
+        AppDependency.putFresh(WelcomeController.new);
       }),
     ),
     GetPage(
       name: login,
       page: () => const LoginScreen(),
       binding: BindingsBuilder(() {
-        Get.put(LoginController());
+        AppDependency.putFresh(LoginController.new);
       }),
     ),
     GetPage(
       name: signUp,
       page: () => const SignUpScreen(),
       binding: BindingsBuilder(() {
-        Get.put(SignUpController());
+        AppDependency.putFresh(SignUpController.new);
       }),
     ),
     GetPage(
       name: otp,
       page: () => const OtpScreen(),
       binding: BindingsBuilder(() {
-        Get.put(OtpController());
+        AppDependency.putFresh(OtpController.new);
       }),
     ),
     GetPage(
@@ -113,9 +114,6 @@ class AppRoutes {
       name: profile,
       page: () => const ProfileScreen(),
       binding: BindingsBuilder(() {
-        if (!Get.isRegistered<HomeController>()) {
-          Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
-        }
         Get.lazyPut<ProfileController>(() => ProfileController());
       }),
     ),
@@ -130,9 +128,6 @@ class AppRoutes {
       name: map,
       page: () => const RestaurantMapScreen(),
       binding: BindingsBuilder(() {
-        if (!Get.isRegistered<HomeController>()) {
-          Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
-        }
         Get.lazyPut<RestaurantMapController>(() => RestaurantMapController());
       }),
     ),
@@ -140,9 +135,6 @@ class AppRoutes {
       name: favorites,
       page: () => const FavoritesScreen(),
       binding: BindingsBuilder(() {
-        if (!Get.isRegistered<HomeController>()) {
-          Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
-        }
         Get.lazyPut<FavoritesController>(() => FavoritesController());
       }),
     ),
@@ -150,19 +142,13 @@ class AppRoutes {
       name: reservation,
       page: () => const ReservationScreen(),
       binding: BindingsBuilder(() {
-        if (Get.isRegistered<ReservationController>()) {
-          Get.delete<ReservationController>(force: true);
-        }
-        Get.put(ReservationController());
+        AppDependency.putFresh(ReservationController.new);
       }),
     ),
     GetPage(
       name: selectRestaurant,
       page: () => const SelectRestaurantScreen(),
       binding: BindingsBuilder(() {
-        if (!Get.isRegistered<HomeController>()) {
-          Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
-        }
         Get.lazyPut<SelectRestaurantController>(
           () => SelectRestaurantController(),
         );

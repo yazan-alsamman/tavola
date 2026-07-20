@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'app_safe_image.dart';
 import 'hoverable_card.dart';
 import 'hoverable_button.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_text_styles.dart';
-import '../../core/utils/image_source.dart';
 import '../../features/home/model/restaurant_model.dart';
 
 class RestaurantCard extends StatelessWidget {
@@ -80,18 +80,13 @@ class RestaurantCard extends StatelessWidget {
                       SizedBox(
                         height: imageHeight,
                         width: double.infinity,
-                        child: restaurant.imageUrl.isNetworkImage
-                            ? Image.network(
-                                restaurant.imageUrl,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.asset(
-                                restaurant.imageUrl,
-                                fit: BoxFit.cover,
-                              ),
+                        child: AppSafeImage(
+                          path: restaurant.imageUrl,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                      Positioned(
-                        left: contentPadding,
+                      PositionedDirectional(
+                        start: contentPadding,
                         top: contentPadding,
                         child: Container(
                           padding: EdgeInsets.symmetric(
@@ -116,8 +111,8 @@ class RestaurantCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Positioned(
-                        right: contentPadding,
+                      PositionedDirectional(
+                        end: contentPadding,
                         top: contentPadding,
                         child: SizedBox(
                           width: favoriteButtonSize,
@@ -196,10 +191,14 @@ class RestaurantCard extends StatelessWidget {
                               size: AppDimensions.smallIconSize,
                             ),
                             const SizedBox(width: AppDimensions.compactSpacing),
-                            Text(
-                              restaurant.cuisine,
-                              style: AppTextStyles.label.copyWith(
-                                color: AppColors.textSecondary,
+                            Expanded(
+                              child: Text(
+                                restaurant.cuisine,
+                                style: AppTextStyles.label.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],

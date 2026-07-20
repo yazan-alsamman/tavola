@@ -5,7 +5,7 @@ import '../../../common/widgets/bottom_nav_bar.dart';
 import '../../../common/widgets/custom_app_bar.dart';
 import '../../../common/widgets/favorite_restaurants_panel.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../../home/controller/home_controller.dart';
+import '../../../core/navigation/bottom_nav_navigation.dart';
 import '../controller/favorites_controller.dart';
 
 class FavoritesScreen extends StatelessWidget {
@@ -34,7 +34,7 @@ class FavoritesScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavBar(
-        currentIndex: HomeController.homeNavigationIndex,
+        currentIndex: BottomNavNavigation.homeIndex,
         onTap: controller.handleBottomNavigation,
       ),
     );

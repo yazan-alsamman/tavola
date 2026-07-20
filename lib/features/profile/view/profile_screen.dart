@@ -64,7 +64,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: AppDimensions.smallSpacing),
                         Expanded(
-                          child: const Text(
+                          child: Text(
                             AppStrings.profileUserName,
                             style: AppTextStyles.profileName,
                           ),
@@ -90,14 +90,14 @@ class ProfileScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 AppStrings.partnerOwnerAccess,
                                 style: AppTextStyles.partnerTitle,
                               ),
                               const SizedBox(
                                 height: AppDimensions.smallSpacing,
                               ),
-                              const Text(
+                              Text(
                                 AppStrings.partnerOwnerDescription,
                                 style: AppTextStyles.partnerBody,
                               ),
@@ -105,27 +105,33 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: AppDimensions.smallSpacing),
-                        HoverableButton(
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            style: AppButtonStyles.filledHover(
-                              ElevatedButton.styleFrom(
-                                textStyle: AppTextStyles.buttonLabel(context),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal:
-                                      AppDimensions.buttonHorizontalPadding,
-                                  vertical: AppDimensions.buttonVerticalPadding,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppDimensions.cardRadius,
+                        Flexible(
+                          child: HoverableButton(
+                            child: ElevatedButton(
+                              onPressed: () {},
+                              style: AppButtonStyles.filledHover(
+                                ElevatedButton.styleFrom(
+                                  textStyle: AppTextStyles.buttonLabel(context),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal:
+                                        AppDimensions.buttonHorizontalPadding,
+                                    vertical:
+                                        AppDimensions.buttonVerticalPadding,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimensions.cardRadius,
+                                    ),
                                   ),
                                 ),
+                                idleBackground: AppColors.success,
+                                idleForeground: AppColors.primaryDark,
                               ),
-                              idleBackground: AppColors.success,
-                              idleForeground: AppColors.primaryDark,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(AppStrings.launchBoard),
+                              ),
                             ),
-                            child: const Text(AppStrings.launchBoard),
                           ),
                         ),
                       ],
@@ -146,12 +152,11 @@ class ProfileScreen extends StatelessWidget {
                                 onTap: () =>
                                     controller.selectSection(entry.key),
                                 child: Container(
-                                  margin: EdgeInsets.only(
-                                    left: entry.key == 0
+                                  margin: EdgeInsetsDirectional.only(
+                                    start: entry.key == 0
                                         ? 0
                                         : AppDimensions.smallSpacing / 2,
-                                    right:
-                                        entry.key ==
+                                    end: entry.key ==
                                             controller.sections.length - 1
                                         ? 0
                                         : AppDimensions.smallSpacing / 2,
@@ -233,7 +238,7 @@ class ProfileScreen extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         AppStrings.activeDiningPlacements,
                         style: AppTextStyles.sectionTitle,
                       ),

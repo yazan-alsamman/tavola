@@ -17,16 +17,30 @@ class OtpCodeInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(
-        OtpController.otpLength,
-        (index) => _OtpDigitField(
-          textController: controller.digitControllers[index],
-          focusNode: controller.focusNodes[index],
-          onChanged: (value) => controller.onDigitChanged(index, value),
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final int count = OtpController.otpLength;
+        final double gaps =
+            AppDimensions.smallSpacing * (count - 1);
+        final double fieldSize = ((constraints.maxWidth - gaps) / count)
+            .clamp(
+              AppDimensions.otpFieldMinSize,
+              AppDimensions.otpFieldSize,
+            );
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(
+            count,
+            (index) => _OtpDigitField(
+              textController: controller.digitControllers[index],
+              focusNode: controller.focusNodes[index],
+              onChanged: (value) => controller.onDigitChanged(index, value),
+              size: fieldSize,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -36,17 +50,19 @@ class _OtpDigitField extends StatelessWidget {
     required this.textController,
     required this.focusNode,
     required this.onChanged,
+    required this.size,
   });
 
   final TextEditingController textController;
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: AppDimensions.otpFieldSize,
-      height: AppDimensions.otpFieldSize,
+      width: size,
+      height: size,
       child: TextField(
         controller: textController,
         focusNode: focusNode,

@@ -57,12 +57,14 @@ class AppDimensions {
   static const double compactRestaurantBodyFontSize = 13.0;
   static const double authPasswordIconSize = 22.0;
   static const double otpFieldSize = 48.0;
+  static const double otpFieldMinSize = 36.0;
   static const double otpFieldRadius = 16.0;
   static const double otpFieldFocusedBorderWidth = 1.5;
   static const double otpIconContainerSize = 64.0;
   static const double otpIconSize = 28.0;
   static const double smallIconSize = 16.0;
   static const double mediumIconSize = 20.0;
+  static const double imageFallbackIconSize = 36.0;
   static const double settingsIconSize = 22.0;
   static const double avatarSize = 48.0;
   static const double avatarRadius = 25.0;
@@ -202,7 +204,8 @@ class AppDimensions {
   static const double shadowOffsetY = 4.0;
   static const double shadowOpacity = 0.16;
 
-  static const double splashInitialScale = 0.88;
+  static const double splashInitialScale = 1.0;
+  static const double splashInitialOpacity = 1.0;
   static const double splashShineStart = -1.6;
   static const double splashShineEnd = 1.6;
   static const double splashGradientCenterY = -0.15;
@@ -223,7 +226,77 @@ class AppDimensions {
   static const Duration splashIntroDuration = Duration(milliseconds: 1400);
   static const Duration splashShineDuration = Duration(milliseconds: 2200);
   static const Duration splashShineDelay = Duration(milliseconds: 650);
-  static const Duration splashDisplayDuration = Duration(milliseconds: 4200);
+  static const Duration splashBrandDrawDuration = Duration(milliseconds: 4000);
+  static const Duration splashBrandDrawDelay = Duration(milliseconds: 350);
+  static const Duration splashDisplayDuration = Duration(milliseconds: 4700);
+  /// Fraction into a letter where the T-bar triggers that glyph's reveal.
+  static const double splashLetterRevealAtFactor = 0.02;
+  /// Reveal span as a fraction of letter width (longer = slower, smoother).
+  static const double splashLetterRevealSpanFactor = 0.78;
+  static const double splashLetterRise = 12.0;
+  static const double splashLetterSlide = 6.0;
+  static const double splashLetterStartScale = 0.88;
+  /// Draw-progress ranges for each T-stroke segment (shared by paint + reveal).
+  static const double splashStrokeStemStart = 0.0;
+  static const double splashStrokeStemEnd = 0.22;
+  static const double splashStrokeBarBeforeStart = 0.18;
+  static const double splashStrokeBarBeforeEnd = 0.42;
+  static const double splashStrokeBarAfterStart = 0.48;
+  static const double splashStrokeBarAfterEnd = 0.78;
+  static const double splashStrokeTipStart = 0.72;
+  static const double splashStrokeTipEnd = 1.0;
+  /// Share of bar-after segment spent moving horizontally before the L drop.
+  static const double splashStrokeBarAfterHorizPortion = 0.55;
+  static const double splashBarStartInsetFactor = 0.45;
+  static const double splashBarEndOnLFactor = 0.35;
+  static const double splashTipStartOnLFactor = 0.55;
+  static const double splashLDropBottomFactor = 0.9;
+  static const double splashTStemBottomFactor = 0.92;
+  static const double splashBrandFontSize = 96.0;
+  static const double splashBrandLetterSpacing = 2.0;
+  static const double splashBrandStrokeWidth = 5.5;
+  static const double splashBrandTipStrokeWidth = 4.4;
+  static const double splashBrandSerifDepth = 9.0;
+  static const double splashBrandMaxWidthFactor = 0.9;
+  static const double splashLavenderWidth = 88.0;
+  static const double splashLavenderHeight = 104.0;
+  static const double splashLavenderTiltDegrees = -28.0;
+  /// How far the sprig base sits into the T-bar cut (downward).
+  static const double splashLavenderBarOverlap = 8.0;
+  /// Where the cut/stem sits across the first 'a' (0=left edge, 1=right).
+  static const double splashLavenderOnAFactor = 0.64;
+  /// Fine horizontal tweak in logical px after [splashLavenderOnAFactor].
+  static const double splashLavenderHorizontalNudge = 0.0;
+  static const double splashLavenderBarGapHalf = 12.0;
+  /// Alignment.x of the stem tip in r11 (tip is ~5% from the left edge).
+  static const double splashLavenderPivotX = -0.90;
+  static const double splashLavenderStartScale = 0.78;
+  static const double splashLavenderEndScale = 1.0;
+  static const double splashLavenderSidePadFactor = 0.4;
+  /// Longer window so the sprig eases in slowly with the T cut.
+  static const double splashLavenderRevealSpread = 0.58;
+  /// Draw progress when the T stroke reaches the cut (end of bar-before-gap).
+  static const double splashLavenderRevealAt = 0.34;
+  /// How far above the seat the sprig starts before settling down.
+  static const double splashLavenderDropDistance = 72.0;
+  /// Extra upright tilt at entrance (degrees); settles to [splashLavenderTiltDegrees].
+  static const double splashLavenderEntranceTiltExtra = 14.0;
+  static const double splashTStemWidthFactor = 0.55;
+  static const double splashBarHeightFactor = 0.12;
+  static const double splashLWidthFactor = 0.42;
+  static const double splashTipLengthFactor = 0.92;
+  static const Duration languageSwitchDisplayDuration = Duration(seconds: 3);
+  static const Duration languageSwitchIntroDuration =
+      Duration(milliseconds: 450);
+  static const Duration languageSwitchCoverDelay =
+      Duration(milliseconds: 80);
+  static const Duration languageSwitchApplyDelay =
+      Duration(milliseconds: 500);
+  static const double languageSwitchInitialScale = 0.92;
+  static const double languageSwitchIconContainerSize = 72.0;
+  static const double languageSwitchIconSize = 32.0;
+  static const double languageSwitchProgressSize = 28.0;
+  static const double languageSwitchProgressStroke = 2.5;
 
   static const int onboardingPageCount = 5;
   static const double onboardingDotSize = 8.0;

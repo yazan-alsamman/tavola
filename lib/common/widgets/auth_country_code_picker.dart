@@ -5,6 +5,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_text_styles.dart';
+import 'app_ltr_text.dart';
+import 'app_safe_image.dart';
 
 class AuthCountryCodePicker extends StatelessWidget {
   const AuthCountryCodePicker({
@@ -74,16 +76,18 @@ class AuthCountryCodePicker extends StatelessWidget {
         if (countryCode?.flagUri != null)
           ClipRRect(
             borderRadius: BorderRadius.circular(AppDimensions.tinySpacing),
-            child: Image.asset(
-              countryCode!.flagUri!,
+            child: AppSafeImage(
+              path: countryCode!.flagUri!,
               package: 'country_code_picker',
               width: AppDimensions.authPhoneFlagWidth,
               height: AppDimensions.authPhoneFlagWidth,
               fit: BoxFit.cover,
+              fallbackIcon: Icons.flag_rounded,
+              fallbackIconSize: AppDimensions.smallIconSize,
             ),
           ),
         const SizedBox(width: AppDimensions.tinySpacing),
-        Text(
+        AppLtrText(
           dialCode,
           style: AppTextStyles.authInput,
         ),

@@ -15,7 +15,7 @@ class FavoriteCuisinesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FavoriteCuisinesController controller =
-        Get.put(FavoriteCuisinesController());
+        Get.find<FavoriteCuisinesController>();
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
@@ -44,13 +44,13 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppDimensions.sectionSpacing),
-                  const Text(
+                  Text(
                     AppStrings.favoriteCuisinesTitle,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.favoriteCuisinesTitle,
                   ),
                   const SizedBox(height: AppDimensions.regularSpacing),
-                  const Text(
+                  Text(
                     AppStrings.favoriteCuisinesSubtitle,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.favoriteCuisinesSubtitle,

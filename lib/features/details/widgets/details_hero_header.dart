@@ -6,9 +6,8 @@ import 'package:get/get.dart';
 import '../../../common/widgets/circle_back_button.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_images.dart';
+import '../../../common/widgets/app_safe_image.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/utils/image_source.dart';
 import '../../home/model/restaurant_model.dart';
 import '../model/restaurant_detail_model.dart';
 
@@ -26,19 +25,13 @@ class DetailsHeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String imagePath = restaurant.imageUrl.isEmpty
-        ? AppImages.placeholder
-        : restaurant.imageUrl;
-
     return SizedBox(
       height: AppDimensions.detailsHeroHeight,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          imagePath.isNetworkImage
-              ? Image.network(imagePath, fit: BoxFit.cover)
-              : Image.asset(imagePath, fit: BoxFit.cover),
+          AppSafeImage(path: restaurant.imageUrl, fit: BoxFit.cover),
           Positioned(
             left: 0,
             right: 0,
@@ -100,7 +93,7 @@ class DetailsHeroHeader extends StatelessWidget {
             right: 0,
             bottom: 0,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
+              padding: const EdgeInsetsDirectional.fromSTEB(
                 AppDimensions.pagePadding,
                 AppDimensions.sectionSpacing,
                 AppDimensions.pagePadding,
@@ -125,9 +118,9 @@ class DetailsHeroHeader extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
+          PositionedDirectional(
             top: AppDimensions.pagePadding,
-            left: AppDimensions.pagePadding,
+            start: AppDimensions.pagePadding,
             child: SafeArea(
               child: CircleBackButton(
                 onPressed: Get.back,

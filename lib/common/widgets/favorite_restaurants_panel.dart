@@ -26,7 +26,7 @@ class FavoriteRestaurantsPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
             Icon(
               Icons.favorite_rounded,
@@ -34,9 +34,13 @@ class FavoriteRestaurantsPanel extends StatelessWidget {
               size: AppDimensions.settingsIconSize,
             ),
             SizedBox(width: AppDimensions.smallSpacing),
-            Text(
-              AppStrings.favoriteDiningSelections,
-              style: AppTextStyles.settingsHeader,
+            Expanded(
+              child: Text(
+                AppStrings.favoriteDiningSelections,
+                style: AppTextStyles.settingsHeader,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

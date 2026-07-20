@@ -17,7 +17,7 @@ class ProfilePaymentsPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
             Icon(
               Icons.receipt_long_rounded,
@@ -25,9 +25,13 @@ class ProfilePaymentsPanel extends StatelessWidget {
               size: AppDimensions.settingsIconSize,
             ),
             SizedBox(width: AppDimensions.smallSpacing),
-            Text(
-              AppStrings.paymentHistory,
-              style: AppTextStyles.settingsHeader,
+            Expanded(
+              child: Text(
+                AppStrings.paymentHistory,
+                style: AppTextStyles.settingsHeader,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

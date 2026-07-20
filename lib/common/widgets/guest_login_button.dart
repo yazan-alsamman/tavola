@@ -21,7 +21,9 @@ class GuestLoginButton extends StatelessWidget {
       }
 
       return Padding(
-        padding: const EdgeInsets.only(right: AppDimensions.smallSpacing),
+        padding: const EdgeInsetsDirectional.only(
+          end: AppDimensions.smallSpacing,
+        ),
         child: HoverableButton(
           child: Material(
             color: AppColors.secondaryLight,

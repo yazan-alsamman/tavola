@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../common/widgets/app_ltr_text.dart';
 import '../../../common/widgets/hoverable_button.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -39,39 +40,42 @@ class ReservationConfirmationOverlay extends StatelessWidget {
               ),
             ),
             Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.pagePadding,
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppDimensions.confirmationCardMaxWidth,
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.pagePadding,
+                    vertical: AppDimensions.sectionSpacing,
                   ),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      boxShadow: const [
-                        BoxShadow(
-                          color: AppColors.primaryDark10,
-                          blurRadius: AppDimensions.shadowBlur,
-                          offset: Offset(0, AppDimensions.shadowOffsetY),
-                        ),
-                      ],
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppDimensions.confirmationCardMaxWidth,
                     ),
-                    child: ClipPath(
-                      clipper: const TornPaperClipper(),
-                      child: ColoredBox(
-                        color: AppColors.surface,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _ConfirmationHeader(
-                              referenceCode: confirmation.referenceCode,
-                            ),
-                            _ConfirmationDetails(
-                              confirmation: confirmation,
-                              onDismiss: onDismiss,
-                            ),
-                          ],
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.primaryDark10,
+                            blurRadius: AppDimensions.shadowBlur,
+                            offset: Offset(0, AppDimensions.shadowOffsetY),
+                          ),
+                        ],
+                      ),
+                      child: ClipPath(
+                        clipper: const TornPaperClipper(),
+                        child: ColoredBox(
+                          color: AppColors.surface,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _ConfirmationHeader(
+                                referenceCode: confirmation.referenceCode,
+                              ),
+                              _ConfirmationDetails(
+                                confirmation: confirmation,
+                                onDismiss: onDismiss,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -118,12 +122,12 @@ class _ConfirmationHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppDimensions.regularSpacing),
-          const Text(
+          Text(
             AppStrings.confirmed,
             style: AppTextStyles.confirmationTitle,
           ),
           const SizedBox(height: AppDimensions.smallSpacing),
-          Text(
+          AppLtrText(
             '${AppStrings.referencePrefix}$referenceCode',
             style: AppTextStyles.confirmationReference,
           ),
@@ -145,7 +149,7 @@ class _ConfirmationDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: const EdgeInsetsDirectional.fromSTEB(
         AppDimensions.contentPadding,
         AppDimensions.sectionSpacing,
         AppDimensions.contentPadding,
@@ -195,7 +199,7 @@ class _ConfirmationDetails extends StatelessWidget {
                   ),
                   idleBackground: AppColors.primaryDark,
                 ),
-                child: const Text(AppStrings.dismiss),
+                child: Text(AppStrings.dismiss),
               ),
             ),
           ),

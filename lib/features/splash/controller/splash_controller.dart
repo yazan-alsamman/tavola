@@ -9,6 +9,7 @@ import '../../../core/utils/onboarding_preferences.dart';
 
 class SplashController extends GetxController {
   Timer? _navigationTimer;
+  bool _didNavigate = false;
 
   @override
   void onReady() {
@@ -19,7 +20,15 @@ class SplashController extends GetxController {
   }
 
   Future<void> _navigateAfterSplash() async {
+    if (_didNavigate || isClosed) {
+      return;
+    }
+    _didNavigate = true;
+
     final bool onboardingCompleted = await OnboardingPreferences.isCompleted();
+    if (isClosed) {
+      return;
+    }
     if (!onboardingCompleted) {
       Get.offAllNamed(AppRoutes.onboarding);
       return;
@@ -27,6 +36,9 @@ class SplashController extends GetxController {
 
     final bool cuisinesCompleted =
         await FavoriteCuisinesPreferences.isCompleted();
+    if (isClosed) {
+      return;
+    }
     if (!cuisinesCompleted) {
       Get.offAllNamed(AppRoutes.favoriteCuisines);
       return;
@@ -38,6 +50,7 @@ class SplashController extends GetxController {
   @override
   void onClose() {
     _navigationTimer?.cancel();
+    _navigationTimer = null;
     super.onClose();
   }
 }

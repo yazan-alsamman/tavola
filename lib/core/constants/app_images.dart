@@ -1,6 +1,4 @@
 class AppImages {
-  static const String placeholder = 'assets/images/placeholder.png';
-  static const String logo = 'assets/images/logo.png';
   static const String r1 = 'assets/images/r1.png';
   static const String r2 = 'assets/images/r2.png';
   static const String r3 = 'assets/images/r3.jpg';
@@ -10,4 +8,5 @@ class AppImages {
   static const String profileAvatar = 'assets/images/r7.png';
   static const String welcomeHero = 'assets/images/r8.jpg';
   static const String appIcon = 'assets/images/r10.jpg';
+  static const String splashLavender = 'assets/images/r11.png';
 }

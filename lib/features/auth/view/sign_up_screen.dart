@@ -30,17 +30,17 @@ class SignUpScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: CircleBackButton(onPressed: Get.back),
               ),
               const SizedBox(height: AppDimensions.sectionSpacing),
-              const Text(
+              Text(
                 AppStrings.signUp,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.authScreenTitle,
               ),
               const SizedBox(height: AppDimensions.regularSpacing),
-              const Text(
+              Text(
                 AppStrings.signUpInstruction,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.authInstruction,
@@ -94,7 +94,7 @@ class SignUpScreen extends StatelessWidget {
               Obx(
                 () {
                   if (controller.showPasswordMismatch.value) {
-                    return const AuthFieldHint(
+                    return AuthFieldHint(
                       message: AppStrings.passwordMismatch,
                     );
                   }
@@ -116,7 +116,7 @@ class SignUpScreen extends StatelessWidget {
                     foregroundColor: AppColors.primaryDark,
                     textStyle: AppTextStyles.authLinkEmphasis,
                   ),
-                  child: const Text(AppStrings.login),
+                  child: Text(AppStrings.login),
                 ),
               ),
               const SizedBox(height: AppDimensions.sectionSpacing),
@@ -145,7 +145,7 @@ class SignUpScreen extends StatelessWidget {
                           ? AppColors.textLight
                           : AppColors.textSecondary,
                     ),
-                    child: const Text(AppStrings.signUp),
+                    child: Text(AppStrings.signUp),
                   );
 
                   return SizedBox(

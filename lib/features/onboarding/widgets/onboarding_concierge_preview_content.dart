@@ -18,14 +18,14 @@ class OnboardingConciergePreviewContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const OnboardingGlassHeader(
+          OnboardingGlassHeader(
             icon: Icons.auto_awesome_rounded,
             title: AppStrings.onboardingDinemateTitle,
             message: AppStrings.onboardingDinemateStatus,
           ),
           const OnboardingGlassDivider(),
           Align(
-            alignment: Alignment.centerRight,
+            alignment: AlignmentDirectional.centerEnd,
             child: FractionallySizedBox(
               widthFactor: AppDimensions.conciergeMessageWidthFactor,
               child: Container(
@@ -49,7 +49,7 @@ class OnboardingConciergePreviewContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppDimensions.compactSpacing),
-          const ConciergeMessageCard(
+          ConciergeMessageCard(
             message: AppStrings.onboardingDinemateAiMessage,
           ),
           const OnboardingGlassDivider(),
