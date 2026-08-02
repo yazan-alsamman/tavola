@@ -4,10 +4,7 @@ import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_text_styles.dart';
 
 class AuthFieldHint extends StatelessWidget {
-  const AuthFieldHint({
-    super.key,
-    required this.message,
-  });
+  const AuthFieldHint({super.key, required this.message});
 
   final String message;
 
@@ -20,10 +17,7 @@ class AuthFieldHint extends StatelessWidget {
       ),
       child: Align(
         alignment: AlignmentDirectional.centerStart,
-        child: Text(
-          message,
-          style: AppTextStyles.authFieldErrorHint,
-        ),
+        child: Text(message, style: AppTextStyles.authFieldErrorHint),
       ),
     );
   }

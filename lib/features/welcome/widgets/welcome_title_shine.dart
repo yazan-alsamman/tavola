@@ -44,14 +44,8 @@ class _WelcomeTitleShineState extends State<WelcomeTitleShine>
           blendMode: BlendMode.srcIn,
           shaderCallback: (Rect bounds) {
             return LinearGradient(
-              begin: Alignment(
-                -AppDimensions.welcomeShineBandExtent,
-                0,
-              ),
-              end: Alignment(
-                AppDimensions.welcomeShineBandExtent,
-                0,
-              ),
+              begin: Alignment(-AppDimensions.welcomeShineBandExtent, 0),
+              end: Alignment(AppDimensions.welcomeShineBandExtent, 0),
               colors: const [
                 AppColors.accent,
                 AppColors.accent,

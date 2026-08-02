@@ -108,9 +108,7 @@ class _LiveStatusDotState extends State<_LiveStatusDot>
     _opacityAnimation = Tween<double>(
       begin: AppDimensions.floorPlanLiveDotMinOpacity,
       end: AppDimensions.floorPlanLiveDotMaxOpacity,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

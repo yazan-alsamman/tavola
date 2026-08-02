@@ -7,21 +7,25 @@ import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_text_styles.dart';
 import 'app_ltr_text.dart';
 import 'app_safe_image.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class AuthCountryCodePicker extends StatelessWidget {
   const AuthCountryCodePicker({
     super.key,
     required this.onChanged,
+    this.onInit,
     this.initialCountryCode = AppStrings.authDefaultCountryCode,
   });
 
   final ValueChanged<CountryCode> onChanged;
+  final ValueChanged<CountryCode?>? onInit;
   final String initialCountryCode;
 
   @override
   Widget build(BuildContext context) {
     return CountryCodePicker(
       onChanged: onChanged,
+      onInit: onInit,
       initialSelection: initialCountryCode,
       favorite: AppStrings.authFavoriteDialCodes,
       showCountryOnly: false,
@@ -38,7 +42,7 @@ class AuthCountryCodePicker extends StatelessWidget {
       barrierColor: AppColors.primaryDark22,
       dialogBackgroundColor: AppColors.surface,
       dialogTextStyle: AppTextStyles.authInput,
-      headerTextStyle: AppTextStyles.authScreenTitle,
+      headerTextStyle: AppTextStyles.authDialogTitle,
       searchStyle: AppTextStyles.authInput,
       builder: _buildCompactSelector,
       searchDecoration: InputDecoration(
@@ -82,17 +86,14 @@ class AuthCountryCodePicker extends StatelessWidget {
               width: AppDimensions.authPhoneFlagWidth,
               height: AppDimensions.authPhoneFlagWidth,
               fit: BoxFit.cover,
-              fallbackIcon: Icons.flag_rounded,
+              fallbackIcon: Symbols.flag,
               fallbackIconSize: AppDimensions.smallIconSize,
             ),
           ),
         const SizedBox(width: AppDimensions.tinySpacing),
-        AppLtrText(
-          dialCode,
-          style: AppTextStyles.authInput,
-        ),
+        AppLtrText(dialCode, style: AppTextStyles.authInput),
         const Icon(
-          Icons.keyboard_arrow_down_rounded,
+          Symbols.keyboard_arrow_down,
           color: AppColors.primary,
           size: AppDimensions.smallIconSize,
         ),

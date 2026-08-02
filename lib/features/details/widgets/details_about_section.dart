@@ -14,7 +14,10 @@ class DetailsAboutSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(AppStrings.aboutRestaurant, style: AppTextStyles.detailsSectionLabel),
+        Text(
+          AppStrings.aboutRestaurant,
+          style: AppTextStyles.detailsSectionLabel,
+        ),
         const SizedBox(height: AppDimensions.regularSpacing),
         Text(about, style: AppTextStyles.detailsAboutBody),
       ],

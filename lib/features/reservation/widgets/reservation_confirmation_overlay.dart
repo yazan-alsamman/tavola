@@ -11,6 +11,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../model/reservation_confirmation_model.dart';
 import 'torn_paper_clipper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ReservationConfirmationOverlay extends StatelessWidget {
   const ReservationConfirmationOverlay({
@@ -35,9 +36,7 @@ class ReservationConfirmationOverlay extends StatelessWidget {
                 sigmaX: AppDimensions.confirmationOverlayBlurSigma,
                 sigmaY: AppDimensions.confirmationOverlayBlurSigma,
               ),
-              child: const ColoredBox(
-                color: AppColors.primaryDark22,
-              ),
+              child: const ColoredBox(color: AppColors.primaryDark22),
             ),
             Center(
               child: SafeArea(
@@ -116,16 +115,13 @@ class _ConfirmationHeader extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.check_rounded,
+              Symbols.check,
               color: AppColors.primaryDark,
               size: AppDimensions.confirmationIconSize,
             ),
           ),
           const SizedBox(height: AppDimensions.regularSpacing),
-          Text(
-            AppStrings.confirmed,
-            style: AppTextStyles.confirmationTitle,
-          ),
+          Text(AppStrings.confirmed, style: AppTextStyles.confirmationTitle),
           const SizedBox(height: AppDimensions.smallSpacing),
           AppLtrText(
             '${AppStrings.referencePrefix}$referenceCode',
@@ -199,7 +195,10 @@ class _ConfirmationDetails extends StatelessWidget {
                   ),
                   idleBackground: AppColors.primaryDark,
                 ),
-                child: Text(AppStrings.dismiss),
+                child: Text(
+                  AppStrings.dismiss,
+                  style: AppTextStyles.confirmReservationButton,
+                ),
               ),
             ),
           ),
@@ -210,10 +209,7 @@ class _ConfirmationDetails extends StatelessWidget {
 }
 
 class _ConfirmationDetailRow extends StatelessWidget {
-  const _ConfirmationDetailRow({
-    required this.label,
-    required this.value,
-  });
+  const _ConfirmationDetailRow({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -229,10 +225,7 @@ class _ConfirmationDetailRow extends StatelessWidget {
         children: [
           Expanded(
             flex: AppDimensions.confirmationLabelFlex,
-            child: Text(
-              label,
-              style: AppTextStyles.confirmationDetailLabel,
-            ),
+            child: Text(label, style: AppTextStyles.confirmationDetailLabel),
           ),
           const SizedBox(width: AppDimensions.smallSpacing),
           Expanded(

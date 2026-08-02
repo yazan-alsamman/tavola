@@ -1,10 +1,10 @@
 import '../../../core/constants/app_strings.dart';
-import '../model/payment_transaction_model.dart';
+import '../model/reservation_history_item_model.dart';
 
-/// Provides profile payments, reservation labels, and notification prefs.
+/// Provides profile reservation history, labels, and notification prefs.
 class ProfileRepository {
-  Future<List<PaymentTransactionModel>> fetchPaymentTransactions() async {
-    return getPaymentTransactions();
+  Future<List<ReservationHistoryItemModel>> fetchReservationHistory() async {
+    return getReservationHistory();
   }
 
   Future<List<(String, String)>> fetchReservationDetailLabels() async {
@@ -23,8 +23,8 @@ class ProfileRepository {
     return getSections();
   }
 
-  List<PaymentTransactionModel> getPaymentTransactions() {
-    return List<PaymentTransactionModel>.unmodifiable(_paymentTransactions);
+  List<ReservationHistoryItemModel> getReservationHistory() {
+    return List<ReservationHistoryItemModel>.unmodifiable(_reservationHistory);
   }
 
   List<(String, String)> getReservationDetailLabels() {
@@ -44,56 +44,30 @@ class ProfileRepository {
   }
 
   static List<String> get _sections => [
-        AppStrings.reservations,
-        AppStrings.payments,
-        AppStrings.favorites,
-        AppStrings.settings,
-      ];
-
-  static List<(String, String)> get _notificationOptions => [
-        (
-          AppStrings.reservationReminderNotifications,
-          AppStrings.reservationReminderDescription,
-        ),
-        (AppStrings.tablePreparedNotice, AppStrings.tablePreparedDescription),
-        (AppStrings.lateArrivalInform, AppStrings.lateArrivalDescription),
-        (
-          AppStrings.promotionsConciergeEvents,
-          AppStrings.promotionsConciergeDescription,
-        ),
-      ];
-
-  static List<(String, String)> get _reservationDetails => [
-        (AppStrings.date, AppStrings.reservationDate),
-        (AppStrings.time, AppStrings.reservationTime),
-        (AppStrings.guests, AppStrings.reservationGuests),
-      ];
-
-  static const List<bool> _defaultNotificationSettings = [
-    true,
-    true,
-    true,
-    true,
+    AppStrings.reservations,
+    AppStrings.lastReservations,
+    AppStrings.favorites,
+    AppStrings.settings,
   ];
 
-  static List<PaymentTransactionModel> get _paymentTransactions => [
-        PaymentTransactionModel(
-          restaurantName: AppStrings.oliveAndOak,
-          date: AppStrings.paymentDateOne,
-          amount: AppStrings.paymentAmountOne,
-          status: AppStrings.paymentCompleted,
-        ),
-        PaymentTransactionModel(
-          restaurantName: AppStrings.otakoSushi,
-          date: AppStrings.paymentDateTwo,
-          amount: AppStrings.paymentAmountTwo,
-          status: AppStrings.paymentCompleted,
-        ),
-        PaymentTransactionModel(
-          restaurantName: AppStrings.saffronHouse,
-          date: AppStrings.paymentDateThree,
-          amount: AppStrings.paymentAmountThree,
-          status: AppStrings.paymentCompleted,
-        ),
-      ];
+  /// Matches `GET/PATCH /users/me/preferences` (2 fields only).
+  static List<(String, String)> get _notificationOptions => [
+    (
+      AppStrings.notificationOptInTitle,
+      AppStrings.notificationOptInDescription,
+    ),
+    (AppStrings.marketingOptInTitle, AppStrings.marketingOptInDescription),
+  ];
+
+  static List<(String, String)> get _reservationDetails => [
+    (AppStrings.date, AppStrings.reservationDate),
+    (AppStrings.time, AppStrings.reservationTime),
+    (AppStrings.guests, AppStrings.reservationGuests),
+  ];
+
+  static const List<bool> _defaultNotificationSettings = [true, false];
+
+  /// History comes from [ReservationRepository] (created bookings in-session).
+  static List<ReservationHistoryItemModel> get _reservationHistory =>
+      const <ReservationHistoryItemModel>[];
 }

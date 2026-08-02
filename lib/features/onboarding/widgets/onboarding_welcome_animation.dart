@@ -39,26 +39,24 @@ class _OnboardingWelcomeAnimationState extends State<OnboardingWelcomeAnimation>
     );
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2800),
+      duration: AppDimensions.onboardingWelcomePulseDuration,
     )..repeat(reverse: true);
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3200),
+      duration: AppDimensions.onboardingWelcomeShimmerDuration,
     )..repeat();
 
     _subtitleOpacity = CurvedAnimation(
       parent: _entranceController,
       curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
     );
-    _subtitleSlide = Tween<Offset>(
-      begin: const Offset(0, 0.35),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic),
-      ),
-    );
+    _subtitleSlide =
+        Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic),
+          ),
+        );
     _brandOpacity = CurvedAnimation(
       parent: _entranceController,
       curve: const Interval(0.25, 0.7, curve: Curves.easeOut),
@@ -111,8 +109,12 @@ class _OnboardingWelcomeAnimationState extends State<OnboardingWelcomeAnimation>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.accent.withValues(alpha: 0.45),
-                      AppColors.secondary.withValues(alpha: 0.18),
+                      AppColors.accent.withValues(
+                        alpha: AppDimensions.onboardingWelcomeOrbAccentAlpha,
+                      ),
+                      AppColors.secondary.withValues(
+                        alpha: AppDimensions.onboardingWelcomeOrbSecondaryAlpha,
+                      ),
                       AppColors.transparent,
                     ],
                   ),
@@ -122,12 +124,18 @@ class _OnboardingWelcomeAnimationState extends State<OnboardingWelcomeAnimation>
             Transform.rotate(
               angle: _shimmerController.value * math.pi * 2,
               child: Container(
-                width: AppDimensions.onboardingWelcomeOrbSize * 0.72,
-                height: AppDimensions.onboardingWelcomeOrbSize * 0.72,
+                width:
+                    AppDimensions.onboardingWelcomeOrbSize *
+                    AppDimensions.onboardingWelcomeRingSizeFactor,
+                height:
+                    AppDimensions.onboardingWelcomeOrbSize *
+                    AppDimensions.onboardingWelcomeRingSizeFactor,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.35),
+                    color: AppColors.accent.withValues(
+                      alpha: AppDimensions.onboardingWelcomeRingBorderAlpha,
+                    ),
                   ),
                 ),
               ),
@@ -176,9 +184,11 @@ class _OnboardingWelcomeAnimationState extends State<OnboardingWelcomeAnimation>
                   ),
                   const SizedBox(height: AppDimensions.sectionSpacing),
                   FractionallySizedBox(
-                    widthFactor: 0.42 * _lineWidth.value,
+                    widthFactor:
+                        AppDimensions.onboardingWelcomeLineWidthFactor *
+                        _lineWidth.value,
                     child: Container(
-                      height: 2,
+                      height: AppDimensions.onboardingWelcomeLineHeight,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(
                           AppDimensions.pillRadius,

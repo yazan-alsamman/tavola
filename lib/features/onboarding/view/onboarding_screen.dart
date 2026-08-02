@@ -16,55 +16,60 @@ import '../widgets/onboarding_page_transition.dart';
 import '../widgets/onboarding_rewards_preview_page.dart';
 import '../widgets/onboarding_welcome_page.dart';
 
-class OnboardingScreen extends StatelessWidget {
+class OnboardingScreen extends GetView<OnboardingController> {
   const OnboardingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final OnboardingController controller = Get.find<OnboardingController>();
-
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView(
-                controller: controller.pageController,
-                onPageChanged: controller.onPageChanged,
-                children: [
-                  OnboardingPageTransition(
-                    index: 0,
-                    pageController: controller.pageController,
-                    child: const OnboardingWelcomePage(),
-                  ),
-                  OnboardingPageTransition(
-                    index: 1,
-                    pageController: controller.pageController,
-                    child: const OnboardingBookingPreviewPage(),
-                  ),
-                  OnboardingPageTransition(
-                    index: 2,
-                    pageController: controller.pageController,
-                    child: const OnboardingConfirmationPreviewPage(),
-                  ),
-                  OnboardingPageTransition(
-                    index: 3,
-                    pageController: controller.pageController,
-                    child: const OnboardingRewardsPreviewPage(),
-                  ),
-                  OnboardingPageTransition(
-                    index: 4,
-                    pageController: controller.pageController,
-                    child: const OnboardingDinematePreviewPage(),
-                  ),
-                ],
+        child: Obx(() {
+          final bool isLastPage = controller.isLastPage;
+          return Column(
+            children: [
+              Expanded(
+                child: PageView(
+                  controller: controller.pageController,
+                  onPageChanged: controller.onPageChanged,
+                  children: [
+                    OnboardingPageTransition(
+                      index: 0,
+                      pageController: controller.pageController,
+                      child: const OnboardingWelcomePage(),
+                    ),
+                    OnboardingPageTransition(
+                      index: 1,
+                      pageController: controller.pageController,
+                      child: OnboardingBookingPreviewPage(
+                        pageController: controller.pageController,
+                      ),
+                    ),
+                    OnboardingPageTransition(
+                      index: 2,
+                      pageController: controller.pageController,
+                      child: OnboardingConfirmationPreviewPage(
+                        pageController: controller.pageController,
+                      ),
+                    ),
+                    OnboardingPageTransition(
+                      index: 3,
+                      pageController: controller.pageController,
+                      child: OnboardingRewardsPreviewPage(
+                        pageController: controller.pageController,
+                      ),
+                    ),
+                    OnboardingPageTransition(
+                      index: 4,
+                      pageController: controller.pageController,
+                      child: OnboardingDinematePreviewPage(
+                        pageController: controller.pageController,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Obx(() {
-              final bool isLastPage = controller.isLastPage;
-
-              return Column(
+              Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
@@ -72,7 +77,9 @@ class OnboardingScreen extends StatelessWidget {
                         ? AppDimensions.compactSpacing
                         : AppDimensions.regularSpacing,
                   ),
-                  const OnboardingPageIndicator(),
+                  OnboardingPageIndicator(
+                    currentPage: controller.currentPage.value,
+                  ),
                   SizedBox(
                     height: isLastPage
                         ? AppDimensions.smallSpacing
@@ -92,11 +99,9 @@ class OnboardingScreen extends StatelessWidget {
                               ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primaryDark,
                                 foregroundColor: AppColors.textLight,
-                                textStyle:
-                                    AppTextStyles.onboardingGetStarted,
+                                textStyle: AppTextStyles.onboardingGetStarted,
                                 padding: const EdgeInsets.symmetric(
-                                  vertical:
-                                      AppDimensions.buttonVerticalPadding,
+                                  vertical: AppDimensions.buttonVerticalPadding,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(
@@ -106,26 +111,26 @@ class OnboardingScreen extends StatelessWidget {
                               ),
                               idleBackground: AppColors.primaryDark,
                             ),
-                            child:
-                                Text(AppStrings.onboardingGetStarted),
+                            child: Text(
+                              AppStrings.onboardingGetStarted,
+                              style: AppTextStyles.onboardingGetStarted,
+                            ),
                           ),
                         ),
                       ),
                     )
                   else
-                    const SizedBox(
-                      height: AppDimensions.authFieldMinHeight,
-                    ),
+                    const SizedBox(height: AppDimensions.authFieldMinHeight),
                   SizedBox(
                     height: isLastPage
                         ? AppDimensions.compactSpacing
                         : AppDimensions.pagePadding,
                   ),
                 ],
-              );
-            }),
-          ],
-        ),
+              ),
+            ],
+          );
+        }),
       ),
     );
   }

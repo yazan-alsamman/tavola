@@ -1,11 +1,130 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AppStrings {
+import '../localization/app_translations.dart';
 
+class AppStrings {
   static const String appName = 'TAVOLA';
   static const String appTitle = appName;
   static const String splashTitle = appName;
+
+  static String get networkUnexpectedError =>
+      'Something went wrong. Please try again.'.tr;
+  static String get networkConnectionError =>
+      'Unable to connect. Check your internet connection.'.tr;
+  static String get networkTimeoutError =>
+      'The request timed out. Please try again.'.tr;
+  static String get networkUnauthorizedError =>
+      'Your session has expired. Please sign in again.'.tr;
+
+  /// Guest / missing token when an authenticated action is required
+  /// (e.g. create reservation) — not the same as session expiry.
+  static String get authSignInRequired => 'Please sign in to continue.'.tr;
+
+  /// Public auth (login / register) when the server rejects credentials
+  /// without a usable JSON message body.
+  static String get authCredentialsRejected =>
+      'Invalid phone or password. Please try again.'.tr;
+  static String get networkForbiddenError =>
+      'You do not have permission to perform this action.'.tr;
+  static String get networkNotFoundError =>
+      'The requested resource was not found.'.tr;
+  static String get networkTooManyRequestsError =>
+      'Too many attempts. Please wait and try again.'.tr;
+  static String get invalidAuthSessionPayload =>
+      'Invalid authentication session payload.'.tr;
+  static String get invalidCustomerRegistrationPayload =>
+      'Invalid registration response.'.tr;
+  static String get authRefreshTokenMissing =>
+      'Your session could not be refreshed. Please sign in again.'.tr;
+  static String get networkServerError =>
+      'The server is unavailable right now.'.tr;
+  static String get retry => 'Retry'.tr;
+  static String get cuisineCategoriesEmpty =>
+      'No cuisine categories available.'.tr;
+  static String get occasionCategoriesEmpty =>
+      'No occasion categories available.'.tr;
+  static String get restaurantsEmpty => 'No restaurants available.'.tr;
+
+  /// Shown only when Discovery returns an empty catalog.
+  static String get restaurantsCustomerCatalogUnavailable =>
+      'Restaurant catalog is not available for customer accounts on this API yet.'
+          .tr;
+
+  /// Legacy placeholder — prefer Discovery error messages / [restaurantsEmpty].
+  static String get restaurantApiNotAvailable =>
+      'Restaurant API is not yet available.'.tr;
+  static String get tablesEmpty => 'No tables available.'.tr;
+  static String get tablesNoBranchAvailable =>
+      'No branch is available for this restaurant.'.tr;
+  static String get tablesNoFloorPlanAvailable =>
+      'No floor plan is available for this restaurant.'.tr;
+  static String get invalidRestaurantPayload =>
+      'Invalid restaurant payload.'.tr;
+  static String get invalidBranchPayload => 'Invalid branch payload.'.tr;
+  static String get invalidTablePayload => 'Invalid table payload.'.tr;
+  static String get invalidReservationPayload =>
+      'Invalid reservation payload.'.tr;
+  static String get reservationCreateFailed =>
+      'Could not create reservation. Please try again.'.tr;
+  static String get reservationAvailabilityFailed =>
+      'Could not load table availability. Please try again.'.tr;
+  static String get reservationWindowIncomplete =>
+      'Choose a date, time, and party size before selecting a table.'.tr;
+  static String get cancelReservation => 'Cancel reservation'.tr;
+  static String get rescheduleReservation => 'Reschedule'.tr;
+  static String get areYouSure => 'Are you sure?'.tr;
+  static String get yes => 'Yes'.tr;
+  static String get no => 'No'.tr;
+  static String get confirmCancelReservationMessage =>
+      'Cancel this reservation?'.tr;
+  static String get confirmRescheduleReservationMessage =>
+      'Reschedule this reservation?'.tr;
+  static String get confirmLogOutMessage => 'Log out of your account?'.tr;
+  static String get invalidUserProfilePayload =>
+      'Invalid user profile payload.'.tr;
+  static String get invalidUserPreferencesPayload =>
+      'Invalid user preferences payload.'.tr;
+  static String get userProfileEmpty => 'No profile available.'.tr;
+  static String get avatarUploadFailed =>
+      'Could not upload avatar. Please try again.'.tr;
+  static String get preferencesUpdateFailed =>
+      'Could not update preferences. Please try again.'.tr;
+  static String get profileUpdateFailed =>
+      'Could not update profile. Please try again.'.tr;
+  static String get changeAvatar => 'Change photo'.tr;
+  static String get profileAccountDetails => 'Account details'.tr;
+  static String get profileFirstName => 'First name'.tr;
+  static String get profileLastName => 'Last name'.tr;
+  static String get profilePhone => 'Phone'.tr;
+  static String get profilePreferredCurrency => 'Preferred currency'.tr;
+  static String get profileSaveChanges => 'Save changes'.tr;
+  static String get profileSaved => 'Profile updated.'.tr;
+  static String get notificationOptInTitle => 'Reservation notifications'.tr;
+  static String get notificationOptInDescription =>
+      'Receive reminders and updates about your reservations.'.tr;
+  static String get marketingOptInTitle => 'Marketing & promotions'.tr;
+  static String get marketingOptInDescription =>
+      'Receive offers, events, and concierge invitations.'.tr;
+  static String get notificationsTitle => 'Notifications'.tr;
+  static String get notificationsEmpty => 'No notifications yet.'.tr;
+  static String get notificationsMarkAllRead => 'Mark all read'.tr;
+  static String get notificationBadgeOverflow => '99+'.tr;
+  static String get notificationsSignInPrompt =>
+      'Sign in to view your notifications.'.tr;
+  static String get invalidNotificationPayload =>
+      'Invalid notification payload.'.tr;
+  static String get waitlistJoin => 'Join waitlist'.tr;
+  static String get waitlistJoinSuccess =>
+      'You are on the waitlist. We will notify you when a table opens.'.tr;
+  static String get waitlistJoinFailed =>
+      'Could not join the waitlist. Please try again.'.tr;
+  static String get waitlistCancel => 'Leave waitlist'.tr;
+  static String get waitlistCancelSuccess => 'You have left the waitlist.'.tr;
+  static String get waitlistCancelFailed =>
+      'Could not leave the waitlist. Please try again.'.tr;
+  static String get invalidWaitlistPayload => 'Invalid waitlist payload.'.tr;
+
   /// Splash wordmark matching the branded Tavola lockup.
   static const String splashBrandMark = 'Tavola';
   static String get signIn => 'SIGN IN'.tr;
@@ -19,30 +138,40 @@ class AppStrings {
   static String get onboardingSwipeHint => 'SWIPE TO EXPLORE'.tr;
   static String get onboardingGetStarted => 'GET STARTED'.tr;
   static String get onboardingSelectTable => 'Select your table'.tr;
-  static String get onboardingSelectTableHint => 'Preview the floor plan and pick your favorite seat.'.tr;
+  static String get onboardingSelectTableHint =>
+      'Preview the floor plan and pick your favorite seat.'.tr;
   static String get onboardingPreferredTime => 'Preferred time'.tr;
   static String get onboardingInviteFriends => 'Invite friends'.tr;
-  static String get onboardingInviteFriendsHint => 'Make it a group experience! (Optional)'.tr;
+  static String get onboardingInviteFriendsHint =>
+      'Make it a group experience! (Optional)'.tr;
   static String get onboardingInviteFriendsAction => 'Invite friends'.tr;
   static String get onboardingBookHeadline => 'BOOK IN A FEW TAPS'.tr;
-  static String get onboardingBookHint => 'Live availability, instant booking, and smart reminders.'.tr;
+  static String get onboardingBookHint =>
+      'Live availability, instant booking, and smart reminders.'.tr;
   static String get onboardingConfirmHeadline => 'STAY IN CONTROL'.tr;
-  static String get onboardingConfirmHint => 'Manage details, share your code, and reach your host in one place.'.tr;
+  static String get onboardingConfirmHint =>
+      'Manage details, share your code, and reach your host in one place.'.tr;
   static String get onboardingRewardsHeadline => 'DINE AND EARN'.tr;
-  static String get onboardingRewardsHint => 'Earn points with every reservation and unlock refined dining privileges.'.tr;
-  static String get onboardingDinemateHeadline => 'Not finding a place to eat? Ask Tavola AI'.tr;
-  static String get onboardingDinemateHint => 'Tavola AI guides you to the perfect table for any occasion.'.tr;
+  static String get onboardingRewardsHint =>
+      'Earn points with every reservation and unlock refined dining privileges.'
+          .tr;
+  static String get onboardingDinemateHeadline =>
+      'Not finding a place to eat? Ask Tavola AI'.tr;
+  static String get onboardingDinemateHint =>
+      'Tavola AI guides you to the perfect table for any occasion.'.tr;
   static const String onboardingDinemateTitle = 'Tavola AI';
   static String get onboardingDinemateStatus => 'Always ready'.tr;
   static String get onboardingDinemateComposerHint =>
       'Ask Tavola AI for a recommendation...'.tr;
-  static String get onboardingDinemateUserMessage => 'Find me an intimate table for two tonight.'.tr;
-  static String get onboardingDinemateAiMessage => 'Olive & Oak has a quiet window table at 8:30 PM — soft lighting and garden views.'.tr;
+  static String get onboardingDinemateUserMessage =>
+      'Find me an intimate table for two tonight.'.tr;
+  static String get onboardingDinemateAiMessage =>
+      'Olive & Oak has a quiet window table at 8:30 PM — soft lighting and garden views.'
+          .tr;
   static String get onboardingLoyaltyRewards => 'TAVOLA REWARDS'.tr;
   static String get onboardingLoyaltyTierBronze => 'Host Member'.tr;
   static String get onboardingLoyaltyPointsValue => '120 pts'.tr;
-  static String get onboardingLoyaltyProgressTitle =>
-      'NEXT: SILVER HOST'.tr;
+  static String get onboardingLoyaltyProgressTitle => 'NEXT: SILVER HOST'.tr;
   static String get onboardingLoyaltyPointsToSilver =>
       '380 points remaining'.tr;
   static String get onboardingLoyaltyTotalPointsValue => '120';
@@ -58,25 +187,22 @@ class AppStrings {
   static String get onboardingLoyaltyOfferOnePoints => '180';
   static String get onboardingLoyaltyOfferOnePlace =>
       'Cedar Table · Mayfair'.tr;
-  static String get onboardingLoyaltyOfferOneNeed =>
-      'Need 60 more points'.tr;
+  static String get onboardingLoyaltyOfferOneNeed => 'Need 60 more points'.tr;
   static String get onboardingLoyaltyOfferTwoTitle =>
       'Late seating priority'.tr;
   static String get onboardingLoyaltyOfferTwoPoints => '100';
   static String get onboardingLoyaltyOfferTwoPlace =>
       'Amber Terrace · Hillview'.tr;
   static String get onboardingLoyaltyOfferClaimedTag => 'Unlocked'.tr;
-  static String get onboardingLoyaltyBenefitsTitle =>
-      'Member Privileges'.tr;
+  static String get onboardingLoyaltyBenefitsTitle => 'Member Privileges'.tr;
   static String get onboardingLoyaltyBenefitOne =>
       'Early access to peak tables'.tr;
-  static String get onboardingLoyaltyBenefitTwo =>
-      'Birthday tasting gift'.tr;
-  static String get onboardingConfirmedMessage => 'Your table is reserved at Otako Sushi. Share the code with your guests and arrive ready to unwind.'.tr;
-  static String get onboardingBookingInformations =>
-      'Reservation summary'.tr;
-  static String get onboardingConfirmationCode =>
-      'Confirmation Code'.tr;
+  static String get onboardingLoyaltyBenefitTwo => 'Birthday tasting gift'.tr;
+  static String get onboardingConfirmedMessage =>
+      'Your table is reserved at Otako Sushi. Share the code with your guests and arrive ready to unwind.'
+          .tr;
+  static String get onboardingBookingInformations => 'Reservation summary'.tr;
+  static String get onboardingConfirmationCode => 'Confirmation Code'.tr;
   static String get onboardingQrCodeLabel => 'QR CODE'.tr;
   static String get onboardingContactRestaurant => 'Quick actions'.tr;
   static String get onboardingCall => 'Call'.tr;
@@ -84,14 +210,10 @@ class AppStrings {
   static String get onboardingDirections => 'Directions'.tr;
   static String get onboardingCancel => 'Cancel'.tr;
   static String get onboardingPartyGuestsLabel => '2 Guests'.tr;
-  static String get onboardingReservationDateLabel =>
-      'Fri, 19 Aug'.tr;
-  static String get onboardingBookingDateLabel =>
-      'Fri, 19 Aug · 8:00 PM'.tr;
-  static String get onboardingTableLabel =>
-      'Table V5 · Window'.tr;
-  static String get onboardingRestaurantCuisine =>
-      'Japanese · Sushi'.tr;
+  static String get onboardingReservationDateLabel => 'Fri, 19 Aug'.tr;
+  static String get onboardingBookingDateLabel => 'Fri, 19 Aug · 8:00 PM'.tr;
+  static String get onboardingTableLabel => 'Table V5 · Window'.tr;
+  static String get onboardingRestaurantCuisine => 'Japanese · Sushi'.tr;
   static String get onboardingTableSelectedBadge => 'SELECTED'.tr;
   static String get onboardingTableWindowSeat => 'Window seat'.tr;
   static String get onboardingToday => 'TODAY'.tr;
@@ -114,7 +236,9 @@ class AppStrings {
       'favorite_cuisines_selected';
 
   static String get favoriteCuisinesTitle => 'Favorite Cuisines'.tr;
-  static String get favoriteCuisinesSubtitle => 'Select the cuisines you enjoy the most to get personalized recommendations.'.tr;
+  static String get favoriteCuisinesSubtitle =>
+      'Select the cuisines you enjoy the most to get personalized recommendations.'
+          .tr;
   static String get favoriteCuisinesSkip => 'Skip for Now'.tr;
   static String get favoriteCuisinesConfirm => 'Confirm'.tr;
   static String get cuisineAmerican => 'American'.tr;
@@ -129,14 +253,24 @@ class AppStrings {
   static String get cuisineEmirati => 'Emirati'.tr;
   static String get loginInstruction =>
       'Login with your phone number and password'.tr;
-  static String get signUpInstruction => 'Create your account with your details to start reserving tables.'.tr;
+  static String get signUpInstruction =>
+      'Enter your username and phone number to start reserving tables.'.tr;
   static String get enterYourNumber => 'Enter your number'.tr;
+  static String get enterYourEmail => 'Enter your email'.tr;
   static String get searchCountry => 'Search country'.tr;
 
   static const String authDefaultCountryCode = 'AE';
   static const String authDefaultDialCode = '+971';
+  static const String authDeviceName = appName;
+
+  /// Customer login `deviceType` values allowed by the API.
+  static const String authDeviceTypeMobile = 'mobile';
+  static const String authDeviceTypeWeb = 'web';
+  static const String authDeviceTypeTablet = 'tablet';
+  static const String authDeviceTypeUnknown = 'unknown';
   static const List<String> authFavoriteDialCodes = [
     '+971',
+    '+963',
     '+966',
     '+973',
     '+974',
@@ -144,18 +278,52 @@ class AppStrings {
   ];
 
   static String get enterYourPassword => 'Enter your password'.tr;
-  static String get confirmYourPassword =>
-      'Confirm your password'.tr;
-  static String get passwordMismatch =>
-      'Passwords do not match.'.tr;
-  static String get authMinDigitsHint =>
-      'Enter at least 8 digits.'.tr;
-  static String get authPasswordHint => 'Use at least 8 characters with letters and numbers.'.tr;
+  static String get confirmYourPassword => 'Confirm your password'.tr;
+  static String get passwordMismatch => 'Passwords do not match.'.tr;
+  static String authPhoneMinDigitsHint(int minDigits) =>
+      'Enter at least @count digits.'.trParams(<String, String>{
+        'count': '$minDigits',
+      });
+  static String get authPhoneInvalidHint =>
+      'Enter a valid phone number for the selected country.'.tr;
+  static String get authEmailHint => 'Enter a valid email address.'.tr;
+
+  /// Matches OpenAPI customer password policy (`minLength: 12`, e.g. SecurePass123!).
+  static String get authPasswordHint =>
+      'Use at least 12 characters with upper and lower case letters, a number, and a symbol.'
+          .tr;
+
+  /// Login API minimum length (no create-policy complexity check).
+  static String authLoginPasswordMinHint(int minLength) =>
+      'Password must be at least @count characters.'.trParams(<String, String>{
+        'count': '$minLength',
+      });
   static String get authNameRequiredHint => 'Enter your name.'.tr;
   static String get enterYourName => 'Enter your name'.tr;
+  static String get enterYourUsername => 'Enter your username'.tr;
+  static String get authUsernameRequiredHint => 'Enter your username.'.tr;
+  static String get authRegistrationComplete =>
+      'Account created. Please log in.'.tr;
+  static String get authPasswordResetComplete =>
+      'Password updated. Please log in.'.tr;
+  static String get authUsernameAlreadyTaken =>
+      'This username is already taken. Please choose a different username.'.tr;
+  static String get authPhoneAlreadyRegistered =>
+      'This phone number already has an account. Log in or use another number.'
+          .tr;
+  static String get authUsernameAndPhoneAlreadyUsed =>
+      'This username is taken, and this phone number already has an account. Please change them or log in.'
+          .tr;
+  static String get createPassword => 'Create password'.tr;
+  static String get createPasswordInstruction =>
+      'Choose a password for your account.'.tr;
+  static String get resetPassword => 'Reset password'.tr;
+  static String get resetPasswordInstruction =>
+      'Choose a new password for your account.'.tr;
+  static String get enterNewPassword => 'Enter new password'.tr;
   static String get forgotPassword => 'Forgot password?'.tr;
-  static String get checkYourWhatsapp =>
-      'CHECK YOUR WHATSAPP'.tr;
+  static String get logOut => 'Log out'.tr;
+  static String get checkYourWhatsapp => 'CHECK YOUR WHATSAPP'.tr;
   static String get otpInstruction =>
       'Enter the verification code we sent you.'.tr;
   static String get otpSentTo => 'We sent a code to'.tr;
@@ -199,45 +367,108 @@ class AppStrings {
   }
 
   static String get reservations => 'Reservations'.tr;
-  static String get payments => 'Payments'.tr;
-  static String get activeDiningPlacements =>
-      'Active dining placements'.tr;
-  static String get partnerOwnerAccess =>
-      'Partner&Owner access'.tr;
-  static String get launchBoard => 'Launch Board'.tr;
+  static String get lastReservations => 'Last Reservations'.tr;
+  static String get activeDiningPlacements => 'Active dining placements'.tr;
+  static String get noActiveReservationsTitle => 'No reservations yet'.tr;
+  static String get noActiveReservationsDescription =>
+      'Your upcoming tables will appear here — reserve a place and return for a refined overview of every seating.'
+          .tr;
+  static String get bookATable => 'Book a table'.tr;
+  static String get exploreMoreRestaurants => 'Explore more restaurants'.tr;
+  static String get explore => 'Explore'.tr;
   static String get searchHint => 'Search restaurants'.tr;
-  static String get restaurantsNearYou =>
-      'Restaurants near you'.tr;
+  static String get restaurantsNearYou => 'Restaurants near you'.tr;
   static String get cuisines => 'Cuisines'.tr;
   static String get occasions => 'Occasions'.tr;
   static String get viewAll => 'View all'.tr;
 
   static String get nearbyLocation => 'NEAR DUBAI, JBR'.tr;
-  static String get allRestaurants => 'All Restaurants'.tr;
+  static String get locationNearYou => 'Near you'.tr;
+  static String get locationEnablePrompt =>
+      'Enable location for nearby restaurants'.tr;
+  static String get locationEnableAction => 'Enable'.tr;
+  static String get locationLoading => 'Finding your location…'.tr;
+  static String get locationPermissionDenied =>
+      'Location permission is required for nearby recommendations.'.tr;
+  static String get locationPermissionDeniedForever =>
+      'Location access is blocked. Open Settings to enable it.'.tr;
+  static String get locationPermissionRestricted =>
+      'Location access is restricted on this device.'.tr;
+  static String get locationServiceDisabled =>
+      'Turn on Location Services to see nearby restaurants.'.tr;
+  static String get locationOpenSettings => 'Open Settings'.tr;
+  static String get locationOpenLocationSettings => 'Open Location Settings'.tr;
+  static String get locationUnavailable =>
+      'Your location is currently unavailable.'.tr;
+  static String get locationFetchFailed =>
+      'Could not get your location. Please try again.'.tr;
+  static String get allRestaurants => allRestaurantsKey.tr;
+
+  /// English source key for the "all restaurants" cuisine filter.
+  /// Kept untranslated in filter state so matching stays stable across locales.
+  static const String allRestaurantsKey = 'All Restaurants';
+
+  /// Localizes taxonomy / filter / chip labels (cuisines, occasions, etc.).
+  ///
+  /// Do **not** use for restaurant names, the app brand, or logo copy.
+  ///
+  /// Resolves API casing/slug variants (`business`, `BUSINESS`, `business`)
+  /// against translation keys (`Business`, …). Prefer [alternate] (usually the
+  /// taxonomy slug) when the primary name has no translation entry.
+  static String localizeUiLabel(String value, {String? alternate}) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty && (alternate == null || alternate.trim().isEmpty)) {
+      return value;
+    }
+
+    if (trimmed.isNotEmpty) {
+      final String key = AppTranslations.resolveUiLabelKey(trimmed);
+      if (AppTranslations.hasUiLabelTranslation(key)) {
+        return key.tr;
+      }
+    }
+
+    final String? alt = alternate?.trim();
+    if (alt != null && alt.isNotEmpty) {
+      final String altKey = AppTranslations.resolveUiLabelKey(alt);
+      if (AppTranslations.hasUiLabelTranslation(altKey)) {
+        return altKey.tr;
+      }
+      return altKey.tr;
+    }
+
+    return AppTranslations.resolveUiLabelKey(trimmed).tr;
+  }
+
   static String get japanese => 'Japanese'.tr;
   static String get seafood => 'Seafood'.tr;
   static String get italian => 'Italian'.tr;
   static String get barbecue => 'BBQ'.tr;
   static String get specialOffer => 'Special Offer'.tr;
-  static String get specialOfferDescription => 'Enjoy a premium dinner experience with chef-selected flavors and a warm atmosphere.'.tr;
+  static String get specialOfferDescription =>
+      'Enjoy a premium dinner experience with chef-selected flavors and a warm atmosphere.'
+          .tr;
   static String get bookNow => 'Book now'.tr;
 
   static String get profileUserName => 'Joan Pedro ';
-  static String get partnerOwnerDescription => 'Unlock advanced restaurant management tools, exclusive analytics, and fast access to board controls with premium permissions.'.tr;
-  static String get fineSystemConfigurations =>
-      'Fine System Configurations'.tr;
+  static String get exploreMoreRestaurantsDescription =>
+      'Curated kitchens, seasonal menus, and dining rooms chosen for craft, atmosphere, and lasting quality.'
+          .tr;
+  static String get fineSystemConfigurations => 'Fine System Configurations'.tr;
   static String get reservationReminderNotifications =>
       'Reservation Reminder Notifications'.tr;
-  static String get reservationReminderDescription => 'Receive 2-hour arrival warnings and hosts updates'.tr;
-  static String get tablePreparedNotice =>
-      'Table is Prepared Ready Notice'.tr;
-  static String get tablePreparedDescription => 'Live alert when hostess prepares physical placement'.tr;
-  static String get lateArrivalInform =>
-      'Late Arrival Automatically Inform'.tr;
-  static String get lateArrivalDescription => 'Let hosts know you are delayed via dynamic chat dispatches'.tr;
+  static String get reservationReminderDescription =>
+      'Receive 2-hour arrival warnings and hosts updates'.tr;
+  static String get tablePreparedNotice => 'Table is Prepared Ready Notice'.tr;
+  static String get tablePreparedDescription =>
+      'Live alert when hostess prepares physical placement'.tr;
+  static String get lateArrivalInform => 'Late Arrival Automatically Inform'.tr;
+  static String get lateArrivalDescription =>
+      'Let hosts know you are delayed via dynamic chat dispatches'.tr;
   static String get promotionsConciergeEvents =>
       'Promotions & Concierge Events'.tr;
-  static String get promotionsConciergeDescription => 'Invitations for special Mayfair cellar wine pairings'.tr;
+  static String get promotionsConciergeDescription =>
+      'Invitations for special Mayfair cellar wine pairings'.tr;
   static String get date => 'Date'.tr;
   static String get time => 'Time'.tr;
   static String get guests => 'Guests'.tr;
@@ -252,25 +483,25 @@ class AppStrings {
   static String get contemporary => 'Contemporary'.tr;
   static String get steakhouse => 'Steakhouse'.tr;
   static List<String> get favoriteCuisineOptions => [
-        cuisineAmerican,
-        cuisineCafe,
-        cuisineChinese,
-        cuisineFrench,
-        cuisineGreek,
-        indian,
-        asian,
-        italian,
-        japanese,
-        cuisineLebanese,
-        mediterranean,
-        barbecue,
-        cuisineMexican,
-        seafood,
-        cuisineSpanish,
-        cuisineThai,
-        cuisineEmirati,
-        sushi,
-      ];
+    cuisineAmerican,
+    cuisineCafe,
+    cuisineChinese,
+    cuisineFrench,
+    cuisineGreek,
+    indian,
+    asian,
+    italian,
+    japanese,
+    cuisineLebanese,
+    mediterranean,
+    barbecue,
+    cuisineMexican,
+    seafood,
+    cuisineSpanish,
+    cuisineThai,
+    cuisineEmirati,
+    sushi,
+  ];
   static String get lunch => 'Lunch'.tr;
   static String get dinner => 'Dinner'.tr;
   static String get brunch => 'Brunch'.tr;
@@ -283,12 +514,15 @@ class AppStrings {
   static String get goldenLantern => 'Golden Lantern';
   static String get cedarTable => 'Cedar Table';
   static String get amberTerrace => 'Amber Terrace';
-  static String get saffronDescription => 'Elegant dining experience with refined spice blends.'.tr;
-  static String get otakoDescription =>
-      'Sushi by a special chief.'.tr;
-  static String get oliveDescription => 'Seasonal plates with warm, rustic charm.'.tr;
-  static String get goldenDescription => 'Modern tasting menu with signature pours.'.tr;
-  static String get cedarDescription => 'Comfort-forward plates and perfect steak .'.tr;
+  static String get saffronDescription =>
+      'Elegant dining experience with refined spice blends.'.tr;
+  static String get otakoDescription => 'Sushi by a special chief.'.tr;
+  static String get oliveDescription =>
+      'Seasonal plates with warm, rustic charm.'.tr;
+  static String get goldenDescription =>
+      'Modern tasting menu with signature pours.'.tr;
+  static String get cedarDescription =>
+      'Comfort-forward plates and perfect steak .'.tr;
   static String get amberDescription =>
       'Premium cuts and candlelit evenings.'.tr;
   static String get oldTown => 'Old Town'.tr;
@@ -303,21 +537,23 @@ class AppStrings {
   static String get favoritesScreen => 'Favorites Screen'.tr;
   static String get conciergeScreen => 'Concierge Screen'.tr;
   static String get reservationScreen => 'Reservation Screen'.tr;
-  static String get reservationPreferences =>
-      'Reservation Preferences'.tr;
-  static String get selectYourRestaurant =>
-      'Select your restaurant'.tr;
-  static String get selectYourRestaurantSubtitle => 'Choose your dining destination to begin crafting a refined reservation experience.'.tr;
-  static String get selectRestaurantUnavailable => 'This restaurant is not accepting new reservations right now.'.tr;
-  static String get reservationPreferencesSubtitle => 'Choose your table and preferred seating to craft a refined dining experience.'.tr;
+  static String get reservationPreferences => 'Reservation Preferences'.tr;
+  static String get selectYourRestaurant => 'Select your restaurant'.tr;
+  static String get selectYourRestaurantSubtitle =>
+      'Choose your dining destination to begin crafting a refined reservation experience.'
+          .tr;
+  static String get selectRestaurantUnavailable =>
+      'This restaurant is not accepting new reservations right now.'.tr;
+  static String get reservationPreferencesSubtitle =>
+      'Choose your table and preferred seating to craft a refined dining experience.'
+          .tr;
   static String get numberOfDiners => 'NUMBER OF DINERS'.tr;
-  static String get availableTimeSlots =>
-      'AVAILABLE TIME SLOTS'.tr;
-  static String get experienceDuration =>
-      'EXPERIENCE DURATION'.tr;
+  static String get availableTimeSlots => 'AVAILABLE TIME SLOTS'.tr;
+  static String get experienceDuration => 'EXPERIENCE DURATION'.tr;
   static String get selectDate => 'SELECT DATE'.tr;
   static String get nextSelectTable => 'NEXT : SELECT TABLE'.tr;
-  static String get reservationStepConfirmed => 'Your preferences have been saved. Table selection is next.'.tr;
+  static String get reservationStepConfirmed =>
+      'Your preferences have been saved. Table selection is next.'.tr;
   static String get timeSlotOne => '07:30 PM'.tr;
   static String get timeSlotTwo => '08:00 PM'.tr;
   static String get timeSlotThree => '08:30 PM'.tr;
@@ -326,42 +562,86 @@ class AppStrings {
   static String get durationTwo => '2 H'.tr;
   static String get durationTwoPointFive => '2.5 H'.tr;
   static List<String> get onboardingTimeSlots => [
-        timeSlotOne,
-        timeSlotTwo,
-        timeSlotThree,
-        timeSlotFour,
-      ];
+    timeSlotOne,
+    timeSlotTwo,
+    timeSlotThree,
+    timeSlotFour,
+  ];
 
   static String get selectYourTable => 'Select your table'.tr;
-  static String get selectTableSubtitle => 'Explore the dining room, choose an available table, and confirm your placement.'.tr;
+  static String get selectTableSubtitle =>
+      'Explore the dining room, choose an available table, and confirm your placement.'
+          .tr;
   static String get tableAvailable => 'AVAILABLE'.tr;
   static String get tableReserved => 'RESERVED'.tr;
   static String get tableCleaning => 'CLEANING'.tr;
+
+  /// API protocol status values (not localized).
+  static const String apiTableStatusAvailable = 'available';
+  static const String apiTableStatusOccupied = 'occupied';
+  static const String apiTableStatusReserved = 'reserved';
+  static const String apiTableStatusDisabled = 'disabled';
+  static const String apiTableStatusCleaning = 'cleaning';
+  static const String apiFloorPlanStatusActive = 'active';
+
+  /// API error / payload match tokens (not localized).
+  static const String apiErrorTokenUsername = 'username';
+  static const String apiErrorTokenUnique = 'unique';
+  static const String apiErrorTokenPhone = 'phone';
+  static const String apiErrorTokenUsed = 'used';
+  static const String apiErrorTokenExist = 'exist';
+  static const String apiErrorTokenRegister = 'register';
+  static const String apiAvatarFieldAvatarUrl = 'avatarUrl';
+  static const String apiAvatarFieldAvatar = 'avatar';
+  static const String apiAvatarFieldImageUrl = 'imageUrl';
+  static const String apiAvatarFieldUrl = 'url';
+  static const String apiAvatarFieldPath = 'path';
+  static const String apiHttpSchemePrefix = 'http:';
+  static const String apiHttpsSchemePrefix = 'https:';
   static String get confirmReservation => 'CONFIRM RESERVATION'.tr;
   static String get floorPlan => 'FLOOR PLAN'.tr;
   static String get tableStatus => 'STATUS'.tr;
   static String get floorPlanNowTime => 'NOWTIME'.tr;
   static String get timePeriodAm => 'AM'.tr;
   static String get timePeriodPm => 'PM'.tr;
-  static String get restaurantMapHint => 'Drag and pinch to explore the dining room'.tr;
+  static String get restaurantMapHint =>
+      'Drag and pinch to explore the dining room'.tr;
   static String get windowSeating => 'WINDOW'.tr;
   static String get mainDining => 'DINING'.tr;
   static String get serviceArea => 'SERVICE'.tr;
   static String get entrance => 'ENTRANCE'.tr;
   static String get selectedTableLabel => 'SELECTED TABLE'.tr;
   static String get windowSeatBadge => 'WINDOW'.tr;
-  static String get tableDescriptionA2 => 'Cozy corner table with soft ambient lighting — ideal for relaxed conversations.'.tr;
-  static String get tableDescriptionV5 => 'Intimate two-seat table near the host stand, perfect for a quiet dinner.'.tr;
-  static String get tableDescriptionP6 => 'Spacious booth with lounge seating and generous space for larger gatherings.'.tr;
-  static String get tableDescriptionB4 => 'Corner booth reserved for a birthday celebration — unavailable for new bookings.'.tr;
-  static String get tableDescriptionM8 => 'Large party table reserved for a corporate dinner event this evening.'.tr;
-  static String get tableDescriptionT7 => 'Compact table being reset after lunch service — available again shortly.'.tr;
+  static String get tableDescriptionA2 =>
+      'Cozy corner table with soft ambient lighting — ideal for relaxed conversations.'
+          .tr;
+  static String get tableDescriptionV5 =>
+      'Intimate two-seat table near the host stand, perfect for a quiet dinner.'
+          .tr;
+  static String get tableDescriptionP6 =>
+      'Spacious booth with lounge seating and generous space for larger gatherings.'
+          .tr;
+  static String get tableDescriptionB4 =>
+      'Corner booth reserved for a birthday celebration — unavailable for new bookings.'
+          .tr;
+  static String get tableDescriptionM8 =>
+      'Large party table reserved for a corporate dinner event this evening.'
+          .tr;
+  static String get tableDescriptionT7 =>
+      'Compact table being reset after lunch service — available again shortly.'
+          .tr;
   static String get categoryExample => 'EXAMPLE'.tr;
   static const String textEllipsis = '…';
   static String get seatsSuffix => ' SEATS'.tr;
-  static String get availableTableDescription => 'Premium window seating with panoramic city views, natural daylight, and a quiet atmosphere — ideal for intimate dining and special occasions.'.tr;
-  static String get reservedTableNote => 'Currently held for an arriving party. Please choose another available table.'.tr;
-  static String get cleaningTableNote => 'Being refreshed for the next service. This table will be ready shortly.'.tr;
+  static String get availableTableDescription =>
+      'Premium window seating with panoramic city views, natural daylight, and a quiet atmosphere — ideal for intimate dining and special occasions.'
+          .tr;
+  static String get reservedTableNote =>
+      'Currently held for an arriving party. Please choose another available table.'
+          .tr;
+  static String get cleaningTableNote =>
+      'Being refreshed for the next service. This table will be ready shortly.'
+          .tr;
   static String get reservationConfirmed =>
       'Your table has been reserved successfully.'.tr;
   static String get confirmed => 'Confirmed'.tr;
@@ -377,28 +657,28 @@ class AppStrings {
   static String get tablePrefix => 'Table'.tr;
   static const String dateTimeSeparator = ' · ';
   static List<String> get monthNames => [
-        'January'.tr,
-        'February'.tr,
-        'March'.tr,
-        'April'.tr,
-        'May'.tr,
-        'June'.tr,
-        'July'.tr,
-        'August'.tr,
-        'September'.tr,
-        'October'.tr,
-        'November'.tr,
-        'December'.tr,
-      ];
+    'January'.tr,
+    'February'.tr,
+    'March'.tr,
+    'April'.tr,
+    'May'.tr,
+    'June'.tr,
+    'July'.tr,
+    'August'.tr,
+    'September'.tr,
+    'October'.tr,
+    'November'.tr,
+    'December'.tr,
+  ];
   static List<String> get weekdayNames => [
-        'Monday'.tr,
-        'Tuesday'.tr,
-        'Wednesday'.tr,
-        'Thursday'.tr,
-        'Friday'.tr,
-        'Saturday'.tr,
-        'Sunday'.tr,
-      ];
+    'Monday'.tr,
+    'Tuesday'.tr,
+    'Wednesday'.tr,
+    'Thursday'.tr,
+    'Friday'.tr,
+    'Saturday'.tr,
+    'Sunday'.tr,
+  ];
   static String get selectTablePrompt =>
       'Please select an available table to continue.'.tr;
   static const String tableIdW1 = 'w1';
@@ -422,36 +702,48 @@ class AppStrings {
 
   static const String conciergeTitle = 'TAVOLA Concierge';
   static String get conciergeStatus => 'Active always'.tr;
-  static String get conciergeGreeting => 'Good afternoon. I am your TAVOLA Concierge. I can guide you through premium seating, suggest perfect wine pairings, or coordinate an exquisite table reservation at any of our Mayfair partners.'.tr;
-  static String get conciergeRecommendation => 'Would you like to review availability for "The Gilded Olive" tonight, or shall I recommend some curated Japanese plates at "Oma Sushi"?'.tr;
-  static String get exploreGildedOlive =>
-      'EXPLORE THE GILDED OLIVE'.tr;
-  static String get conciergeMessageHint =>
-      'Message your dining host...'.tr;
-  static String get favoriteDiningSelections =>
-      'Favorite dining selections'.tr;
+  static String get conciergeGreeting =>
+      'Good afternoon. I am your TAVOLA Concierge. I can guide you through premium seating, suggest perfect wine pairings, or coordinate an exquisite table reservation at any of our Mayfair partners.'
+          .tr;
+  static String get conciergeRecommendation =>
+      'Would you like to review availability for "The Gilded Olive" tonight, or shall I recommend some curated Japanese plates at "Oma Sushi"?'
+          .tr;
+  static String get exploreGildedOlive => 'EXPLORE THE GILDED OLIVE'.tr;
+  static String get conciergeMessageHint => 'Message your dining host...'.tr;
+  static String get favoriteDiningSelections => 'Favorite dining selections'.tr;
 
   static String get mapSearchHint => 'Search Resturant'.tr;
+  static String get mapLocationsLoadError =>
+      'Could not load map restaurants. Showing available pins.'.tr;
   static String get reserveTable => 'Reserve Table'.tr;
   static String get viewDetails => 'View Details'.tr;
+  static String get menu => 'Menu'.tr;
   static String get save => 'Save'.tr;
   static String get saved => 'Saved'.tr;
   static const String restaurantSummarySeparator = ' · ';
-  static String get reservationSelected =>
-      'Reservation request selected.'.tr;
+  static String get reservationSelected => 'Reservation request selected.'.tr;
   static String get restaurantDetailsSelected =>
       'Restaurant details selected.'.tr;
   static String get openStreetMapContributors =>
       'OpenStreetMap contributors'.tr;
+  static String get cartoAttribution => 'CARTO'.tr;
+  static String get mapAttributionLabel => 'OpenStreetMap · CARTO'.tr;
 
-  static String get paymentHistory => 'Payment history'.tr;
-  static String get paymentCompleted => 'Completed'.tr;
-  static const String paymentDateOne = '18 Jun 2026';
-  static const String paymentDateTwo = '02 Jun 2026';
-  static const String paymentDateThree = '21 May 2026';
-  static const String paymentAmountOne = '£185.00';
-  static const String paymentAmountTwo = '£96.00';
-  static const String paymentAmountThree = '£142.00';
+  static String get reservationHistory => 'Reservation history'.tr;
+  static String get reservationHistoryCompleted => 'Completed'.tr;
+  static const String reservationHistoryRestaurantIdOne = 'local-olive-oak';
+  static const String reservationHistoryRestaurantIdTwo = 'local-otako-sushi';
+  static const String reservationHistoryRestaurantIdThree =
+      'local-saffron-house';
+  static const String reservationHistoryDateOne = '18 Jun 2026';
+  static const String reservationHistoryDateTwo = '02 Jun 2026';
+  static const String reservationHistoryDateThree = '21 May 2026';
+  static const String reservationHistoryTimeOne = '08:30 PM';
+  static const String reservationHistoryTimeTwo = '07:00 PM';
+  static const String reservationHistoryTimeThree = '09:15 PM';
+  static const String reservationHistoryGuestsOne = '4';
+  static const String reservationHistoryGuestsTwo = '2';
+  static const String reservationHistoryGuestsThree = '6';
 
   static String get browseByOccasion => 'Browse by Occasion'.tr;
   static String get birthday => 'Birthday'.tr;
@@ -474,15 +766,17 @@ class AppStrings {
   static String get dayFriday => 'Friday'.tr;
   static String get daySaturday => 'Saturday'.tr;
   static String get daySunday => 'Sunday'.tr;
-  static String get dayMondayToSaturday =>
-      'Monday–Saturday'.tr;
-  static String get dayTuesdayToThursday =>
-      'Tuesday–Thursday'.tr;
-  static String get dayFridayToSaturday =>
-      'Friday–Saturday'.tr;
+  static String get dayMondayToSaturday => 'Monday–Saturday'.tr;
+  static String get dayTuesdayToThursday => 'Tuesday–Thursday'.tr;
+  static String get dayFridayToSaturday => 'Friday–Saturday'.tr;
   static String get hoursWeekday => '12:00 PM – 11:00 PM'.tr;
   static String get hoursWeekend => '11:00 AM – 12:00 AM'.tr;
   static String get hoursClosed => 'Closed'.tr;
+  static String get ratingUnavailable => '—'.tr;
+  static String get restaurantDetailsEmpty =>
+      'Restaurant details unavailable.'.tr;
+  static String get restaurantDetailsLoadError =>
+      'Could not load restaurant details.'.tr;
   static String get hoursLate => '5:00 PM – 1:00 AM'.tr;
 
   static const String restaurantIdOne = '1';
@@ -501,41 +795,42 @@ class AppStrings {
 
   static String get locationBlurbSaffron => 'Heart of Old Town'.tr;
   static String get locationBlurbOtako => 'Marina waterfront'.tr;
-  static String get locationBlurbOlive =>
-      'Garden Street terrace'.tr;
-  static String get locationBlurbGolden =>
-      'North District loft'.tr;
-  static String get locationBlurbCedar =>
-      'Elm Avenue corner'.tr;
+  static String get locationBlurbOlive => 'Garden Street terrace'.tr;
+  static String get locationBlurbGolden => 'North District loft'.tr;
+  static String get locationBlurbCedar => 'Elm Avenue corner'.tr;
   static String get locationBlurbAmber => 'Hillview rooftop'.tr;
 
-  static String get aboutSaffron => 'Saffron House is a refined sanctuary of spice and warmth, where chef-led tasting journeys unfold beneath soft amber lighting and hand-carved teak panels.'.tr;
-  static String get aboutOtako => 'Otako Sushi celebrates precision and calm — each plate composed with seasonal fish, house-aged soy, and a quiet reverence for Japanese craft.'.tr;
-  static String get aboutOlive => 'Olive & Oak blends Mediterranean ease with rustic elegance, serving sunlit plates that feel like a long afternoon by the coast.'.tr;
-  static String get aboutGolden => 'Golden Lantern is a contemporary Asian house known for bold textures, lacquered finishes, and tasting menus that feel cinematic.'.tr;
-  static String get aboutCedar => 'Cedar Table offers modern comfort dining — polished cuts, hearth-kissed vegetables, and a room designed for lingering conversations.'.tr;
-  static String get aboutAmber => 'Amber Terrace is an elevated steakhouse experience with candlelit tables, cellar pours, and panoramic evening views.'.tr;
+  static String get aboutSaffron =>
+      'Saffron House is a refined sanctuary of spice and warmth, where chef-led tasting journeys unfold beneath soft amber lighting and hand-carved teak panels.'
+          .tr;
+  static String get aboutOtako =>
+      'Otako Sushi celebrates precision and calm — each plate composed with seasonal fish, house-aged soy, and a quiet reverence for Japanese craft.'
+          .tr;
+  static String get aboutOlive =>
+      'Olive & Oak blends Mediterranean ease with rustic elegance, serving sunlit plates that feel like a long afternoon by the coast.'
+          .tr;
+  static String get aboutGolden =>
+      'Golden Lantern is a contemporary Asian house known for bold textures, lacquered finishes, and tasting menus that feel cinematic.'
+          .tr;
+  static String get aboutCedar =>
+      'Cedar Table offers modern comfort dining — polished cuts, hearth-kissed vegetables, and a room designed for lingering conversations.'
+          .tr;
+  static String get aboutAmber =>
+      'Amber Terrace is an elevated steakhouse experience with candlelit tables, cellar pours, and panoramic evening views.'
+          .tr;
 
   static String get amenityValet => 'Valet parking available'.tr;
-  static String get amenityPrivateParking =>
-      'Private parking on-site'.tr;
-  static String get amenityStreetParking =>
-      'Street parking nearby'.tr;
+  static String get amenityPrivateParking => 'Private parking on-site'.tr;
+  static String get amenityStreetParking => 'Street parking nearby'.tr;
   static String get amenityWineCellar => 'Curated wine cellar'.tr;
-  static String get amenityPrivateDining =>
-      'Private dining rooms'.tr;
-  static String get amenityOutdoorTerrace =>
-      'Outdoor terrace seating'.tr;
+  static String get amenityPrivateDining => 'Private dining rooms'.tr;
+  static String get amenityOutdoorTerrace => 'Outdoor terrace seating'.tr;
   static String get amenityLiveMusic => 'Live evening music'.tr;
-  static String get amenityChefTable =>
-      'Chef’s table experiences'.tr;
-  static String get amenityWheelchair =>
-      'Wheelchair accessible'.tr;
-  static String get amenityPetFriendly =>
-      'Pet-friendly patio'.tr;
+  static String get amenityChefTable => 'Chef’s table experiences'.tr;
+  static String get amenityWheelchair => 'Wheelchair accessible'.tr;
+  static String get amenityPetFriendly => 'Pet-friendly patio'.tr;
   static String get amenityRooftop => 'Rooftop lounge access'.tr;
-  static String get amenityKidsFriendly =>
-      'Family-friendly seating'.tr;
+  static String get amenityKidsFriendly => 'Family-friendly seating'.tr;
 
   static const String phoneSaffron = '+971 4 528 0194';
   static const String phoneOtako = '+971 4 391 7742';
@@ -544,92 +839,173 @@ class AppStrings {
   static const String phoneCedar = '+971 4 612 4478';
   static const String phoneAmber = '+971 4 903 1566';
 
-  static String get locationNoteSaffron => 'Nestled along Old Town’s quiet lanes, a short stroll from the heritage square and evening markets.'.tr;
-  static String get locationNoteOtako => 'Overlooking Marina Bay, with waterfront access and a serene approach from the promenade.'.tr;
-  static String get locationNoteOlive => 'Set on Garden Street beside olive trees and soft courtyard lighting for warm arrivals.'.tr;
-  static String get locationNoteGolden => 'Located in North District’s creative loft quarter, easy to reach by metro and rideshare.'.tr;
-  static String get locationNoteCedar => 'On Elm Avenue’s dining strip, with valet at the entrance and shaded sidewalk seating.'.tr;
-  static String get locationNoteAmber => 'Perched above Hillview, offering elevated city views and a discreet rooftop entrance.'.tr;
+  static String get locationNoteSaffron =>
+      'Nestled along Old Town’s quiet lanes, a short stroll from the heritage square and evening markets.'
+          .tr;
+  static String get locationNoteOtako =>
+      'Overlooking Marina Bay, with waterfront access and a serene approach from the promenade.'
+          .tr;
+  static String get locationNoteOlive =>
+      'Set on Garden Street beside olive trees and soft courtyard lighting for warm arrivals.'
+          .tr;
+  static String get locationNoteGolden =>
+      'Located in North District’s creative loft quarter, easy to reach by metro and rideshare.'
+          .tr;
+  static String get locationNoteCedar =>
+      'On Elm Avenue’s dining strip, with valet at the entrance and shaded sidewalk seating.'
+          .tr;
+  static String get locationNoteAmber =>
+      'Perched above Hillview, offering elevated city views and a discreet rooftop entrance.'
+          .tr;
 
   static String get menuSaffronOne => 'Saffron Butter Prawns'.tr;
-  static String get menuSaffronOneDesc => 'Gulf prawns finished with saffron butter and citrus leaf.'.tr;
+  static String get menuSaffronOneDesc =>
+      'Gulf prawns finished with saffron butter and citrus leaf.'.tr;
   static const String menuSaffronOnePrice = '£42';
   static String get menuSaffronTwo => 'Tandoor Spiced Lamb'.tr;
-  static String get menuSaffronTwoDesc => 'Slow-roasted rack with rose petal glaze and mint oil.'.tr;
+  static String get menuSaffronTwoDesc =>
+      'Slow-roasted rack with rose petal glaze and mint oil.'.tr;
   static const String menuSaffronTwoPrice = '£58';
-  static String get menuSaffronThree =>
-      'Cardamom Rice Pudding'.tr;
-  static String get menuSaffronThreeDesc => 'Chilled dessert with pistachio brittle and gold leaf.'.tr;
+  static String get menuSaffronThree => 'Cardamom Rice Pudding'.tr;
+  static String get menuSaffronThreeDesc =>
+      'Chilled dessert with pistachio brittle and gold leaf.'.tr;
   static const String menuSaffronThreePrice = '£18';
   static String get menuSaffronFour => 'Mayfair Thali'.tr;
-  static String get menuSaffronFourDesc => 'Chef’s tasting selection of seasonal spice plates.'.tr;
+  static String get menuSaffronFourDesc =>
+      'Chef’s tasting selection of seasonal spice plates.'.tr;
   static const String menuSaffronFourPrice = '£74';
 
   static String get menuOtakoOne => 'Omakase Duo'.tr;
-  static String get menuOtakoOneDesc => 'Daily chef selection of nigiri and seasonal garnish.'.tr;
+  static String get menuOtakoOneDesc =>
+      'Daily chef selection of nigiri and seasonal garnish.'.tr;
   static const String menuOtakoOnePrice = '£64';
   static String get menuOtakoTwo => 'Torched Wagyu Nigiri'.tr;
-  static String get menuOtakoTwoDesc => 'Seared wagyu with truffle soy and crisp shallot.'.tr;
+  static String get menuOtakoTwoDesc =>
+      'Seared wagyu with truffle soy and crisp shallot.'.tr;
   static const String menuOtakoTwoPrice = '£36';
   static String get menuOtakoThree => 'Yuzu Uni Toast'.tr;
-  static String get menuOtakoThreeDesc => 'Warm brioche, sea urchin, and bright yuzu foam.'.tr;
+  static String get menuOtakoThreeDesc =>
+      'Warm brioche, sea urchin, and bright yuzu foam.'.tr;
   static const String menuOtakoThreePrice = '£29';
   static String get menuOtakoFour => 'Matcha Soft Serve'.tr;
-  static String get menuOtakoFourDesc => 'Ceremonial matcha with black sesame crumble.'.tr;
+  static String get menuOtakoFourDesc =>
+      'Ceremonial matcha with black sesame crumble.'.tr;
   static const String menuOtakoFourPrice = '£16';
 
   static String get menuOliveOne => 'Wood-Fired Mezze'.tr;
-  static String get menuOliveOneDesc => 'Hummus, grilled halloumi, and charcoal flatbread.'.tr;
+  static String get menuOliveOneDesc =>
+      'Hummus, grilled halloumi, and charcoal flatbread.'.tr;
   static const String menuOliveOnePrice = '£28';
   static String get menuOliveTwo => 'Lemon Herb Sea Bass'.tr;
-  static String get menuOliveTwoDesc => 'Whole roasted fish with olive oil and garden herbs.'.tr;
+  static String get menuOliveTwoDesc =>
+      'Whole roasted fish with olive oil and garden herbs.'.tr;
   static const String menuOliveTwoPrice = '£49';
   static String get menuOliveThree => 'Fig & Honey Tart'.tr;
-  static String get menuOliveThreeDesc => 'Caramelized figs, almond cream, and wild honey.'.tr;
+  static String get menuOliveThreeDesc =>
+      'Caramelized figs, almond cream, and wild honey.'.tr;
   static const String menuOliveThreePrice = '£17';
   static String get menuOliveFour => 'Coastal Salad'.tr;
-  static String get menuOliveFourDesc => 'Fennel, citrus, and toasted pine nuts.'.tr;
+  static String get menuOliveFourDesc =>
+      'Fennel, citrus, and toasted pine nuts.'.tr;
   static const String menuOliveFourPrice = '£22';
 
   static String get menuGoldenOne => 'Lacquered Duck'.tr;
-  static String get menuGoldenOneDesc => 'Crisp duck with five-spice glaze and pickled plum.'.tr;
+  static String get menuGoldenOneDesc =>
+      'Crisp duck with five-spice glaze and pickled plum.'.tr;
   static const String menuGoldenOnePrice = '£54';
   static String get menuGoldenTwo => 'Silk Broth Dumplings'.tr;
-  static String get menuGoldenTwoDesc => 'Hand-folded dumplings in aromatic consommé.'.tr;
+  static String get menuGoldenTwoDesc =>
+      'Hand-folded dumplings in aromatic consommé.'.tr;
   static const String menuGoldenTwoPrice = '£31';
   static String get menuGoldenThree => 'Charcoal Aubergine'.tr;
-  static String get menuGoldenThreeDesc => 'Smoked aubergine with miso butter and sesame.'.tr;
+  static String get menuGoldenThreeDesc =>
+      'Smoked aubergine with miso butter and sesame.'.tr;
   static const String menuGoldenThreePrice = '£24';
   static String get menuGoldenFour => 'Black Sesame Mousse'.tr;
-  static String get menuGoldenFourDesc => 'Silky mousse with cherry gel and crisp tuile.'.tr;
+  static String get menuGoldenFourDesc =>
+      'Silky mousse with cherry gel and crisp tuile.'.tr;
   static const String menuGoldenFourPrice = '£19';
 
   static String get menuCedarOne => 'Cedar-Smoked Steak'.tr;
-  static String get menuCedarOneDesc => 'Dry-aged cut finished over cedar smoke.'.tr;
+  static String get menuCedarOneDesc =>
+      'Dry-aged cut finished over cedar smoke.'.tr;
   static const String menuCedarOnePrice = '£68';
-  static String get menuCedarTwo =>
-      'Butter-Poached Lobster'.tr;
-  static String get menuCedarTwoDesc => 'Gentle lobster with herb beurre blanc.'.tr;
+  static String get menuCedarTwo => 'Butter-Poached Lobster'.tr;
+  static String get menuCedarTwoDesc =>
+      'Gentle lobster with herb beurre blanc.'.tr;
   static const String menuCedarTwoPrice = '£72';
   static String get menuCedarThree => 'Roasted Root Bowl'.tr;
-  static String get menuCedarThreeDesc => 'Seasonal roots, hazelnut butter, and thyme.'.tr;
+  static String get menuCedarThreeDesc =>
+      'Seasonal roots, hazelnut butter, and thyme.'.tr;
   static const String menuCedarThreePrice = '£26';
-  static String get menuCedarFour =>
-      'Vanilla Bean Panna Cotta'.tr;
-  static String get menuCedarFourDesc => 'Soft set cream with berry reduction.'.tr;
+  static String get menuCedarFour => 'Vanilla Bean Panna Cotta'.tr;
+  static String get menuCedarFourDesc =>
+      'Soft set cream with berry reduction.'.tr;
   static const String menuCedarFourPrice = '£15';
 
   static String get menuAmberOne => 'Amber Ribeye'.tr;
-  static String get menuAmberOneDesc => 'Prime ribeye with bone marrow butter.'.tr;
+  static String get menuAmberOneDesc =>
+      'Prime ribeye with bone marrow butter.'.tr;
   static const String menuAmberOnePrice = '£76';
   static String get menuAmberTwo => 'Truffle Fries'.tr;
-  static String get menuAmberTwoDesc => 'Crisp fries finished with aged parmesan.'.tr;
+  static String get menuAmberTwoDesc =>
+      'Crisp fries finished with aged parmesan.'.tr;
   static const String menuAmberTwoPrice = '£18';
   static String get menuAmberThree => 'Ember Salad'.tr;
-  static String get menuAmberThreeDesc => 'Charred greens with citrus vinaigrette.'.tr;
+  static String get menuAmberThreeDesc =>
+      'Charred greens with citrus vinaigrette.'.tr;
   static const String menuAmberThreePrice = '£21';
-  static String get menuAmberFour =>
-      'Dark Chocolate Soufflé'.tr;
-  static String get menuAmberFourDesc => 'Warm soufflé with salted caramel cream.'.tr;
+  static String get menuAmberFour => 'Dark Chocolate Soufflé'.tr;
+  static String get menuAmberFourDesc =>
+      'Warm soufflé with salted caramel cream.'.tr;
   static const String menuAmberFourPrice = '£20';
+
+  static String get menuSharedOne => 'Burrata Caprese'.tr;
+  static String get menuSharedOneDesc =>
+      'Creamy burrata with heirloom tomatoes and basil oil.'.tr;
+  static const String menuSharedOnePrice = '£24';
+  static String get menuSharedTwo => 'Crispy Calamari'.tr;
+  static String get menuSharedTwoDesc =>
+      'Lightly fried squid with lemon aioli and chili salt.'.tr;
+  static const String menuSharedTwoPrice = '£22';
+  static String get menuSharedThree => 'Mushroom Risotto'.tr;
+  static String get menuSharedThreeDesc =>
+      'Arborio rice with wild mushrooms and aged parmesan.'.tr;
+  static const String menuSharedThreePrice = '£32';
+  static String get menuSharedFour => 'Grilled Octopus'.tr;
+  static String get menuSharedFourDesc =>
+      'Charred octopus with smoked paprika and olive salsa.'.tr;
+  static const String menuSharedFourPrice = '£38';
+  static String get menuSharedFive => 'Beef Tartare'.tr;
+  static String get menuSharedFiveDesc =>
+      'Hand-cut beef with quail egg, capers, and toasted brioche.'.tr;
+  static const String menuSharedFivePrice = '£34';
+  static String get menuSharedSix => 'Lobster Mac'.tr;
+  static String get menuSharedSixDesc =>
+      'Baked macaroni with lobster, gruyère, and herb crumb.'.tr;
+  static const String menuSharedSixPrice = '£46';
+  static String get menuSharedSeven => 'Seared Scallops'.tr;
+  static String get menuSharedSevenDesc =>
+      'Caramelized scallops with cauliflower purée and brown butter.'.tr;
+  static const String menuSharedSevenPrice = '£41';
+  static String get menuSharedEight => 'Lamb Kofta'.tr;
+  static String get menuSharedEightDesc =>
+      'Spiced lamb skewers with mint yogurt and flatbread.'.tr;
+  static const String menuSharedEightPrice = '£29';
+  static String get menuSharedNine => 'Prawn Linguine'.tr;
+  static String get menuSharedNineDesc =>
+      'Fresh linguine with garlic prawns and chili oil.'.tr;
+  static const String menuSharedNinePrice = '£33';
+  static String get menuSharedTen => 'Duck Confit'.tr;
+  static String get menuSharedTenDesc =>
+      'Slow-cooked duck leg with orange glaze and greens.'.tr;
+  static const String menuSharedTenPrice = '£44';
+  static String get menuSharedEleven => 'Tiramisu'.tr;
+  static String get menuSharedElevenDesc =>
+      'Classic espresso tiramisu with mascarpone cream.'.tr;
+  static const String menuSharedElevenPrice = '£14';
+  static String get menuSharedTwelve => 'Citrus Panna Cotta'.tr;
+  static String get menuSharedTwelveDesc =>
+      'Vanilla panna cotta with blood-orange syrup.'.tr;
+  static const String menuSharedTwelvePrice = '£13';
 }

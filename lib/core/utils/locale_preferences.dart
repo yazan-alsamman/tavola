@@ -17,6 +17,9 @@ class LocalePreferences {
 
   static Future<void> saveLocale(Locale locale) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppStrings.localeLanguageCodeKey, locale.languageCode);
+    await prefs.setString(
+      AppStrings.localeLanguageCodeKey,
+      locale.languageCode,
+    );
   }
 }

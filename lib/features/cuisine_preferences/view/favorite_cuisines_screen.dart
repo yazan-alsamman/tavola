@@ -8,6 +8,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../controller/favorite_cuisines_controller.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class FavoriteCuisinesScreen extends StatelessWidget {
   const FavoriteCuisinesScreen({super.key});
@@ -38,7 +39,7 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.restaurant_menu_rounded,
+                      Symbols.restaurant_menu,
                       size: AppDimensions.favoriteCuisinesIconSize,
                       color: AppColors.primaryDark,
                     ),
@@ -58,20 +59,61 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                   const SizedBox(height: AppDimensions.sectionSpacing),
                   Expanded(
                     flex: 8,
-                    child: SingleChildScrollView(
-                      child: Obx(() {
-                        return Wrap(
+                    child: Obx(() {
+                      if (controller.isLoadingCuisineCategories.value) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final String? error =
+                          controller.cuisineCategoriesError.value;
+                      if (error != null) {
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                error,
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.favoriteCuisinesSubtitle,
+                              ),
+                              const SizedBox(
+                                height: AppDimensions.regularSpacing,
+                              ),
+                              TextButton(
+                                onPressed: controller.loadCuisineCategories,
+                                style: TextButton.styleFrom(
+                                  textStyle: AppTextStyles.authLinkEmphasis,
+                                ),
+                                child: Text(
+                                  AppStrings.retry,
+                                  style: AppTextStyles.authLinkEmphasis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      if (controller.cuisineOptions.isEmpty) {
+                        return Center(
+                          child: Text(
+                            AppStrings.cuisineCategoriesEmpty,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.favoriteCuisinesSubtitle,
+                          ),
+                        );
+                      }
+
+                      return SingleChildScrollView(
+                        child: Wrap(
                           alignment: WrapAlignment.center,
                           spacing: AppDimensions.favoriteCuisinesChipSpacing,
-                          runSpacing:
-                              AppDimensions.favoriteCuisinesChipSpacing,
-                          children: AppStrings.favoriteCuisineOptions.map((
-                            String cuisine,
-                          ) {
-                            final bool selected =
-                                controller.isSelected(cuisine);
+                          runSpacing: AppDimensions.favoriteCuisinesChipSpacing,
+                          children: controller.cuisineOptions.map((cuisine) {
+                            final String name = cuisine.name;
+                            final bool selected = controller.isSelected(name);
                             return GestureDetector(
-                              onTap: () => controller.toggleCuisine(cuisine),
+                              onTap: () => controller.toggleCuisine(name),
                               child: AnimatedContainer(
                                 duration: AppDimensions.hoverDuration,
                                 curve: Curves.easeOutCubic,
@@ -95,21 +137,23 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                                   ),
                                 ),
                                 child: Text(
-                                  cuisine,
-                                  style:
-                                      AppTextStyles.favoriteCuisineChip
-                                          .copyWith(
-                                    color: selected
-                                        ? AppColors.textLight
-                                        : AppColors.textPrimary,
+                                  AppStrings.localizeUiLabel(
+                                    name,
+                                    alternate: cuisine.slug,
                                   ),
+                                  style: AppTextStyles.favoriteCuisineChip
+                                      .copyWith(
+                                        color: selected
+                                            ? AppColors.textLight
+                                            : AppColors.textPrimary,
+                                      ),
                                 ),
                               ),
                             );
                           }).toList(),
-                        );
-                      }),
-                    ),
+                        ),
+                      );
+                    }),
                   ),
                   const SizedBox(height: AppDimensions.sectionSpacing),
                   Obx(() {
@@ -141,6 +185,7 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                             hasSelection
                                 ? AppStrings.favoriteCuisinesConfirm
                                 : AppStrings.favoriteCuisinesSkip,
+                            style: AppTextStyles.favoriteCuisinesSkip,
                           ),
                         ),
                       ),

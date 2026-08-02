@@ -11,22 +11,27 @@ import '../../features/profile/controller/profile_controller.dart';
 import '../../features/reservation/controller/reservation_controller.dart';
 import '../../features/reservation/controller/select_restaurant_controller.dart';
 import '../../features/reservation/controller/select_table_controller.dart';
+import '../../app/theme/app_theme.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../utils/locale_preferences.dart';
 
 class LocaleController extends GetxController {
-  final RxString languageCode = 'en'.obs;
+  /// Canonical app language codes — the single source for locale literals.
+  static const String englishCode = 'en';
+  static const String arabicCode = 'ar';
+
+  final RxString languageCode = englishCode.obs;
   final RxBool isSwitchingLanguage = false.obs;
 
-  bool get isArabic => languageCode.value == 'ar';
+  bool get isArabic => languageCode.value == arabicCode;
 
   void syncFromLocale(Locale? locale) {
-    languageCode.value = locale?.languageCode ?? 'en';
+    languageCode.value = locale?.languageCode ?? englishCode;
   }
 
   Future<void> setArabic(bool enabled) async {
-    final Locale locale = Locale(enabled ? 'ar' : 'en');
+    final Locale locale = Locale(enabled ? arabicCode : englishCode);
     await applyLocale(locale);
   }
 
@@ -39,6 +44,7 @@ class LocaleController extends GetxController {
     }
 
     isSwitchingLanguage.value = true;
+    bool openedOverlay = false;
     try {
       // Cover the UI first so the locale rebuild is never visible underneath.
       Get.dialog(
@@ -47,22 +53,26 @@ class LocaleController extends GetxController {
         barrierColor: AppColors.scaffold,
         useSafeArea: false,
       );
+      openedOverlay = true;
+
       await _waitUntilOverlayVisible();
       await Future<void>.delayed(AppDimensions.languageSwitchApplyDelay);
 
-      languageCode.value = locale.languageCode;
       await LocalePreferences.saveLocale(locale);
       await Get.updateLocale(locale);
+      // Notify listeners only after Get.locale / .tr are on the new language.
+      languageCode.value = locale.languageCode;
       _reloadLocalizedControllers();
+      Get.changeTheme(AppTheme.themeFor(locale));
 
       final Duration remainingDisplay =
           AppDimensions.languageSwitchDisplayDuration -
           AppDimensions.languageSwitchApplyDelay;
       await Future<void>.delayed(remainingDisplay);
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
     } finally {
+      if (openedOverlay) {
+        _dismissLanguageOverlay();
+      }
       isSwitchingLanguage.value = false;
     }
   }
@@ -73,30 +83,65 @@ class LocaleController extends GetxController {
     await Future<void>.delayed(AppDimensions.languageSwitchCoverDelay);
   }
 
+  /// Closes only a still-open GetX dialog.
+  ///
+  /// Never use `Navigator.pop(rootNavigator: true)` here: after
+  /// `Get.changeTheme` / `updateLocale` the dialog route may already be gone
+  /// while `isDialogOpen` is briefly stale — a root pop then removes Profile
+  /// (or Home) and looks like a crash on en↔ar switch.
+  void _dismissLanguageOverlay() {
+    try {
+      if (Get.isDialogOpen == true) {
+        Get.back();
+      }
+    } catch (_) {
+      // Overlay already gone / navigator mid-transition.
+    }
+  }
+
+  /// Refreshes live feature controllers after locale/theme swap.
+  ///
+  /// Skips closed / late-removed route controllers (`putFresh`).
   void _reloadLocalizedControllers() {
-    if (Get.isRegistered<HomeController>()) {
-      Get.find<HomeController>().reloadLocalizedData();
+    _reloadIfAlive<HomeController>(
+      (HomeController controller) => controller.reloadLocalizedData(),
+    );
+    _reloadIfAlive<ProfileController>(
+      (ProfileController controller) => controller.reloadLocalizedData(),
+    );
+    _reloadIfAlive<FavoritesController>(
+      (FavoritesController controller) => controller.reloadLocalizedData(),
+    );
+    _reloadIfAlive<RestaurantMapController>(
+      (RestaurantMapController controller) => controller.reloadLocalizedData(),
+    );
+    _reloadIfAlive<SelectRestaurantController>(
+      (SelectRestaurantController controller) =>
+          controller.reloadLocalizedData(),
+    );
+    _reloadIfAlive<ReservationController>(
+      (ReservationController controller) => controller.reloadLocalizedData(),
+    );
+    _reloadIfAlive<SelectTableController>(
+      (SelectTableController controller) => controller.reloadLocalizedData(),
+    );
+    _reloadIfAlive<DetailsController>(
+      (DetailsController controller) => controller.reloadLocalizedData(),
+    );
+  }
+
+  void _reloadIfAlive<T extends GetxController>(void Function(T) reload) {
+    if (!Get.isRegistered<T>()) {
+      return;
     }
-    if (Get.isRegistered<ProfileController>()) {
-      Get.find<ProfileController>().reloadLocalizedData();
+    final T controller = Get.find<T>();
+    if (controller.isClosed) {
+      return;
     }
-    if (Get.isRegistered<FavoritesController>()) {
-      Get.find<FavoritesController>().reloadLocalizedData();
-    }
-    if (Get.isRegistered<RestaurantMapController>()) {
-      Get.find<RestaurantMapController>().reloadLocalizedData();
-    }
-    if (Get.isRegistered<SelectRestaurantController>()) {
-      Get.find<SelectRestaurantController>().reloadLocalizedData();
-    }
-    if (Get.isRegistered<ReservationController>()) {
-      Get.find<ReservationController>().reloadLocalizedData();
-    }
-    if (Get.isRegistered<SelectTableController>()) {
-      Get.find<SelectTableController>().reloadLocalizedData();
-    }
-    if (Get.isRegistered<DetailsController>()) {
-      Get.find<DetailsController>().reloadLocalizedData();
+    try {
+      reload(controller);
+    } catch (_) {
+      // Stale GetBuilder listeners / lateRemove races must not abort locale swap.
     }
   }
 }

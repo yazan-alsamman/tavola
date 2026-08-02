@@ -1,5 +1,1 @@
-enum TableStatus {
-  available,
-  reserved,
-  cleaning,
-}
+enum TableStatus { available, reserved, cleaning }

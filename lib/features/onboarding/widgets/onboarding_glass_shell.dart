@@ -42,7 +42,9 @@ class OnboardingGlassShell extends StatelessWidget {
               end: -AppDimensions.onboardingConciergeGlowOrbSize * 0.25,
               child: OnboardingGlassGlowOrb(
                 size: AppDimensions.onboardingConciergeGlowOrbSize,
-                color: AppColors.accent.withValues(alpha: 0.34),
+                color: AppColors.accent.withValues(
+                  alpha: AppDimensions.onboardingGlassAccentOrbAlpha,
+                ),
               ),
             ),
             PositionedDirectional(
@@ -50,7 +52,9 @@ class OnboardingGlassShell extends StatelessWidget {
               start: -AppDimensions.onboardingConciergeGlowOrbSize * 0.15,
               child: OnboardingGlassGlowOrb(
                 size: AppDimensions.onboardingConciergeGlowOrbSize * 0.72,
-                color: AppColors.secondary.withValues(alpha: 0.28),
+                color: AppColors.secondary.withValues(
+                  alpha: AppDimensions.onboardingGlassSecondaryOrbAlpha,
+                ),
               ),
             ),
             BackdropFilter(
@@ -64,9 +68,13 @@ class OnboardingGlassShell extends StatelessWidget {
                   AppDimensions.onboardingSectionPadding,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryDark.withValues(alpha: 0.72),
+                  color: AppColors.primaryDark.withValues(
+                    alpha: AppDimensions.onboardingGlassPanelFillAlpha,
+                  ),
                   border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.28),
+                    color: AppColors.accent.withValues(
+                      alpha: AppDimensions.onboardingGlassPanelBorderAlpha,
+                    ),
                     width: AppDimensions.cardBorderWidth,
                   ),
                 ),
@@ -118,7 +126,9 @@ class OnboardingGlassDivider extends StatelessWidget {
       child: Divider(
         height: AppDimensions.dividerHeight,
         thickness: AppDimensions.dividerHeight,
-        color: AppColors.textLight.withValues(alpha: 0.16),
+        color: AppColors.textLight.withValues(
+          alpha: AppDimensions.onboardingGlassDividerAlpha,
+        ),
       ),
     );
   }
@@ -136,12 +146,16 @@ class OnboardingGlassInnerCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppDimensions.compactSpacing),
       decoration: BoxDecoration(
-        color: AppColors.textLight.withValues(alpha: 0.92),
+        color: AppColors.textLight.withValues(
+          alpha: AppDimensions.onboardingGlassLightFillAlpha,
+        ),
         borderRadius: BorderRadius.circular(
           AppDimensions.onboardingRewardsOfferRadius,
         ),
         border: Border.all(
-          color: AppColors.textLight.withValues(alpha: 0.24),
+          color: AppColors.textLight.withValues(
+            alpha: AppDimensions.onboardingGlassLightBorderAlpha,
+          ),
         ),
       ),
       child: child,
@@ -160,10 +174,14 @@ class OnboardingGlassFrostPanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppDimensions.compactSpacing),
       decoration: BoxDecoration(
-        color: AppColors.textLight.withValues(alpha: 0.12),
+        color: AppColors.textLight.withValues(
+          alpha: AppDimensions.onboardingGlassTileFillAlpha,
+        ),
         borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
         border: Border.all(
-          color: AppColors.textLight.withValues(alpha: 0.18),
+          color: AppColors.textLight.withValues(
+            alpha: AppDimensions.onboardingGlassTileBorderAlpha,
+          ),
         ),
       ),
       child: child,
@@ -205,9 +223,11 @@ class OnboardingGlassHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: AppDimensions.onboardingConfirmedIconSize +
+          width:
+              AppDimensions.onboardingConfirmedIconSize +
               AppDimensions.smallSpacing,
-          height: AppDimensions.onboardingConfirmedIconSize +
+          height:
+              AppDimensions.onboardingConfirmedIconSize +
               AppDimensions.smallSpacing,
           decoration: const BoxDecoration(
             color: AppColors.accent,

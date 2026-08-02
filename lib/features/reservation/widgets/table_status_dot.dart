@@ -58,10 +58,7 @@ class TableStatusDot extends StatelessWidget {
 }
 
 class _DashedCirclePainter extends CustomPainter {
-  const _DashedCirclePainter({
-    required this.color,
-    required this.strokeWidth,
-  });
+  const _DashedCirclePainter({required this.color, required this.strokeWidth});
 
   final Color color;
   final double strokeWidth;

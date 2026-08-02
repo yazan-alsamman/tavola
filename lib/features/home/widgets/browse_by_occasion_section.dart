@@ -5,6 +5,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../taxonomy/model/occasion_category_model.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class BrowseByOccasionSection extends StatelessWidget {
   const BrowseByOccasionSection({
@@ -14,26 +16,38 @@ class BrowseByOccasionSection extends StatelessWidget {
     required this.onSelected,
   });
 
-  final List<String> categories;
+  final List<OccasionCategoryModel> categories;
   final String? selectedCategory;
   final ValueChanged<String> onSelected;
 
-  static const List<IconData> _icons = [
-    Icons.cake_rounded,
-    Icons.favorite_rounded,
-    Icons.business_center_rounded,
-    Icons.groups_rounded,
-  ];
+  /// Maps icons to `GET /occasion-categories` slugs exactly.
+  static IconData _iconFor(OccasionCategoryModel category) {
+    switch (category.slug.trim().toLowerCase()) {
+      case OccasionCategoryModel.slugDateNight:
+        return Symbols.favorite;
+      case OccasionCategoryModel.slugBusinessLunch:
+        return Symbols.business_center;
+      case OccasionCategoryModel.slugFamily:
+        return Symbols.family_restroom;
+      case OccasionCategoryModel.slugBirthday:
+        return Symbols.cake;
+      case OccasionCategoryModel.slugGroupGathering:
+        return Symbols.group;
+      case OccasionCategoryModel.slugCasual:
+        return Symbols.restaurant;
+      case OccasionCategoryModel.slugFineDining:
+        return Symbols.dinner_dining;
+      default:
+        return Symbols.restaurant;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          AppStrings.browseByOccasion,
-          style: AppTextStyles.occasionTitle,
-        ),
+        Text(AppStrings.browseByOccasion, style: AppTextStyles.occasionTitle),
         const SizedBox(height: AppDimensions.regularSpacing),
         LayoutBuilder(
           builder: (context, constraints) {
@@ -53,8 +67,8 @@ class BrowseByOccasionSection extends StatelessWidget {
                 childAspectRatio: AppDimensions.occasionGridAspectRatio,
               ),
               itemBuilder: (context, index) {
-                final category = categories[index];
-                final isSelected = selectedCategory == category;
+                final OccasionCategoryModel category = categories[index];
+                final bool isSelected = selectedCategory == category.name;
 
                 return HoverableCard(
                   borderRadius: AppDimensions.occasionCardRadius,
@@ -65,7 +79,7 @@ class BrowseByOccasionSection extends StatelessWidget {
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
-                      onTap: () => onSelected(category),
+                      onTap: () => onSelected(category.name),
                       child: Container(
                         padding: const EdgeInsets.all(
                           AppDimensions.contentPadding,
@@ -94,7 +108,7 @@ class BrowseByOccasionSection extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                _icons[index],
+                                _iconFor(category),
                                 color: AppColors.primary,
                                 size: AppDimensions.occasionIconSize,
                               ),
@@ -103,7 +117,10 @@ class BrowseByOccasionSection extends StatelessWidget {
                               height: AppDimensions.regularSpacing,
                             ),
                             Text(
-                              category,
+                              AppStrings.localizeUiLabel(
+                                category.name,
+                                alternate: category.slug,
+                              ),
                               textAlign: TextAlign.center,
                               style: AppTextStyles.occasionLabel,
                             ),

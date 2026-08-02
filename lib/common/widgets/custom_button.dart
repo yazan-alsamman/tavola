@@ -24,7 +24,7 @@ class CustomButton extends StatelessWidget {
             ),
           ),
         ),
-        child: Text(label),
+        child: Text(label, style: AppTextStyles.buttonLabel(context)),
       ),
     );
   }

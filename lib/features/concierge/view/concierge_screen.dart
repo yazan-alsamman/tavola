@@ -18,8 +18,15 @@ class ConciergeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ConciergeController controller = Get.find<ConciergeController>();
+    // Read from the parent MediaQuery (outside Scaffold body). Scaffold removes
+    // viewInsets from the body's MediaQuery when resizeToAvoidBottomInset is on.
+    final bool isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return Scaffold(
+      // Let Scaffold shrink the body above the keyboard once. Do NOT also pad
+      // the composer with viewInsets — that double-inset shoved the field up
+      // and left a large empty gap above the keyboard.
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -90,7 +97,10 @@ class ConciergeScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            child: Text(AppStrings.exploreGildedOlive),
+                            child: Text(
+                              AppStrings.exploreGildedOlive,
+                              style: AppTextStyles.conciergeAction,
+                            ),
                           ),
                         ),
                       ],
@@ -99,29 +109,28 @@ class ConciergeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.viewInsetsOf(context).bottom,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppDimensions.conciergeContentMaxWidth,
-                  ),
-                  child: ConciergeComposer(
-                    controller: controller.messageController,
-                    onSend: controller.sendMessage,
-                  ),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: AppDimensions.conciergeContentMaxWidth,
+                ),
+                child: ConciergeComposer(
+                  controller: controller.messageController,
+                  onSend: controller.sendMessage,
                 ),
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: ConciergeController.chatNavigationIndex,
-        onTap: controller.handleBottomNavigation,
-      ),
+      // Bottom nav above the keyboard creates a permanent gap under the
+      // composer — hide it while typing so the field docks to the keyboard.
+      bottomNavigationBar: isKeyboardOpen
+          ? null
+          : BottomNavBar(
+              currentIndex: ConciergeController.chatNavigationIndex,
+              onTap: controller.handleBottomNavigation,
+            ),
     );
   }
 }

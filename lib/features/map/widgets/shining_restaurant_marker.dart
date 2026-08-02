@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ShiningRestaurantMarker extends StatefulWidget {
   const ShiningRestaurantMarker({
@@ -94,7 +95,7 @@ class _ShiningRestaurantMarkerState extends State<ShiningRestaurantMarker>
               ),
             ),
             child: const Icon(
-              Icons.restaurant_rounded,
+              Symbols.restaurant,
               color: AppColors.textLight,
               size: AppDimensions.mapMarkerIconSize,
             ),

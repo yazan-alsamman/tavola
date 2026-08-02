@@ -6,6 +6,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ConciergeComposer extends StatelessWidget {
   const ConciergeComposer({
@@ -74,7 +75,7 @@ class ConciergeComposer extends StatelessWidget {
                 onPressed: onSend,
                 style: AppButtonStyles.filledHover(IconButton.styleFrom()),
                 icon: const Icon(
-                  Icons.send_rounded,
+                  Symbols.send,
                   size: AppDimensions.conciergeSendIconSize,
                 ),
               ),

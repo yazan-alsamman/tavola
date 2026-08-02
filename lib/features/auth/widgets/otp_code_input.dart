@@ -8,10 +8,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../controller/otp_controller.dart';
 
 class OtpCodeInput extends StatelessWidget {
-  const OtpCodeInput({
-    super.key,
-    required this.controller,
-  });
+  const OtpCodeInput({super.key, required this.controller});
 
   final OtpController controller;
 
@@ -20,13 +17,11 @@ class OtpCodeInput extends StatelessWidget {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final int count = OtpController.otpLength;
-        final double gaps =
-            AppDimensions.smallSpacing * (count - 1);
-        final double fieldSize = ((constraints.maxWidth - gaps) / count)
-            .clamp(
-              AppDimensions.otpFieldMinSize,
-              AppDimensions.otpFieldSize,
-            );
+        final double gaps = AppDimensions.smallSpacing * (count - 1);
+        final double fieldSize = ((constraints.maxWidth - gaps) / count).clamp(
+          AppDimensions.otpFieldMinSize,
+          AppDimensions.otpFieldSize,
+        );
 
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

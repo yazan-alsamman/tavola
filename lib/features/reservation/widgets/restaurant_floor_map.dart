@@ -35,12 +35,13 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
       vsync: this,
       duration: AppDimensions.floorPlanPulseDuration,
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(
-      begin: AppDimensions.floorPlanAvailablePulseMin,
-      end: AppDimensions.floorPlanAvailablePulseMax,
-    ).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
+    _pulseAnimation =
+        Tween<double>(
+          begin: AppDimensions.floorPlanAvailablePulseMin,
+          end: AppDimensions.floorPlanAvailablePulseMax,
+        ).animate(
+          CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+        );
   }
 
   @override
@@ -121,8 +122,7 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
     final double size = baseSize * tableScale;
     final double left = table.mapX * scaleX;
     final double top = table.mapY * scaleY;
-    final bool isSelected =
-        widget.controller.selectedTableId.value == table.id;
+    final bool isSelected = widget.controller.selectedTableId.value == table.id;
     final bool shouldPulse =
         table.status == TableStatus.available && !isSelected;
 
@@ -170,7 +170,12 @@ class _RestaurantMapPainter extends CustomPainter {
     const double padding = AppDimensions.floorPlanMapInnerPadding;
 
     final RRect outer = RRect.fromRectAndRadius(
-      Rect.fromLTWH(inset, inset, size.width - inset * 2, size.height - inset * 2),
+      Rect.fromLTWH(
+        inset,
+        inset,
+        size.width - inset * 2,
+        size.height - inset * 2,
+      ),
       const Radius.circular(AppDimensions.cardRadius),
     );
 
@@ -304,14 +309,15 @@ class _RestaurantMapPainter extends CustomPainter {
     Offset offset,
     double maxWidth,
   ) {
-    final TextPainter painter = TextPainter(
-      text: TextSpan(text: label, style: AppTextStyles.floorPlanZoneLabel),
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-      ellipsis: AppStrings.textEllipsis,
-    )..layout(
-        maxWidth: maxWidth * AppDimensions.floorPlanZoneLabelMaxWidthFactor,
-      );
+    final TextPainter painter =
+        TextPainter(
+          text: TextSpan(text: label, style: AppTextStyles.floorPlanZoneLabel),
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+          ellipsis: AppStrings.textEllipsis,
+        )..layout(
+          maxWidth: maxWidth * AppDimensions.floorPlanZoneLabelMaxWidthFactor,
+        );
 
     painter.paint(canvas, offset);
   }

@@ -37,8 +37,55 @@ class SelectRestaurantScreen extends StatelessWidget {
                 style: AppTextStyles.selectRestaurantSubtitle,
               ),
               const SizedBox(height: AppDimensions.sectionSpacing),
-              Obx(
-                () => ListView.separated(
+              Obx(() {
+                if (controller.isLoadingRestaurants.value) {
+                  return const SizedBox(
+                    height: AppDimensions.imageHeight,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: AppDimensions.progressIndicatorStrokeWidth,
+                      ),
+                    ),
+                  );
+                }
+
+                final String? restaurantsError =
+                    controller.restaurantsError.value;
+                if (restaurantsError != null) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          restaurantsError,
+                          style: AppTextStyles.selectRestaurantSubtitle,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: controller.loadRestaurants,
+                        style: TextButton.styleFrom(
+                          textStyle: AppTextStyles.authLinkEmphasis,
+                        ),
+                        child: Text(
+                          AppStrings.retry,
+                          style: AppTextStyles.authLinkEmphasis,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                if (controller.restaurants.isEmpty) {
+                  return Text(
+                    AppStrings.restaurantsEmpty,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.selectRestaurantSubtitle,
+                  );
+                }
+
+                // Required: ListView.builder itemBuilder is not tracked by Obx.
+                controller.watchFavorites();
+
+                return ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: controller.restaurants.length,
@@ -59,8 +106,8 @@ class SelectRestaurantScreen extends StatelessWidget {
                       onTap: () => controller.selectRestaurant(restaurant),
                     );
                   },
-                ),
-              ),
+                );
+              }),
               const SizedBox(height: AppDimensions.sectionSpacing),
             ],
           ),

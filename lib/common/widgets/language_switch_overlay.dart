@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../core/constants/app_fonts.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_text_styles.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// Full-screen transition shown while the app locale is updating.
 class LanguageSwitchOverlay extends StatefulWidget {
-  const LanguageSwitchOverlay({
-    super.key,
-    required this.locale,
-  });
+  const LanguageSwitchOverlay({super.key, required this.locale});
 
   final Locale locale;
 
@@ -35,12 +34,13 @@ class _LanguageSwitchOverlayState extends State<LanguageSwitchOverlay>
       parent: _introController,
       curve: Curves.easeOutCubic,
     );
-    _scaleAnimation = Tween<double>(
-      begin: AppDimensions.languageSwitchInitialScale,
-      end: 1,
-    ).animate(
-      CurvedAnimation(parent: _introController, curve: Curves.easeOutBack),
-    );
+    _scaleAnimation =
+        Tween<double>(
+          begin: AppDimensions.languageSwitchInitialScale,
+          end: 1,
+        ).animate(
+          CurvedAnimation(parent: _introController, curve: Curves.easeOutBack),
+        );
     _introController.forward();
   }
 
@@ -52,7 +52,7 @@ class _LanguageSwitchOverlayState extends State<LanguageSwitchOverlay>
 
   @override
   Widget build(BuildContext context) {
-    final TextDirection textDirection = widget.locale.languageCode == 'ar'
+    final TextDirection textDirection = AppFonts.isArabicLocale(widget.locale)
         ? TextDirection.rtl
         : TextDirection.ltr;
 
@@ -85,13 +85,19 @@ class _LanguageSwitchOverlayState extends State<LanguageSwitchOverlay>
                         children: [
                           Text(
                             AppStrings.appName,
-                            style: AppTextStyles.languageSwitchBrand,
+                            style: AppFonts.forLocale(
+                              AppTextStyles.languageSwitchBrand,
+                              locale: widget.locale,
+                              heading: true,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: AppDimensions.sectionSpacing),
                           Container(
-                            width: AppDimensions.languageSwitchIconContainerSize,
-                            height: AppDimensions.languageSwitchIconContainerSize,
+                            width:
+                                AppDimensions.languageSwitchIconContainerSize,
+                            height:
+                                AppDimensions.languageSwitchIconContainerSize,
                             decoration: BoxDecoration(
                               color: AppColors.surfaceAlt,
                               shape: BoxShape.circle,
@@ -101,7 +107,7 @@ class _LanguageSwitchOverlayState extends State<LanguageSwitchOverlay>
                               ),
                             ),
                             child: Icon(
-                              Icons.translate_rounded,
+                              Symbols.translate,
                               color: AppColors.primary,
                               size: AppDimensions.languageSwitchIconSize,
                             ),
@@ -109,7 +115,11 @@ class _LanguageSwitchOverlayState extends State<LanguageSwitchOverlay>
                           const SizedBox(height: AppDimensions.sectionSpacing),
                           Text(
                             AppStrings.languageSwitchingTitleFor(widget.locale),
-                            style: AppTextStyles.languageSwitchTitle,
+                            style: AppFonts.forLocale(
+                              AppTextStyles.languageSwitchTitle,
+                              locale: widget.locale,
+                              heading: true,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: AppDimensions.smallSpacing),
@@ -117,7 +127,11 @@ class _LanguageSwitchOverlayState extends State<LanguageSwitchOverlay>
                             AppStrings.languageSwitchingSubtitleFor(
                               widget.locale,
                             ),
-                            style: AppTextStyles.languageSwitchSubtitle,
+                            style: AppFonts.forLocale(
+                              AppTextStyles.languageSwitchSubtitle,
+                              locale: widget.locale,
+                              heading: false,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: AppDimensions.sectionSpacing),

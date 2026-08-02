@@ -7,11 +7,12 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../reservation/controller/reservation_controller.dart';
+import '../../reservation/controller/select_table_controller.dart';
 import '../../reservation/model/restaurant_table_model.dart';
 import '../../reservation/model/table_status_theme.dart';
 import '../../reservation/widgets/restaurant_floor_map.dart';
-import '../controller/onboarding_controller.dart';
 import 'onboarding_glass_shell.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// Compact reservation UI for onboarding — glass shell with readable inner panels.
 class OnboardingBookingPreviewContent extends StatelessWidget {
@@ -19,8 +20,10 @@ class OnboardingBookingPreviewContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final OnboardingController onboardingController =
-        Get.find<OnboardingController>();
+    final SelectTableController selectTable =
+        Get.find<SelectTableController>();
+    final ReservationController reservation =
+        Get.find<ReservationController>();
 
     return OnboardingGlassShell(
       child: Column(
@@ -28,7 +31,7 @@ class OnboardingBookingPreviewContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OnboardingGlassHeader(
-            icon: Icons.table_restaurant_rounded,
+            icon: Symbols.table_restaurant,
             title: AppStrings.onboardingSelectTable,
             message: AppStrings.onboardingSelectTableHint,
           ),
@@ -49,15 +52,11 @@ class OnboardingBookingPreviewContent extends StatelessWidget {
                   child: SizedBox(
                     height: AppDimensions.onboardingFloorPlanPreviewHeight,
                     width: double.infinity,
-                    child: RestaurantFloorMap(
-                      controller:
-                          onboardingController.previewSelectTableController,
-                    ),
+                    child: RestaurantFloorMap(controller: selectTable),
                   ),
                 ),
                 Obx(() {
-                  final RestaurantTableModel? table = onboardingController
-                      .previewSelectTableController.selectedTable;
+                  final RestaurantTableModel? table = selectTable.selectedTable;
                   if (table == null) {
                     return const SizedBox.shrink();
                   }
@@ -83,12 +82,9 @@ class OnboardingBookingPreviewContent extends StatelessWidget {
                 ),
                 Obx(
                   () => _CompactDinerCounter(
-                    value: onboardingController
-                        .previewReservationController.dinerCount.value,
-                    onDecrement: onboardingController
-                        .previewReservationController.decrementDiners,
-                    onIncrement: onboardingController
-                        .previewReservationController.incrementDiners,
+                    value: reservation.dinerCount.value,
+                    onDecrement: reservation.decrementDiners,
+                    onIncrement: reservation.incrementDiners,
                   ),
                 ),
               ],
@@ -193,17 +189,21 @@ class _CompactDinerCounter extends StatelessWidget {
         vertical: AppDimensions.tinySpacing,
       ),
       decoration: BoxDecoration(
-        color: AppColors.textLight.withValues(alpha: 0.14),
+        color: AppColors.textLight.withValues(
+          alpha: AppDimensions.onboardingPreviewChipFillAlpha,
+        ),
         borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
         border: Border.all(
-          color: AppColors.textLight.withValues(alpha: 0.2),
+          color: AppColors.textLight.withValues(
+            alpha: AppDimensions.onboardingPreviewBorderAlpha,
+          ),
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _CounterButton(
-            icon: Icons.remove_rounded,
+            icon: Symbols.remove,
             onPressed: onDecrement,
             isEnabled: canDecrement,
           ),
@@ -219,7 +219,7 @@ class _CompactDinerCounter extends StatelessWidget {
             ),
           ),
           _CounterButton(
-            icon: Icons.add_rounded,
+            icon: Symbols.add,
             onPressed: onIncrement,
             isEnabled: canIncrement,
           ),
@@ -246,7 +246,9 @@ class _CounterButton extends StatelessWidget {
       child: Material(
         color: isEnabled
             ? AppColors.accent
-            : AppColors.textLight.withValues(alpha: 0.08),
+            : AppColors.textLight.withValues(
+                alpha: AppDimensions.onboardingPreviewDisabledFillAlpha,
+              ),
         shape: const CircleBorder(),
         child: InkWell(
           onTap: isEnabled ? onPressed : null,

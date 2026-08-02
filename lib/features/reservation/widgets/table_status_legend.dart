@@ -13,19 +13,13 @@ class TableStatusLegend extends StatelessWidget {
   final bool overlay;
 
   static List<_LegendItem> get _items => [
-        _LegendItem(
-          status: TableStatus.available,
-          label: AppStrings.tableAvailable,
-        ),
-        _LegendItem(
-          status: TableStatus.reserved,
-          label: AppStrings.tableReserved,
-        ),
-        _LegendItem(
-          status: TableStatus.cleaning,
-          label: AppStrings.tableCleaning,
-        ),
-      ];
+    _LegendItem(
+      status: TableStatus.available,
+      label: AppStrings.tableAvailable,
+    ),
+    _LegendItem(status: TableStatus.reserved, label: AppStrings.tableReserved),
+    _LegendItem(status: TableStatus.cleaning, label: AppStrings.tableCleaning),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +29,9 @@ class TableStatusLegend extends StatelessWidget {
       children: [
         if (overlay)
           Padding(
-            padding: const EdgeInsets.only(bottom: AppDimensions.compactSpacing),
+            padding: const EdgeInsets.only(
+              bottom: AppDimensions.compactSpacing,
+            ),
             child: Text(
               AppStrings.tableStatus,
               style: AppTextStyles.reservationSectionLabel,
@@ -45,8 +41,9 @@ class TableStatusLegend extends StatelessWidget {
           final _LegendItem item = _items[index];
           return Padding(
             padding: EdgeInsets.only(
-              bottom:
-                  index == _items.length - 1 ? 0 : AppDimensions.compactSpacing,
+              bottom: index == _items.length - 1
+                  ? 0
+                  : AppDimensions.compactSpacing,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

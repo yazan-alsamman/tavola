@@ -1,7 +1,6 @@
-import 'package:get/get.dart';
-
 import '../../app/routes/app_routes.dart';
 import '../../features/reservation/controller/select_restaurant_controller.dart';
+import 'app_navigation.dart';
 
 class BottomNavNavigation {
   static const int homeIndex = 0;
@@ -16,12 +15,12 @@ class BottomNavNavigation {
     }
 
     if (index == homeIndex) {
-      Get.offNamed(AppRoutes.home);
+      AppNavigation.goShell(AppRoutes.home);
       return;
     }
 
     if (index == mapIndex) {
-      Get.toNamed(AppRoutes.map);
+      AppNavigation.goShell(AppRoutes.map);
       return;
     }
 
@@ -31,12 +30,12 @@ class BottomNavNavigation {
     }
 
     if (index == chatIndex) {
-      Get.toNamed(AppRoutes.concierge);
+      AppNavigation.goShell(AppRoutes.concierge);
       return;
     }
 
     if (index == profileIndex) {
-      Get.offNamed(AppRoutes.profile);
+      AppNavigation.goShell(AppRoutes.profile);
     }
   }
 }

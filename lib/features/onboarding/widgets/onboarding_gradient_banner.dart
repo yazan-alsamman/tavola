@@ -34,9 +34,11 @@ class OnboardingGradientBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: AppDimensions.onboardingConfirmedIconSize +
+            width:
+                AppDimensions.onboardingConfirmedIconSize +
                 AppDimensions.smallSpacing,
-            height: AppDimensions.onboardingConfirmedIconSize +
+            height:
+                AppDimensions.onboardingConfirmedIconSize +
                 AppDimensions.smallSpacing,
             decoration: const BoxDecoration(
               color: AppColors.accent,

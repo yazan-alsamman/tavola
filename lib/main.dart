@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -9,37 +11,47 @@ import 'core/constants/app_strings.dart';
 import 'core/localization/app_translations.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/utils/app_dependency.dart';
-import 'core/utils/hot_restart_safety.dart';
 import 'core/utils/locale_preferences.dart';
 import 'features/auth/controller/auth_session_controller.dart';
-import 'features/details/repository/restaurant_details_repository.dart';
-import 'features/favorites/repository/favorites_repository.dart';
-import 'features/home/repository/restaurant_repository.dart';
-import 'features/map/repository/restaurant_map_repository.dart';
-import 'features/profile/repository/profile_repository.dart';
-import 'features/reservation/repository/reservation_availability_repository.dart';
-import 'features/reservation/repository/table_repository.dart';
+import 'features/auth/repository/auth_repository.dart';
+import 'core/network/api_client.dart';
+import 'core/network/auth_token_reader.dart';
+import 'core/network/secure_auth_token_store.dart';
+import 'features/splash/controller/splash_controller.dart';
+import 'features/splash/splash_assets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // LOCKED: prevents google_fonts isolate crashes on Hot Restart.
-  HotRestartSafety.apply();
-
   final Locale? savedLocale = await LocalePreferences.savedLocale();
   final Locale initialLocale = savedLocale ?? const Locale('en');
 
+  final SecureAuthTokenStore tokenStore = SecureAuthTokenStore();
+  // Never await Keychain before runApp on physical iOS — SecItem* can hang
+  // the platform main thread so the Dart VM Service never connects and Login
+  // never becomes reachable. Splash still syncs tokens before routing.
+  unawaited(tokenStore.hydrate());
+  await SplashAssets.precacheLavender();
+
+  AppDependency.putPermanent(AuthRepository());
+  AppDependency.putPermanent<AuthTokenReader>(tokenStore);
   AppDependency.putPermanent(AuthSessionController());
-  AppDependency.putPermanent(RestaurantRepository());
-  AppDependency.putPermanent(FavoritesRepository());
-  AppDependency.putPermanent(RestaurantDetailsRepository());
-  AppDependency.putPermanent(RestaurantMapRepository());
-  AppDependency.putPermanent(ReservationAvailabilityRepository());
-  AppDependency.putPermanent(TableRepository());
-  AppDependency.putPermanent(ProfileRepository());
-  final LocaleController localeController =
-      AppDependency.putPermanent(LocaleController());
+  AppDependency.putPermanent(
+    ApiClient(
+      tokenReader: tokenStore,
+      authRepository: Get.find<AuthRepository>(),
+      onSessionExpired: () async {
+        await Get.find<AuthSessionController>().handleSessionExpired();
+      },
+    ),
+  );
+  final LocaleController localeController = AppDependency.putPermanent(
+    LocaleController(),
+  );
   localeController.syncFromLocale(initialLocale);
+
+  // Splash must be ready before the first paint — not deferred to Binding.
+  AppDependency.putIfAbsent(SplashController.new);
 
   runApp(TavolaApp(initialLocale: initialLocale));
 }
@@ -54,7 +66,7 @@ class TavolaApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: AppStrings.appTitle,
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.themeFor(initialLocale),
       translations: AppTranslations(),
       locale: initialLocale,
       fallbackLocale: const Locale('en'),
@@ -66,10 +78,7 @@ class TavolaApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en'),
-        Locale('ar'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('ar')],
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class DetailsLocationFooter extends StatelessWidget {
   const DetailsLocationFooter({super.key, required this.locationNote});
@@ -26,16 +27,13 @@ class DetailsLocationFooter extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
-            Icons.location_on_rounded,
+            Symbols.location_on,
             color: AppColors.primaryDark,
             size: AppDimensions.detailsLocationIconSize,
           ),
           const SizedBox(width: AppDimensions.regularSpacing),
           Expanded(
-            child: Text(
-              locationNote,
-              style: AppTextStyles.detailsLocationNote,
-            ),
+            child: Text(locationNote, style: AppTextStyles.detailsLocationNote),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -15,6 +16,8 @@ class AuthTextField extends StatelessWidget {
     this.prefixIcon,
     this.prefixIconConstraints,
     this.suffixIcon,
+    this.maxLength,
+    this.inputFormatters,
   });
 
   final TextEditingController controller;
@@ -25,6 +28,8 @@ class AuthTextField extends StatelessWidget {
   final Widget? prefixIcon;
   final BoxConstraints? prefixIconConstraints;
   final Widget? suffixIcon;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +42,16 @@ class AuthTextField extends StatelessWidget {
         keyboardType: keyboardType,
         obscureText: obscureText,
         textDirection: textDirection,
+        maxLength: maxLength,
+        inputFormatters: inputFormatters,
+        buildCounter: maxLength == null
+            ? null
+            : (
+                BuildContext context, {
+                required int currentLength,
+                required bool isFocused,
+                required int? maxLength,
+              }) => const SizedBox.shrink(),
         style: AppTextStyles.authInput,
         decoration: InputDecoration(
           hintText: hintText,

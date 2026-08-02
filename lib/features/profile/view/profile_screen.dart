@@ -10,11 +10,15 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/theme/app_button_styles.dart';
+import '../../../core/localization/locale_controller.dart';
 import '../controller/profile_controller.dart';
-import '../widgets/profile_payments_panel.dart';
+import '../widgets/profile_explore_banner.dart';
 import '../widgets/profile_reservation_card.dart';
+import '../widgets/profile_reservation_history_panel.dart';
+import '../widgets/profile_reservations_empty_state.dart';
 import '../widgets/profile_settings_panel.dart';
+import '../../reservation/controller/select_restaurant_controller.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -22,239 +26,369 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ProfileController controller = Get.find<ProfileController>();
+    final LocaleController localeController = Get.find<LocaleController>();
 
     return Scaffold(
       appBar: const CustomAppBar(),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.pagePadding),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HoverableCard(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.cardRadius,
+          child: Obx(() {
+            // Rebuild profile copy (tabs, settings, banners) with the new locale.
+            localeController.languageCode.value;
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  HoverableCard(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.cardRadius,
+                        ),
+                        border: Border.all(
+                          color: AppColors.border,
+                          width: AppDimensions.cardBorderWidth,
+                        ),
                       ),
-                      border: Border.all(
-                        color: AppColors.border,
-                        width: AppDimensions.cardBorderWidth,
+                      padding: const EdgeInsets.all(
+                        AppDimensions.contentPadding,
                       ),
-                    ),
-                    padding: const EdgeInsets.all(AppDimensions.contentPadding),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: AppDimensions.avatarSize,
-                          height: AppDimensions.avatarSize,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.avatarRadius,
+                      child: Obx(() {
+                        if (controller.isLoadingProfile.value) {
+                          return const SizedBox(
+                            height: AppDimensions.avatarSize,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth:
+                                    AppDimensions.progressIndicatorStrokeWidth,
+                              ),
                             ),
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            color: AppColors.textLight,
-                            size: AppDimensions.avatarIconSize,
-                          ),
-                        ),
-                        const SizedBox(width: AppDimensions.smallSpacing),
-                        Expanded(
-                          child: Text(
-                            AppStrings.profileUserName,
-                            style: AppTextStyles.profileName,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                HoverableCard(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryDark,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.cardRadius,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(AppDimensions.contentPadding),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          );
+                        }
+
+                        final String? profileError =
+                            controller.profileError.value;
+                        if (profileError != null) {
+                          return Row(
                             children: [
-                              Text(
-                                AppStrings.partnerOwnerAccess,
-                                style: AppTextStyles.partnerTitle,
+                              Expanded(
+                                child: Text(
+                                  profileError,
+                                  style: AppTextStyles.body,
+                                ),
                               ),
-                              const SizedBox(
-                                height: AppDimensions.smallSpacing,
-                              ),
-                              Text(
-                                AppStrings.partnerOwnerDescription,
-                                style: AppTextStyles.partnerBody,
+                              TextButton(
+                                onPressed: controller.loadUserProfile,
+                                style: TextButton.styleFrom(
+                                  textStyle: AppTextStyles.authLinkEmphasis,
+                                ),
+                                child: Text(
+                                  AppStrings.retry,
+                                  style: AppTextStyles.authLinkEmphasis,
+                                ),
                               ),
                             ],
-                          ),
-                        ),
-                        const SizedBox(width: AppDimensions.smallSpacing),
-                        Flexible(
-                          child: HoverableButton(
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              style: AppButtonStyles.filledHover(
-                                ElevatedButton.styleFrom(
-                                  textStyle: AppTextStyles.buttonLabel(context),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal:
-                                        AppDimensions.buttonHorizontalPadding,
-                                    vertical:
-                                        AppDimensions.buttonVerticalPadding,
+                          );
+                        }
+
+                        return Row(
+                          children: [
+                            GestureDetector(
+                              onTap: controller.isUploadingAvatar.value
+                                  ? null
+                                  : controller.pickAndUploadAvatar,
+                              child: Stack(
+                                alignment: Alignment.bottomRight,
+                                children: [
+                                  Container(
+                                    width: AppDimensions.avatarSize,
+                                    height: AppDimensions.avatarSize,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.avatarRadius,
+                                      ),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: controller.isUploadingAvatar.value
+                                        ? const Center(
+                                            child: SizedBox(
+                                              width: AppDimensions
+                                                  .occasionIconSize,
+                                              height: AppDimensions
+                                                  .occasionIconSize,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: AppDimensions
+                                                    .progressIndicatorStrokeWidth,
+                                                color: AppColors.textLight,
+                                              ),
+                                            ),
+                                          )
+                                        : (controller.profileAvatarUrl != null
+                                              ? Image.network(
+                                                  controller.profileAvatarUrl!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder:
+                                                      (
+                                                        BuildContext context,
+                                                        Object error,
+                                                        StackTrace? stackTrace,
+                                                      ) {
+                                                        return const Icon(
+                                                          Symbols.person,
+                                                          color: AppColors
+                                                              .textLight,
+                                                          size: AppDimensions
+                                                              .avatarIconSize,
+                                                        );
+                                                      },
+                                                )
+                                              : const Icon(
+                                                  Symbols.person,
+                                                  color: AppColors.textLight,
+                                                  size: AppDimensions
+                                                      .avatarIconSize,
+                                                )),
                                   ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppDimensions.cardRadius,
+                                  Container(
+                                    padding: const EdgeInsets.all(
+                                      AppDimensions.tinySpacing,
+                                    ),
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.primaryDark,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Symbols.photo_camera,
+                                      size: AppDimensions.tinyIconSize,
+                                      color: AppColors.textLight,
                                     ),
                                   ),
-                                ),
-                                idleBackground: AppColors.success,
-                                idleForeground: AppColors.primaryDark,
-                              ),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(AppStrings.launchBoard),
+                                ],
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                Obx(
-                  () => Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: controller.sections
-                        .asMap()
-                        .entries
-                        .map(
-                          (entry) => Expanded(
-                            child: HoverableButton(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    controller.selectSection(entry.key),
-                                child: Container(
-                                  margin: EdgeInsetsDirectional.only(
-                                    start: entry.key == 0
-                                        ? 0
-                                        : AppDimensions.smallSpacing / 2,
-                                    end: entry.key ==
-                                            controller.sections.length - 1
-                                        ? 0
-                                        : AppDimensions.smallSpacing / 2,
+                            const SizedBox(width: AppDimensions.smallSpacing),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    controller.profileDisplayName,
+                                    style: AppTextStyles.profileName,
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: AppDimensions.tabVerticalPadding,
-                                    horizontal:
-                                        AppDimensions.tabHorizontalPadding,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        controller.selectedSectionIndex.value ==
-                                            entry.key
-                                        ? AppColors.primary
-                                        : AppColors.surface,
-                                    borderRadius: BorderRadius.circular(
-                                      AppDimensions.cardRadius,
+                                  if (controller.profilePhone != null) ...[
+                                    const SizedBox(
+                                      height: AppDimensions.tinySpacing,
+                                    ),
+                                    Text(
+                                      controller.profilePhone!,
+                                      style: AppTextStyles.label.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                  if ((controller.userProfile.value?.email ??
+                                          '')
+                                      .trim()
+                                      .isNotEmpty) ...[
+                                    const SizedBox(
+                                      height: AppDimensions.tinySpacing,
+                                    ),
+                                    Text(
+                                      controller.userProfile.value!.email,
+                                      style: AppTextStyles.label.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                  TextButton(
+                                    onPressed:
+                                        controller.isUploadingAvatar.value
+                                        ? null
+                                        : controller.pickAndUploadAvatar,
+                                    style: TextButton.styleFrom(
+                                      textStyle: AppTextStyles.authLinkEmphasis,
+                                    ),
+                                    child: Text(
+                                      AppStrings.changeAvatar,
+                                      style: AppTextStyles.authLinkEmphasis,
                                     ),
                                   ),
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      entry.value,
-                                      maxLines: 1,
-                                      textAlign: TextAlign.center,
-                                      style: AppTextStyles.tabLabel.copyWith(
-                                        color:
-                                            controller
-                                                    .selectedSectionIndex
-                                                    .value ==
-                                                entry.key
-                                            ? AppColors.textLight
-                                            : AppColors.textPrimary,
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.sectionSpacing),
+                  ProfileExploreBanner(
+                    onExplorePressed: controller.exploreHome,
+                  ),
+                  const SizedBox(height: AppDimensions.sectionSpacing),
+                  Obx(
+                    () => IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: controller.sections
+                            .asMap()
+                            .entries
+                            .map(
+                              (entry) => Expanded(
+                                child: Padding(
+                                  padding: EdgeInsetsDirectional.only(
+                                    start: entry.key == 0
+                                        ? 0
+                                        : AppDimensions.profileSectionTabGap /
+                                              2,
+                                    end:
+                                        entry.key ==
+                                            controller.sections.length - 1
+                                        ? 0
+                                        : AppDimensions.profileSectionTabGap /
+                                              2,
+                                  ),
+                                  child: HoverableButton(
+                                    child: GestureDetector(
+                                      onTap: () =>
+                                          controller.selectSection(entry.key),
+                                      child: Container(
+                                        constraints: const BoxConstraints(
+                                          minHeight: AppDimensions
+                                              .profileSectionTabMinHeight,
+                                        ),
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: AppDimensions
+                                              .profileSectionTabVerticalPadding,
+                                          horizontal: AppDimensions
+                                              .profileSectionTabHorizontalPadding,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              controller
+                                                      .selectedSectionIndex
+                                                      .value ==
+                                                  entry.key
+                                              ? AppColors.primary
+                                              : AppColors.surface,
+                                          borderRadius: BorderRadius.circular(
+                                            AppDimensions.cardRadius,
+                                          ),
+                                          border: Border.all(
+                                            color:
+                                                controller
+                                                        .selectedSectionIndex
+                                                        .value ==
+                                                    entry.key
+                                                ? AppColors.primary
+                                                : AppColors.border,
+                                            width:
+                                                AppDimensions.cardBorderWidth,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          entry.value,
+                                          maxLines: 2,
+                                          textAlign: TextAlign.center,
+                                          softWrap: true,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTextStyles
+                                              .profileSectionTabLabel
+                                              .copyWith(
+                                                color:
+                                                    controller
+                                                            .selectedSectionIndex
+                                                            .value ==
+                                                        entry.key
+                                                    ? AppColors.textLight
+                                                    : AppColors.textPrimary,
+                                              ),
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.sectionSpacing),
+                  Obx(() {
+                    if (controller.selectedSectionIndex.value ==
+                        ProfileController.lastReservationsSectionIndex) {
+                      return ProfileReservationHistoryPanel(
+                        items: controller.reservationHistory,
+                      );
+                    }
+
+                    if (controller.selectedSectionIndex.value ==
+                        ProfileController.favoritesSectionIndex) {
+                      controller.watchFavorites();
+                      final restaurants = controller.favoriteRestaurants;
+                      return FavoriteRestaurantsPanel(
+                        restaurants: restaurants,
+                        favoriteValues: restaurants
+                            .map(
+                              (restaurant) =>
+                                  controller.isFavorite(restaurant.id),
+                            )
+                            .toList(),
+                        onFavoritePressed: controller.toggleFavorite,
+                        onRestaurantTap: controller.openDetails,
+                      );
+                    }
+
+                    if (controller.selectedSectionIndex.value ==
+                        ProfileController.settingsSectionIndex) {
+                      return ProfileSettingsPanel(
+                        onChanged: controller.toggleNotification,
+                      );
+                    }
+
+                    final activeReservations =
+                        controller.activeCustomerReservations;
+                    if (activeReservations.isEmpty) {
+                      return ProfileReservationsEmptyState(
+                        onBookPressed: SelectRestaurantController.open,
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.activeDiningPlacements,
+                          style: AppTextStyles.sectionTitle,
+                        ),
+                        const SizedBox(height: AppDimensions.smallSpacing),
+                        ...activeReservations.map(
+                          (reservation) => ProfileReservationCard(
+                            restaurant: controller.restaurantPreviewFor(
+                              reservation,
+                            ),
+                            details: controller.detailsForReservation(
+                              reservation,
+                            ),
+                            onReschedule: () =>
+                                controller.rescheduleReservation(reservation),
+                            onCancel: () => controller.cancelReservation(
+                              reservation.reservationId,
                             ),
                           ),
-                        )
-                        .toList(),
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                Obx(() {
-                  if (controller.selectedSectionIndex.value ==
-                      ProfileController.paymentsSectionIndex) {
-                    return ProfilePaymentsPanel(
-                      transactions: controller.paymentTransactions,
-                    );
-                  }
-
-                  if (controller.selectedSectionIndex.value ==
-                      ProfileController.favoritesSectionIndex) {
-                    final restaurants = controller.favoriteRestaurants;
-                    return FavoriteRestaurantsPanel(
-                      restaurants: restaurants,
-                      favoriteValues: restaurants
-                          .map(
-                            (restaurant) =>
-                                controller.isFavorite(restaurant.id),
-                          )
-                          .toList(),
-                      onFavoritePressed: controller.toggleFavorite,
-                      onRestaurantTap: controller.openDetails,
-                    );
-                  }
-
-                  if (controller.selectedSectionIndex.value ==
-                      ProfileController.settingsSectionIndex) {
-                    return ProfileSettingsPanel(
-                      options: controller.notificationOptions,
-                      values: controller.notificationSettings.toList(),
-                      onChanged: controller.toggleNotification,
-                    );
-                  }
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppStrings.activeDiningPlacements,
-                        style: AppTextStyles.sectionTitle,
-                      ),
-                      const SizedBox(height: AppDimensions.smallSpacing),
-                      ...controller.featuredRestaurants.map(
-                        (restaurant) => ProfileReservationCard(
-                          restaurant: restaurant,
-                          details: controller.reservationDetails,
                         ),
-                      ),
-                    ],
-                  );
-                }),
-              ],
-            ),
-          ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            );
+          }),
         ),
       ),
       bottomNavigationBar: BottomNavBar(

@@ -6,6 +6,7 @@ import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../features/home/model/restaurant_model.dart';
 import 'restaurant_card.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class FavoriteRestaurantsPanel extends StatelessWidget {
   const FavoriteRestaurantsPanel({
@@ -29,7 +30,7 @@ class FavoriteRestaurantsPanel extends StatelessWidget {
         Row(
           children: [
             Icon(
-              Icons.favorite_rounded,
+              Symbols.favorite,
               color: AppColors.primary,
               size: AppDimensions.settingsIconSize,
             ),

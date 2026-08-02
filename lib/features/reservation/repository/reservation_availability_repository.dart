@@ -22,18 +22,18 @@ class ReservationAvailabilityRepository {
     return List<String>.unmodifiable(_durationOptions);
   }
 
-  String getDefaultRestaurantName() => AppStrings.saffronHouse;
+  String getDefaultRestaurantName() => '';
 
   static List<String> get _timeSlots => [
-        AppStrings.timeSlotOne,
-        AppStrings.timeSlotTwo,
-        AppStrings.timeSlotThree,
-        AppStrings.timeSlotFour,
-      ];
+    AppStrings.timeSlotOne,
+    AppStrings.timeSlotTwo,
+    AppStrings.timeSlotThree,
+    AppStrings.timeSlotFour,
+  ];
 
   static List<String> get _durationOptions => [
-        AppStrings.durationOnePointFive,
-        AppStrings.durationTwo,
-        AppStrings.durationTwoPointFive,
-      ];
+    AppStrings.durationOnePointFive,
+    AppStrings.durationTwo,
+    AppStrings.durationTwoPointFive,
+  ];
 }

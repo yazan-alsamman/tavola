@@ -10,6 +10,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../home/model/restaurant_model.dart';
 import '../../profile/widgets/profile_reservation_card.dart';
 import 'onboarding_glass_shell.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// Confirmation preview with glass shell and readable inner panels.
 class OnboardingConfirmationPreviewContent extends StatelessWidget {
@@ -28,10 +29,10 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
   );
 
   static List<(String, String)> get _reservationDetails => [
-        (AppStrings.date, AppStrings.onboardingReservationDateLabel),
-        (AppStrings.time, AppStrings.reservationTime),
-        (AppStrings.guests, AppStrings.onboardingPartyGuestsLabel),
-      ];
+    (AppStrings.date, AppStrings.onboardingReservationDateLabel),
+    (AppStrings.time, AppStrings.reservationTime),
+    (AppStrings.guests, AppStrings.onboardingPartyGuestsLabel),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +42,7 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OnboardingGlassHeader(
-            icon: Icons.check_rounded,
+            icon: Symbols.check,
             title: AppStrings.confirmed,
             message: AppStrings.onboardingConfirmedMessage,
           ),
@@ -53,9 +54,7 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
             compact: true,
           ),
           const OnboardingGlassDivider(),
-          const OnboardingGlassInnerCard(
-            child: _ConfirmationCodeRow(),
-          ),
+          const OnboardingGlassInnerCard(child: _ConfirmationCodeRow()),
           const OnboardingGlassDivider(),
           OnboardingGlassSectionLabel(
             text: AppStrings.onboardingContactRestaurant,
@@ -63,7 +62,7 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
           const SizedBox(height: AppDimensions.compactSpacing),
           _QuickActionPill(
             label: AppStrings.onboardingChangeDate,
-            icon: Icons.calendar_month_rounded,
+            icon: Symbols.calendar_month,
             emphasized: true,
           ),
           const SizedBox(height: AppDimensions.compactSpacing),
@@ -72,21 +71,21 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
               Expanded(
                 child: _QuickActionPill(
                   label: AppStrings.onboardingCall,
-                  icon: Icons.call_rounded,
+                  icon: Symbols.call,
                 ),
               ),
               SizedBox(width: AppDimensions.compactSpacing),
               Expanded(
                 child: _QuickActionPill(
                   label: AppStrings.onboardingDirections,
-                  icon: Icons.directions_rounded,
+                  icon: Symbols.directions,
                 ),
               ),
               SizedBox(width: AppDimensions.compactSpacing),
               Expanded(
                 child: _QuickActionPill(
                   label: AppStrings.onboardingCancel,
-                  icon: Icons.close_rounded,
+                  icon: Symbols.close,
                   muted: true,
                 ),
               ),
@@ -133,9 +132,7 @@ class _ConfirmationCodeRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppDimensions.compactSpacing),
-        const ReservationQrCode(
-          data: AppStrings.confirmationReferenceCode,
-        ),
+        const ReservationQrCode(data: AppStrings.confirmationReferenceCode),
       ],
     );
   }
@@ -159,14 +156,20 @@ class _QuickActionPill extends StatelessWidget {
     final Color background = emphasized
         ? AppColors.accent
         : muted
-            ? AppColors.textLight.withValues(alpha: 0.1)
-            : AppColors.textLight.withValues(alpha: 0.16);
+        ? AppColors.textLight.withValues(
+            alpha: AppDimensions.onboardingPreviewMutedFillAlpha,
+          )
+        : AppColors.textLight.withValues(
+            alpha: AppDimensions.onboardingPreviewFillAlpha,
+          );
     final Color foreground = emphasized
         ? AppColors.primaryDark
         : AppColors.textLight;
     final Color borderColor = emphasized
         ? AppColors.accent
-        : AppColors.textLight.withValues(alpha: 0.2);
+        : AppColors.textLight.withValues(
+            alpha: AppDimensions.onboardingPreviewBorderAlpha,
+          );
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -182,11 +185,7 @@ class _QuickActionPill extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: AppDimensions.smallIconSize,
-            color: foreground,
-          ),
+          Icon(icon, size: AppDimensions.smallIconSize, color: foreground),
           const SizedBox(width: AppDimensions.tinySpacing),
           Flexible(
             child: Text(

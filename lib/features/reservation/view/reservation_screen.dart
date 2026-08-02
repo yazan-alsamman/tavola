@@ -12,6 +12,7 @@ import '../widgets/reservation_calendar_panel.dart';
 import '../widgets/reservation_diners_panel.dart';
 import '../widgets/reservation_duration_panel.dart';
 import '../widgets/reservation_time_slots_panel.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ReservationScreen extends StatelessWidget {
   const ReservationScreen({super.key});
@@ -35,7 +36,7 @@ class ReservationScreen extends StatelessWidget {
                       child: IconButton(
                         onPressed: Get.back,
                         icon: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
+                          Symbols.arrow_back_ios_new,
                           color: AppColors.primary,
                           size: AppDimensions.mediumIconSize,
                         ),
@@ -75,40 +76,60 @@ class ReservationScreen extends StatelessWidget {
               ),
               child: SizedBox(
                 width: double.infinity,
-                child: HoverableButton(
-                  child: ElevatedButton(
-                    onPressed: controller.proceedToSelectTable,
-                    style: AppButtonStyles.filledHover(
-                      ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryDark,
-                        foregroundColor: AppColors.textLight,
-                        textStyle: AppTextStyles.reservationNextButton,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppDimensions.buttonVerticalPadding,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.cardRadius,
+                child: Obx(() {
+                  final bool busy =
+                      controller.isSearchingAvailability.value ||
+                      controller.isResolvingBranch.value;
+                  return HoverableButton(
+                    child: ElevatedButton(
+                      onPressed: busy ? null : controller.proceedToSelectTable,
+                      style: AppButtonStyles.filledHover(
+                        ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryDark,
+                          foregroundColor: AppColors.textLight,
+                          textStyle: AppTextStyles.reservationNextButton,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppDimensions.buttonVerticalPadding,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.cardRadius,
+                            ),
                           ),
                         ),
+                        idleBackground: AppColors.primaryDark,
                       ),
-                      idleBackground: AppColors.primaryDark,
+                      child: busy
+                          ? const SizedBox(
+                              width: AppDimensions.mediumIconSize,
+                              height: AppDimensions.mediumIconSize,
+                              child: CircularProgressIndicator(
+                                strokeWidth:
+                                    AppDimensions.progressIndicatorStrokeWidth,
+                                color: AppColors.textLight,
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  AppStrings.nextSelectTable,
+                                  style: AppTextStyles.reservationNextButton,
+                                ),
+                                const SizedBox(
+                                  width: AppDimensions.smallSpacing,
+                                ),
+                                const Icon(
+                                  Symbols.arrow_forward_ios,
+                                  color: AppColors.textLight,
+                                  size: AppDimensions.smallIconSize,
+                                ),
+                              ],
+                            ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(AppStrings.nextSelectTable),
-                        const SizedBox(width: AppDimensions.smallSpacing),
-                        const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          color: AppColors.textLight,
-                          size: AppDimensions.smallIconSize,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                  );
+                }),
               ),
             ),
           ],

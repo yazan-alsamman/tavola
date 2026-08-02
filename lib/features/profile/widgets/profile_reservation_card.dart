@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../common/widgets/app_safe_image.dart';
 import '../../../common/widgets/hoverable_card.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../home/model/restaurant_model.dart';
 
@@ -14,18 +16,24 @@ class ProfileReservationCard extends StatelessWidget {
     required this.details,
     this.showBottomMargin = true,
     this.compact = false,
+    this.onCancel,
+    this.onReschedule,
   });
 
   final RestaurantModel restaurant;
   final List<(String, String)> details;
   final bool showBottomMargin;
   final bool compact;
+  final VoidCallback? onCancel;
+  final VoidCallback? onReschedule;
 
   static const List<IconData> _detailIcons = [
-    Icons.calendar_today,
-    Icons.access_time,
-    Icons.person,
+    Symbols.calendar_today,
+    Symbols.schedule,
+    Symbols.person,
   ];
+
+  bool get _hasActions => onCancel != null || onReschedule != null;
 
   double get _cardHeight => compact
       ? AppDimensions.onboardingReservationCardHeight
@@ -39,7 +47,8 @@ class ProfileReservationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return HoverableCard(
       child: Container(
-        height: _cardHeight,
+        // Height comes from content + minHeight on the media row (not a
+        // fixed outer height that clips Arabic labels).
         margin: showBottomMargin
             ? const EdgeInsets.only(bottom: AppDimensions.sectionSpacing)
             : EdgeInsets.zero,
@@ -55,50 +64,70 @@ class ProfileReservationCard extends StatelessWidget {
           ),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: _imageWidth,
-              height: double.infinity,
-              child: AppSafeImage(
-                path: restaurant.imageUrl,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Expanded(
-              child: Container(
-                color: AppColors.surface,
-                padding: EdgeInsets.all(
-                  compact
-                      ? AppDimensions.compactSpacing
-                      : AppDimensions.contentPadding,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+            // IntrinsicHeight gives the stretch Row a finite height (avoids
+            // infinite-height crash) while still growing for long labels.
+            ConstrainedBox(
+              constraints: BoxConstraints(minHeight: _cardHeight),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      restaurant.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.reservationTitle,
-                    ),
                     SizedBox(
-                      height: compact
-                          ? AppDimensions.compactSpacing
-                          : AppDimensions.regularSpacing,
+                      width: _imageWidth,
+                      child: AppSafeImage(
+                        path: restaurant.imageUrl,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                    Row(
-                      children: List.generate(
-                        details.length,
-                        (index) => Expanded(
-                          child: _ReservationInfoItem(
-                            icon: _detailIcons[index],
-                            label: details[index].$1,
-                            value: details[index].$2,
-                            compact: compact,
-                          ),
+                    Expanded(
+                      child: Container(
+                        color: AppColors.surface,
+                        padding: EdgeInsets.all(
+                          compact
+                              ? AppDimensions.compactSpacing
+                              : AppDimensions.contentPadding,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              restaurant.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.reservationTitle,
+                            ),
+                            SizedBox(
+                              height: compact
+                                  ? AppDimensions.compactSpacing
+                                  : AppDimensions.regularSpacing,
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: List.generate(
+                                details.length,
+                                (index) => Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsetsDirectional.only(
+                                      end: index == details.length - 1
+                                          ? 0
+                                          : AppDimensions.tinySpacing,
+                                    ),
+                                    child: _ReservationInfoItem(
+                                      icon: _detailIcons[index],
+                                      label: details[index].$1,
+                                      value: details[index].$2,
+                                      compact: compact,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -106,6 +135,48 @@ class ProfileReservationCard extends StatelessWidget {
                 ),
               ),
             ),
+            if (_hasActions) ...[
+              const Divider(
+                height: AppDimensions.cardBorderWidth,
+                color: AppColors.border,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppDimensions.compactSpacing),
+                child: Row(
+                  children: [
+                    if (onReschedule != null)
+                      Expanded(
+                        child: TextButton(
+                          onPressed: onReschedule,
+                          child: Text(
+                            AppStrings.rescheduleReservation,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    if (onReschedule != null && onCancel != null)
+                      const SizedBox(width: AppDimensions.compactSpacing),
+                    if (onCancel != null)
+                      Expanded(
+                        child: TextButton(
+                          onPressed: onCancel,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.warning,
+                          ),
+                          child: Text(
+                            AppStrings.cancelReservation,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -130,6 +201,7 @@ class _ReservationInfoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
@@ -143,21 +215,37 @@ class _ReservationInfoItem extends StatelessWidget {
               ? AppDimensions.tinySpacing
               : AppDimensions.compactSpacing,
         ),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.label,
+        SizedBox(
+          height: AppDimensions.reservationDetailLabelLineHeight,
+          width: double.infinity,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.label,
+          ),
         ),
         const SizedBox(height: AppDimensions.tinySpacing),
-        Text(
-          value,
-          maxLines: compact ? 1 : 2,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.body.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: compact ? 12 : null,
+        SizedBox(
+          height: AppDimensions.reservationDetailValueLineHeight,
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              value,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.fade,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: compact
+                    ? AppDimensions.reservationDetailCompactValueFontSize
+                    : null,
+                height: 1,
+              ),
+            ),
           ),
         ),
       ],

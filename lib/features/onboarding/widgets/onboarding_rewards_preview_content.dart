@@ -5,6 +5,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import 'onboarding_glass_shell.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// Rewards preview with premium glass styling and readable inner offer cards.
 class OnboardingRewardsPreviewContent extends StatelessWidget {
@@ -18,7 +19,7 @@ class OnboardingRewardsPreviewContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OnboardingGlassHeader(
-            icon: Icons.workspace_premium_rounded,
+            icon: Symbols.workspace_premium,
             title: AppStrings.onboardingLoyaltyRewards,
             message: AppStrings.onboardingRewardsHint,
           ),
@@ -30,8 +31,7 @@ class OnboardingRewardsPreviewContent extends StatelessWidget {
               Expanded(
                 child: Text(
                   AppStrings.onboardingLoyaltyDiscounts,
-                  style:
-                      AppTextStyles.onboardingRewardsProgressLabel.copyWith(
+                  style: AppTextStyles.onboardingRewardsProgressLabel.copyWith(
                     color: AppColors.textLight,
                   ),
                 ),
@@ -57,7 +57,7 @@ class OnboardingRewardsPreviewContent extends StatelessWidget {
           const SizedBox(height: AppDimensions.compactSpacing),
           OnboardingGlassInnerCard(
             child: _RewardOfferContent(
-              icon: Icons.restaurant_menu_rounded,
+              icon: Symbols.restaurant_menu,
               title: AppStrings.onboardingLoyaltyOfferTwoTitle,
               place: AppStrings.onboardingLoyaltyOfferTwoPlace,
               points: AppStrings.onboardingLoyaltyOfferTwoPoints,
@@ -67,7 +67,7 @@ class OnboardingRewardsPreviewContent extends StatelessWidget {
           const SizedBox(height: AppDimensions.compactSpacing),
           OnboardingGlassInnerCard(
             child: _RewardOfferContent(
-              icon: Icons.dinner_dining_rounded,
+              icon: Symbols.dinner_dining,
               title: AppStrings.onboardingLoyaltyOfferOneTitle,
               place: AppStrings.onboardingLoyaltyOfferOnePlace,
               points: AppStrings.onboardingLoyaltyOfferOnePoints,
@@ -76,12 +76,12 @@ class OnboardingRewardsPreviewContent extends StatelessWidget {
           ),
           const OnboardingGlassDivider(),
           _GlassBenefitRow(
-            icon: Icons.event_seat_rounded,
+            icon: Symbols.event_seat,
             label: AppStrings.onboardingLoyaltyBenefitOne,
           ),
           const SizedBox(height: AppDimensions.compactSpacing),
           _GlassBenefitRow(
-            icon: Icons.cake_rounded,
+            icon: Symbols.cake,
             label: AppStrings.onboardingLoyaltyBenefitTwo,
           ),
         ],
@@ -173,10 +173,14 @@ class _GlassStatChip extends StatelessWidget {
           vertical: AppDimensions.tinySpacing,
         ),
         decoration: BoxDecoration(
-          color: AppColors.textLight.withValues(alpha: 0.1),
+          color: AppColors.textLight.withValues(
+            alpha: AppDimensions.onboardingPreviewMutedFillAlpha,
+          ),
           borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
           border: Border.all(
-            color: AppColors.textLight.withValues(alpha: 0.16),
+            color: AppColors.textLight.withValues(
+              alpha: AppDimensions.onboardingPreviewSoftBorderAlpha,
+            ),
           ),
         ),
         child: Column(
@@ -279,7 +283,7 @@ class _RewardOfferContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             const Icon(
-              Icons.star_rounded,
+              Symbols.star,
               size: AppDimensions.smallIconSize,
               color: AppColors.accent,
             ),

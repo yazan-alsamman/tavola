@@ -37,7 +37,9 @@ class DetailsInfoBox extends StatelessWidget {
           const SizedBox(height: AppDimensions.regularSpacing),
           ...openingHours.map(
             (day) => Padding(
-              padding: const EdgeInsets.only(bottom: AppDimensions.compactSpacing),
+              padding: const EdgeInsets.only(
+                bottom: AppDimensions.compactSpacing,
+              ),
               child: Row(
                 children: [
                   Expanded(

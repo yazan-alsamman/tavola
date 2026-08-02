@@ -18,8 +18,8 @@ class RestaurantNearCard extends StatelessWidget {
     return HoverableCard(
       child: Card(
         child: ListTile(
-          title: Text(title, style: AppTextStyles.placeholder),
-          subtitle: Text(subtitle, style: AppTextStyles.placeholder),
+          title: Text(title, style: AppTextStyles.compactRestaurantTitle),
+          subtitle: Text(subtitle, style: AppTextStyles.compactRestaurantBody),
         ),
       ),
     );

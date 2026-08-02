@@ -36,7 +36,8 @@ class OnboardingAnimatedPageLayout extends StatefulWidget {
       _OnboardingAnimatedPageLayoutState();
 }
 
-class _OnboardingAnimatedPageLayoutState extends State<OnboardingAnimatedPageLayout>
+class _OnboardingAnimatedPageLayoutState
+    extends State<OnboardingAnimatedPageLayout>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _textOpacity;
@@ -173,7 +174,8 @@ class _OnboardingAnimatedPageLayoutState extends State<OnboardingAnimatedPageLay
                                 ),
                               ),
                               SizedBox(
-                                height: AppDimensions.regularSpacing *
+                                height:
+                                    AppDimensions.regularSpacing *
                                     _spacingFactor.value,
                               ),
                               FadeTransition(

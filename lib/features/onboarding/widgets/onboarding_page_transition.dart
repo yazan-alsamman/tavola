@@ -28,8 +28,10 @@ class OnboardingPageTransition extends StatelessWidget {
         final double delta = (page - index).clamp(-1.0, 1.0);
         final double distance = delta.abs();
         final double opacity =
-            (1.0 - (distance * AppDimensions.onboardingPageFadeFactor))
-                .clamp(0.0, 1.0);
+            (1.0 - (distance * AppDimensions.onboardingPageFadeFactor)).clamp(
+              0.0,
+              1.0,
+            );
         final double scale =
             1.0 - (distance * AppDimensions.onboardingPageScaleFactor);
         final double slideX = delta * AppDimensions.onboardingPageSlideX;

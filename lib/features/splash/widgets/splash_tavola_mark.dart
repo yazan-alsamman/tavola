@@ -23,91 +23,23 @@ class SplashTavolaMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String mark = AppStrings.splashBrandMark;
-    final List<double> advances = <double>[];
-    for (int i = 0; i < mark.length; i++) {
-      final TextPainter letter = TextPainter(
-        text: TextSpan(text: mark[i], style: AppTextStyles.splashBrandGlyph),
-        textDirection: TextDirection.ltr,
-        maxLines: 1,
-      )..layout();
-      advances.add(letter.width);
-    }
-
-    final List<double> lefts = <double>[];
-    double cursor = 0;
-    for (int i = 0; i < advances.length; i++) {
-      lefts.add(cursor);
-      cursor += advances[i];
-      if (i < advances.length - 1) {
-        cursor += AppDimensions.splashBrandLetterSpacing;
-      }
-    }
-    final double totalWidth = cursor;
-
-    final TextPainter heightProbe = TextPainter(
-      text: TextSpan(text: mark, style: AppTextStyles.splashBrandGlyph),
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    )..layout();
-    final double markHeight = heightProbe.height;
-
-    final double tWidth = advances[0];
-    final double firstALeft = lefts[1];
-    final double firstAWidth = advances[1];
-    final double lLeft = lefts[4];
-    final double lWidth = advances[4];
-    final double lastALeft = lefts[5];
-    final double lastAWidth = advances[5];
-
-    final double barY = markHeight * AppDimensions.splashBarHeightFactor;
-    // Stem tip and bar cut share one X (pivot is the tip, not the box center).
-    final double tipFrac =
-        (1 + AppDimensions.splashLavenderPivotX) / 2;
-    final double cutCenterX = firstALeft +
-        (firstAWidth * AppDimensions.splashLavenderOnAFactor) +
-        AppDimensions.splashLavenderHorizontalNudge;
-    final double gapStart =
-        cutCenterX - AppDimensions.splashLavenderBarGapHalf;
-    final double gapEnd = cutCenterX + AppDimensions.splashLavenderBarGapHalf;
-    final double cutY = barY;
-
-    final _TavolaStrokeLayout strokeLayout = _TavolaStrokeLayout(
-      tWidth: tWidth,
-      lLeft: lLeft,
-      lWidth: lWidth,
-      lastALeft: lastALeft,
-      lastAWidth: lastAWidth,
-      markHeight: markHeight,
-      gapStartX: gapStart,
-      gapEndX: gapEnd,
-    );
-
-    final double lavenderTopLift = math.max(
-      0,
-      AppDimensions.splashLavenderHeight -
-          AppDimensions.splashLavenderBarOverlap -
-          barY,
-    );
-    final double sidePad = AppDimensions.splashLavenderWidth *
-        AppDimensions.splashLavenderSidePadFactor;
-
-    // Glyphs a, v, o, a — `l` is formed by the elongated T stroke itself.
-    const List<int> revealGlyphIndexes = <int>[1, 2, 3, 5];
+    // Glyph metrics are constant for the splash typeface — compute once and
+    // reuse across every AnimatedBuilder tick (avoids TextPainter.layout jank).
+    final _BrandMarkMetrics metrics = _BrandMarkMetrics.obtain();
 
     return AnimatedBuilder(
       animation: drawProgress,
       child: lavenderImage,
-      builder: (context, lavenderChild) {
+      builder: (BuildContext context, Widget? lavenderChild) {
         final double draw = Curves.easeInOutCubic.transform(drawProgress.value);
-        final double lavT = ((draw - AppDimensions.splashLavenderRevealAt) /
-                AppDimensions.splashLavenderRevealSpread)
-            .clamp(0.0, 1.0);
-        // Slow drop + settle, same easing family as the T stroke.
-        final double lavMotion =
-            Curves.easeInOutCubic.transform(lavT);
+        final double lavT =
+            ((draw - AppDimensions.splashLavenderRevealAt) /
+                    AppDimensions.splashLavenderRevealSpread)
+                .clamp(0.0, 1.0);
+        final double lavMotion = Curves.easeInOutCubic.transform(lavT);
         final double lavOpacity = Curves.easeOut.transform(lavT);
-        final double lavScale = AppDimensions.splashLavenderStartScale +
+        final double lavScale =
+            AppDimensions.splashLavenderStartScale +
             (AppDimensions.splashLavenderEndScale -
                     AppDimensions.splashLavenderStartScale) *
                 lavMotion;
@@ -115,51 +47,52 @@ class SplashTavolaMark extends StatelessWidget {
             AppDimensions.splashLavenderDropDistance * (1 - lavMotion);
         final double lavTiltDegrees =
             AppDimensions.splashLavenderTiltDegrees +
-                (AppDimensions.splashLavenderEntranceTiltExtra *
-                    (1 - lavMotion));
-        final double strokeFrontX = strokeLayout.frontX(draw);
+            (AppDimensions.splashLavenderEntranceTiltExtra * (1 - lavMotion));
+        final double strokeFrontX = metrics.strokeLayout.frontX(draw);
 
         return SizedBox(
-          width: totalWidth + (sidePad * 2),
-          // Equal top/bottom reserve keeps the word optically screen-centered.
-          height: markHeight + (lavenderTopLift * 2),
+          width: metrics.totalWidth + (metrics.sidePad * 2),
+          height: metrics.markHeight + (metrics.lavenderTopLift * 2),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
               Positioned(
-                left: sidePad,
-                right: sidePad,
-                top: lavenderTopLift,
-                height: markHeight,
+                left: metrics.sidePad,
+                right: metrics.sidePad,
+                top: metrics.lavenderTopLift,
+                height: metrics.markHeight,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    for (final int index in revealGlyphIndexes)
+                    for (final int index
+                        in _BrandMarkMetrics.revealGlyphIndexes)
                       Positioned(
-                        left: lefts[index],
+                        left: metrics.lefts[index],
                         bottom: 0,
                         child: _RevealedBrandGlyph(
-                          glyph: mark[index],
+                          glyph: metrics.mark[index],
                           progress: _letterProgressFromStroke(
                             strokeFrontX: strokeFrontX,
-                            letterLeft: lefts[index],
-                            letterWidth: advances[index],
+                            letterLeft: metrics.lefts[index],
+                            letterWidth: metrics.advances[index],
                           ),
                         ),
                       ),
                     CustomPaint(
-                      size: Size(totalWidth, markHeight),
+                      size: Size(metrics.totalWidth, metrics.markHeight),
                       painter: _TavolaStrokePainter(
                         progress: draw,
-                        layout: strokeLayout,
+                        layout: metrics.strokeLayout,
                       ),
                     ),
                     if (lavT > 0)
                       Positioned(
-                        // Stem tip (pivot) sits exactly on cutCenterX, cutY.
-                        left: cutCenterX -
-                            (AppDimensions.splashLavenderWidth * tipFrac),
-                        top: cutY -
+                        left:
+                            metrics.cutCenterX -
+                            (AppDimensions.splashLavenderWidth *
+                                metrics.tipFrac),
+                        top:
+                            metrics.cutY -
                             AppDimensions.splashLavenderHeight +
                             AppDimensions.splashLavenderBarOverlap,
                         width: AppDimensions.splashLavenderWidth,
@@ -203,19 +136,133 @@ class SplashTavolaMark extends StatelessWidget {
   }) {
     final double triggerX =
         letterLeft + (letterWidth * AppDimensions.splashLetterRevealAtFactor);
-    final double span =
-        math.max(letterWidth * AppDimensions.splashLetterRevealSpanFactor, 1);
+    final double span = math.max(
+      letterWidth * AppDimensions.splashLetterRevealSpanFactor,
+      1,
+    );
     final double raw = ((strokeFrontX - triggerX) / span).clamp(0.0, 1.0);
-    // Match the T-stroke easing so each glyph settles with the bar.
     return Curves.easeInOutCubic.transform(raw);
   }
 }
 
-class _RevealedBrandGlyph extends StatelessWidget {
-  const _RevealedBrandGlyph({
-    required this.glyph,
-    required this.progress,
+/// Immutable glyph/stroke geometry for the splash wordmark.
+class _BrandMarkMetrics {
+  const _BrandMarkMetrics._({
+    required this.mark,
+    required this.advances,
+    required this.lefts,
+    required this.totalWidth,
+    required this.markHeight,
+    required this.tipFrac,
+    required this.cutCenterX,
+    required this.cutY,
+    required this.lavenderTopLift,
+    required this.sidePad,
+    required this.strokeLayout,
   });
+
+  static const List<int> revealGlyphIndexes = <int>[1, 2, 3, 5];
+
+  static _BrandMarkMetrics? _cached;
+
+  static _BrandMarkMetrics obtain() => _cached ??= _BrandMarkMetrics._compute();
+
+  static _BrandMarkMetrics _compute() {
+    final String mark = AppStrings.splashBrandMark;
+    final List<double> advances = <double>[];
+    for (int i = 0; i < mark.length; i++) {
+      final TextPainter letter = TextPainter(
+        text: TextSpan(text: mark[i], style: AppTextStyles.splashBrandGlyph),
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+      )..layout();
+      advances.add(letter.width);
+    }
+
+    final List<double> lefts = <double>[];
+    double cursor = 0;
+    for (int i = 0; i < advances.length; i++) {
+      lefts.add(cursor);
+      cursor += advances[i];
+      if (i < advances.length - 1) {
+        cursor += AppDimensions.splashBrandLetterSpacing;
+      }
+    }
+    final double totalWidth = cursor;
+
+    final TextPainter heightProbe = TextPainter(
+      text: TextSpan(text: mark, style: AppTextStyles.splashBrandGlyph),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    final double markHeight = heightProbe.height;
+
+    final double tWidth = advances[0];
+    final double firstALeft = lefts[1];
+    final double firstAWidth = advances[1];
+    final double lLeft = lefts[4];
+    final double lWidth = advances[4];
+    final double lastALeft = lefts[5];
+    final double lastAWidth = advances[5];
+
+    final double barY = markHeight * AppDimensions.splashBarHeightFactor;
+    final double tipFrac = (1 + AppDimensions.splashLavenderPivotX) / 2;
+    final double cutCenterX =
+        firstALeft +
+        (firstAWidth * AppDimensions.splashLavenderOnAFactor) +
+        AppDimensions.splashLavenderHorizontalNudge;
+    final double gapStart = cutCenterX - AppDimensions.splashLavenderBarGapHalf;
+    final double gapEnd = cutCenterX + AppDimensions.splashLavenderBarGapHalf;
+
+    final double lavenderTopLift = math.max(
+      0,
+      AppDimensions.splashLavenderHeight -
+          AppDimensions.splashLavenderBarOverlap -
+          barY,
+    );
+    final double sidePad =
+        AppDimensions.splashLavenderWidth *
+        AppDimensions.splashLavenderSidePadFactor;
+
+    return _BrandMarkMetrics._(
+      mark: mark,
+      advances: advances,
+      lefts: lefts,
+      totalWidth: totalWidth,
+      markHeight: markHeight,
+      tipFrac: tipFrac,
+      cutCenterX: cutCenterX,
+      cutY: barY,
+      lavenderTopLift: lavenderTopLift,
+      sidePad: sidePad,
+      strokeLayout: _TavolaStrokeLayout(
+        tWidth: tWidth,
+        lLeft: lLeft,
+        lWidth: lWidth,
+        lastALeft: lastALeft,
+        lastAWidth: lastAWidth,
+        markHeight: markHeight,
+        gapStartX: gapStart,
+        gapEndX: gapEnd,
+      ),
+    );
+  }
+
+  final String mark;
+  final List<double> advances;
+  final List<double> lefts;
+  final double totalWidth;
+  final double markHeight;
+  final double tipFrac;
+  final double cutCenterX;
+  final double cutY;
+  final double lavenderTopLift;
+  final double sidePad;
+  final _TavolaStrokeLayout strokeLayout;
+}
+
+class _RevealedBrandGlyph extends StatelessWidget {
+  const _RevealedBrandGlyph({required this.glyph, required this.progress});
 
   final String glyph;
   final double progress;
@@ -230,7 +277,8 @@ class _RevealedBrandGlyph extends StatelessWidget {
     final double opacity = progress;
     final double rise = AppDimensions.splashLetterRise * settle;
     final double slide = AppDimensions.splashLetterSlide * settle;
-    final double scale = AppDimensions.splashLetterStartScale +
+    final double scale =
+        AppDimensions.splashLetterStartScale +
         ((1 - AppDimensions.splashLetterStartScale) * progress);
 
     return Opacity(
@@ -289,8 +337,7 @@ class _TavolaStrokeLayout {
 
   double get lBottom => markHeight * AppDimensions.splashLDropBottomFactor;
 
-  double get stemBottom =>
-      markHeight * AppDimensions.splashTStemBottomFactor;
+  double get stemBottom => markHeight * AppDimensions.splashTStemBottomFactor;
 
   /// Horizontal front of the elongated T as draw progress advances.
   double frontX(double progress) {
@@ -350,10 +397,7 @@ class _TavolaStrokeLayout {
 }
 
 class _TavolaStrokePainter extends CustomPainter {
-  const _TavolaStrokePainter({
-    required this.progress,
-    required this.layout,
-  });
+  const _TavolaStrokePainter({required this.progress, required this.layout});
 
   final double progress;
   final _TavolaStrokeLayout layout;

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import 'auth_text_field.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class AuthPasswordField extends StatelessWidget {
   const AuthPasswordField({
@@ -27,9 +28,7 @@ class AuthPasswordField extends StatelessWidget {
       suffixIcon: IconButton(
         onPressed: onToggleVisibility,
         icon: Icon(
-          obscurePassword
-              ? Icons.visibility_off_outlined
-              : Icons.visibility_outlined,
+          obscurePassword ? Symbols.visibility_off : Symbols.visibility,
           color: AppColors.primary,
           size: AppDimensions.authPasswordIconSize,
         ),

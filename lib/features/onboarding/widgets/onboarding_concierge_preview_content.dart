@@ -6,6 +6,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../concierge/widgets/concierge_message_card.dart';
 import 'onboarding_glass_shell.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// Tavola AI preview with a frosted primaryDark glass card.
 class OnboardingConciergePreviewContent extends StatelessWidget {
@@ -19,7 +20,7 @@ class OnboardingConciergePreviewContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OnboardingGlassHeader(
-            icon: Icons.auto_awesome_rounded,
+            icon: Symbols.auto_awesome,
             title: AppStrings.onboardingDinemateTitle,
             message: AppStrings.onboardingDinemateStatus,
           ),
@@ -31,12 +32,14 @@ class OnboardingConciergePreviewContent extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(AppDimensions.contentPadding),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.cardRadius,
+                  color: AppColors.accent.withValues(
+                    alpha: AppDimensions.onboardingConciergeBubbleFillAlpha,
                   ),
+                  borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
                   border: Border.all(
-                    color: AppColors.textLight.withValues(alpha: 0.2),
+                    color: AppColors.textLight.withValues(
+                      alpha: AppDimensions.onboardingPreviewBorderAlpha,
+                    ),
                   ),
                 ),
                 child: Text(
@@ -49,9 +52,7 @@ class OnboardingConciergePreviewContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppDimensions.compactSpacing),
-          ConciergeMessageCard(
-            message: AppStrings.onboardingDinemateAiMessage,
-          ),
+          ConciergeMessageCard(message: AppStrings.onboardingDinemateAiMessage),
           const OnboardingGlassDivider(),
           OnboardingGlassFrostPanel(
             child: Row(
@@ -74,17 +75,16 @@ class OnboardingConciergePreviewContent extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.35),
-                        blurRadius: AppDimensions.shadowBlur,
-                        offset: const Offset(
-                          0,
-                          AppDimensions.tinySpacing,
+                        color: AppColors.accent.withValues(
+                          alpha: AppDimensions.onboardingConciergeGlowAlpha,
                         ),
+                        blurRadius: AppDimensions.shadowBlur,
+                        offset: const Offset(0, AppDimensions.tinySpacing),
                       ),
                     ],
                   ),
                   child: const Icon(
-                    Icons.send_rounded,
+                    Symbols.send,
                     size: AppDimensions.conciergeSendIconSize,
                     color: AppColors.primaryDark,
                   ),

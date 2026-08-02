@@ -19,7 +19,9 @@ class DetailsMenuSection extends StatelessWidget {
         const SizedBox(height: AppDimensions.regularSpacing),
         ...menuItems.map(
           (item) => Padding(
-            padding: const EdgeInsets.only(bottom: AppDimensions.regularSpacing),
+            padding: const EdgeInsets.only(
+              bottom: AppDimensions.regularSpacing,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

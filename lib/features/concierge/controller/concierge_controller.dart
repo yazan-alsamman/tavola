@@ -23,10 +23,7 @@ class ConciergeController extends GetxController {
   void exploreGildedOlive() {}
 
   void handleBottomNavigation(int index) {
-    BottomNavNavigation.handle(
-      index,
-      currentIndex: chatNavigationIndex,
-    );
+    BottomNavNavigation.handle(index, currentIndex: chatNavigationIndex);
   }
 
   @override

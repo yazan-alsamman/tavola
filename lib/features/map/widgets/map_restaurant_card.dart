@@ -9,6 +9,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../../home/model/restaurant_model.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class MapRestaurantCard extends StatelessWidget {
   const MapRestaurantCard({
@@ -40,10 +41,7 @@ class MapRestaurantCard extends StatelessWidget {
             SizedBox(
               height: AppDimensions.mapCardImageHeight,
               width: double.infinity,
-              child: AppSafeImage(
-                path: restaurant.imageUrl,
-                fit: BoxFit.cover,
-              ),
+              child: AppSafeImage(path: restaurant.imageUrl, fit: BoxFit.cover),
             ),
             Padding(
               padding: const EdgeInsets.all(AppDimensions.contentPadding),
@@ -60,7 +58,7 @@ class MapRestaurantCard extends StatelessWidget {
                             Text(restaurant.name, style: AppTextStyles.title),
                             const SizedBox(height: AppDimensions.tinySpacing),
                             Text(
-                              '${restaurant.cuisine}'
+                              '${AppStrings.localizeUiLabel(restaurant.cuisine)}'
                               '${AppStrings.restaurantSummarySeparator}'
                               '${restaurant.location}',
                               style: AppTextStyles.body,
@@ -72,13 +70,13 @@ class MapRestaurantCard extends StatelessWidget {
                         child: TextButton.icon(
                           onPressed: onSave,
                           icon: Icon(
-                            isSaved
-                                ? Icons.bookmark_rounded
-                                : Icons.bookmark_border_rounded,
+                            Symbols.bookmark,
+                            fill: isSaved ? 1 : 0,
                             size: AppDimensions.mapCardSaveIconSize,
                           ),
                           label: Text(
                             isSaved ? AppStrings.saved : AppStrings.save,
+                            style: AppTextStyles.label,
                           ),
                           style: AppButtonStyles.textHover(
                             TextButton.styleFrom(
@@ -98,6 +96,7 @@ class MapRestaurantCard extends StatelessWidget {
                             onPressed: onReserve,
                             style: AppButtonStyles.filledHover(
                               ElevatedButton.styleFrom(
+                                textStyle: AppTextStyles.authPrimaryButton,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: AppDimensions.buttonVerticalPadding,
                                 ),
@@ -110,7 +109,10 @@ class MapRestaurantCard extends StatelessWidget {
                             ),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(AppStrings.reserveTable),
+                              child: Text(
+                                AppStrings.reserveTable,
+                                style: AppTextStyles.authPrimaryButton,
+                              ),
                             ),
                           ),
                         ),
@@ -122,6 +124,7 @@ class MapRestaurantCard extends StatelessWidget {
                             onPressed: onViewDetails,
                             style: AppButtonStyles.outlinedHover(
                               OutlinedButton.styleFrom(
+                                textStyle: AppTextStyles.authPrimaryButton,
                                 side: const BorderSide(
                                   color: AppColors.primary,
                                 ),
@@ -137,7 +140,10 @@ class MapRestaurantCard extends StatelessWidget {
                             ),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(AppStrings.viewDetails),
+                              child: Text(
+                                AppStrings.viewDetails,
+                                style: AppTextStyles.authPrimaryButton,
+                              ),
                             ),
                           ),
                         ),

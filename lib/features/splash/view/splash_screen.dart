@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_images.dart';
+import '../controller/splash_controller.dart';
+import '../splash_assets.dart';
 import '../widgets/splash_tavola_mark.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,9 +19,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  static const AssetImage _lavenderAsset =
-      AssetImage(AppImages.splashLavender);
-
   late final AnimationController _introController;
   late final AnimationController _drawController;
   late final CurvedAnimation _introCurve;
@@ -26,11 +26,41 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _fadeAnimation;
   late final Animation<double> _scaleAnimation;
   Timer? _drawStartTimer;
-  bool _didPrecacheLavender = false;
+  late final Widget _lavenderImage;
 
   @override
   void initState() {
     super.initState();
+
+    // Resolve controller put in `main()` / Binding before first paint.
+    Get.find<SplashController>();
+
+    _lavenderImage = SplashAssets.lavenderImage != null
+        ? RawImage(
+            image: SplashAssets.lavenderImage,
+            width: AppDimensions.splashLavenderWidth,
+            height: AppDimensions.splashLavenderHeight,
+            fit: BoxFit.contain,
+            alignment: const Alignment(AppDimensions.splashLavenderPivotX, 1),
+            filterQuality: FilterQuality.medium,
+          )
+        : Image(
+            image: SplashAssets.lavenderProvider,
+            width: AppDimensions.splashLavenderWidth,
+            height: AppDimensions.splashLavenderHeight,
+            fit: BoxFit.contain,
+            alignment: const Alignment(AppDimensions.splashLavenderPivotX, 1),
+            gaplessPlayback: true,
+            filterQuality: FilterQuality.medium,
+            errorBuilder:
+                (BuildContext context, Object error, StackTrace? stackTrace) {
+                  return Icon(
+                    Symbols.local_florist,
+                    color: AppColors.accent,
+                    size: AppDimensions.smallIconSize,
+                  );
+                },
+          );
 
     _introController = AnimationController(
       vsync: this,
@@ -45,18 +75,16 @@ class _SplashScreenState extends State<SplashScreen>
       parent: _introController,
       curve: Curves.easeOutCubic,
     );
-    _drawCurve = CurvedAnimation(
-      parent: _drawController,
-      curve: Curves.linear,
-    );
+    _drawCurve = CurvedAnimation(parent: _drawController, curve: Curves.linear);
 
     _fadeAnimation = Tween<double>(
       begin: AppDimensions.splashInitialOpacity,
       end: 1,
     ).animate(_introCurve);
-    _scaleAnimation =
-        Tween<double>(begin: AppDimensions.splashInitialScale, end: 1)
-            .animate(_introCurve);
+    _scaleAnimation = Tween<double>(
+      begin: AppDimensions.splashInitialScale,
+      end: 1,
+    ).animate(_introCurve);
 
     _introController.forward();
     _drawStartTimer = Timer(AppDimensions.splashBrandDrawDelay, () {
@@ -68,45 +96,9 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_didPrecacheLavender) {
-      return;
-    }
-    _didPrecacheLavender = true;
-    // Catch decode/path races so Hot Restart never surfaces an uncaught async error.
-    unawaited(
-      precacheImage(_lavenderAsset, context).catchError((Object _) {}),
-    );
-  }
-
-  Widget _buildLavenderImage() {
-    return Image(
-      image: _lavenderAsset,
-      width: AppDimensions.splashLavenderWidth,
-      height: AppDimensions.splashLavenderHeight,
-      fit: BoxFit.contain,
-      // Pin the stem tip (bottom-left of the art) to the transform pivot.
-      alignment: const Alignment(
-        AppDimensions.splashLavenderPivotX,
-        1,
-      ),
-      gaplessPlayback: true,
-      filterQuality: FilterQuality.medium,
-      errorBuilder: (context, error, stackTrace) => Icon(
-        Icons.local_florist_rounded,
-        color: AppColors.accent,
-        size: AppDimensions.smallIconSize,
-      ),
-    );
-  }
-
-  @override
   void dispose() {
     _drawStartTimer?.cancel();
     _drawStartTimer = null;
-    // Drop any in-flight lavender decode tied to this splash instance.
-    PaintingBinding.instance.imageCache.evict(_lavenderAsset);
     _introController.stop();
     _drawController.stop();
     _introCurve.dispose();
@@ -118,7 +110,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final double maxBrandWidth = MediaQuery.sizeOf(context).width *
+    final double maxBrandWidth =
+        MediaQuery.sizeOf(context).width *
         AppDimensions.splashBrandMaxWidthFactor;
 
     return Scaffold(
@@ -144,7 +137,7 @@ class _SplashScreenState extends State<SplashScreen>
                   alignment: Alignment.center,
                   child: SplashTavolaMark(
                     drawProgress: _drawCurve,
-                    lavenderImage: _buildLavenderImage(),
+                    lavenderImage: _lavenderImage,
                   ),
                 ),
               ),

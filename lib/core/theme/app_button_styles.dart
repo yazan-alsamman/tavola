@@ -11,28 +11,24 @@ class AppButtonStyles {
   }) {
     return baseStyle.copyWith(
       animationDuration: AppDimensions.hoverDuration,
-      backgroundColor: WidgetStateProperty.resolveWith(
-        (states) {
-          if (states.contains(WidgetState.disabled)) {
-            return AppColors.disabled;
-          }
-          if (states.contains(WidgetState.hovered)) {
-            return AppColors.primaryDark;
-          }
-          return idleBackground;
-        },
-      ),
-      foregroundColor: WidgetStateProperty.resolveWith(
-        (states) {
-          if (states.contains(WidgetState.disabled)) {
-            return AppColors.textSecondary;
-          }
-          if (states.contains(WidgetState.hovered)) {
-            return AppColors.textLight;
-          }
-          return idleForeground;
-        },
-      ),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return AppColors.disabled;
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return AppColors.primaryDark;
+        }
+        return idleBackground;
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return AppColors.textSecondary;
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return AppColors.textLight;
+        }
+        return idleForeground;
+      }),
     );
   }
 

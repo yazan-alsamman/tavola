@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_text_styles.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class CustomSearchBar extends StatelessWidget {
   const CustomSearchBar({
@@ -22,10 +23,18 @@ class CustomSearchBar extends StatelessWidget {
       controller: controller,
       onChanged: onChanged,
       style: AppTextStyles.input,
+      keyboardType: TextInputType.text,
+      textInputAction: TextInputAction.search,
+      // Reduce iOS QuickType / prediction-bar Autolayout storms that can
+      // make Home feel frozen on physical devices while the keyboard is up.
+      autocorrect: false,
+      enableSuggestions: false,
+      smartDashesType: SmartDashesType.disabled,
+      smartQuotesType: SmartQuotesType.disabled,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: AppTextStyles.inputHint,
-        prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+        prefixIcon: const Icon(Symbols.search, color: AppColors.primary),
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import 'hoverable_button.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class CircleBackButton extends StatelessWidget {
   const CircleBackButton({
@@ -16,10 +17,12 @@ class CircleBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor =
-        onDarkBackground ? AppColors.surface75 : AppColors.surface;
-    final Color iconColor =
-        onDarkBackground ? AppColors.primaryDark : AppColors.primary;
+    final Color backgroundColor = onDarkBackground
+        ? AppColors.surface75
+        : AppColors.surface;
+    final Color iconColor = onDarkBackground
+        ? AppColors.primaryDark
+        : AppColors.primary;
     final BorderSide borderSide = onDarkBackground
         ? BorderSide.none
         : const BorderSide(
@@ -48,7 +51,7 @@ class CircleBackButton extends StatelessWidget {
                   start: AppDimensions.circleBackIconOffset,
                 ),
                 child: Icon(
-                  Icons.arrow_back_ios_new_rounded,
+                  Symbols.arrow_back_ios_new,
                   color: iconColor,
                   size: AppDimensions.circleBackIconSize,
                 ),

@@ -8,6 +8,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../controller/reservation_controller.dart';
 import 'reservation_section_container.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ReservationDinersPanel extends StatelessWidget {
   const ReservationDinersPanel({super.key, required this.controller});
@@ -23,7 +24,7 @@ class ReservationDinersPanel extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _CounterButton(
-              icon: Icons.remove_rounded,
+              icon: Symbols.remove,
               onPressed: controller.decrementDiners,
               isEnabled:
                   controller.dinerCount.value > ReservationController.minDiners,
@@ -35,7 +36,7 @@ class ReservationDinersPanel extends StatelessWidget {
             ),
             const SizedBox(width: AppDimensions.sectionSpacing),
             _CounterButton(
-              icon: Icons.add_rounded,
+              icon: Symbols.add,
               onPressed: controller.incrementDiners,
               isEnabled:
                   controller.dinerCount.value < ReservationController.maxDiners,

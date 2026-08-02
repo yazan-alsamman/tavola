@@ -7,6 +7,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../controller/reservation_controller.dart';
 import 'reservation_section_container.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ReservationCalendarPanel extends StatelessWidget {
   const ReservationCalendarPanel({super.key, required this.controller});
@@ -31,16 +32,16 @@ class ReservationCalendarPanel extends StatelessWidget {
             formatButtonVisible: false,
             titleCentered: true,
             titleTextStyle: AppTextStyles.reservationCalendarHeader,
-            leftChevronIcon: const Icon(
-              Icons.chevron_left_rounded,
+            leftChevronIcon: Icon(
+              Symbols.chevron_left,
               color: AppColors.primary,
             ),
-            rightChevronIcon: const Icon(
-              Icons.chevron_right_rounded,
+            rightChevronIcon: Icon(
+              Symbols.chevron_right,
               color: AppColors.primary,
             ),
           ),
-          daysOfWeekStyle: const DaysOfWeekStyle(
+          daysOfWeekStyle: DaysOfWeekStyle(
             weekdayStyle: AppTextStyles.reservationCalendarWeekday,
             weekendStyle: AppTextStyles.reservationCalendarWeekday,
           ),
