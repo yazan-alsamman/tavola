@@ -1,5 +1,6 @@
 class ReservationHistoryItemModel {
   const ReservationHistoryItemModel({
+    required this.reservationId,
     required this.restaurantId,
     required this.restaurantName,
     required this.imageUrl,
@@ -9,6 +10,7 @@ class ReservationHistoryItemModel {
     required this.status,
   });
 
+  final String reservationId;
   final String restaurantId;
   final String restaurantName;
   final String imageUrl;
@@ -16,4 +18,8 @@ class ReservationHistoryItemModel {
   final String time;
   final String guests;
   final String status;
+
+  /// Any history row with a reservation id shows the review CTA.
+  /// `POST /reviews` still enforces completed reservations server-side.
+  bool get canReview => reservationId.trim().isNotEmpty;
 }

@@ -94,6 +94,10 @@ class NotificationsRepository {
   }
 
   Future<bool> _hasAccessToken() async {
+    if (Get.isRegistered<GuestModeReader>() &&
+        Get.find<GuestModeReader>().isAnonymousGuest) {
+      return false;
+    }
     if (!Get.isRegistered<AuthTokenReader>()) {
       return false;
     }

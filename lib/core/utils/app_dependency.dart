@@ -5,7 +5,9 @@ import '../services/location_service.dart';
 import '../../features/auth/controller/login_controller.dart';
 import '../../features/auth/controller/sign_up_controller.dart';
 import '../../features/branches/repository/branch_repository.dart';
+import '../../features/concierge/repository/conversations_repository.dart';
 import '../../features/discovery/repository/discovery_repository.dart';
+import '../../features/details/repository/menu_repository.dart';
 import '../../features/details/repository/restaurant_details_repository.dart';
 import '../../features/favorites/repository/favorites_repository.dart';
 import '../../features/home/controller/home_controller.dart';
@@ -17,6 +19,7 @@ import '../../features/profile/repository/profile_repository.dart';
 import '../../features/reservation/repository/reservation_availability_repository.dart';
 import '../../features/reservation/repository/reservation_repository.dart';
 import '../../features/reservation/repository/table_repository.dart';
+import '../../features/reviews/repository/reviews_repository.dart';
 import '../../features/taxonomy/repository/taxonomy_repository.dart';
 import '../../features/users/repository/users_repository.dart';
 import '../../features/waitlist/repository/waitlist_repository.dart';
@@ -109,6 +112,20 @@ class AppDependency {
     putPermanentIfAbsent(() => NotificationsRepository(Get.find<ApiClient>()));
   }
 
+  static void ensureReviewsRepository() {
+    putPermanentIfAbsent(() => ReviewsRepository(Get.find<ApiClient>()));
+  }
+
+  static void ensureConversationsRepository() {
+    putPermanentIfAbsent(() => ConversationsRepository(Get.find<ApiClient>()));
+  }
+
+  /// Chat / Concierge tab — conversations + discovery for start-chat picker.
+  static void ensureConciergeDependencies() {
+    ensureConversationsRepository();
+    ensureDiscoveryRepository();
+  }
+
   /// App-bar unread badge — permanent, refreshed post-frame on shell entry.
   static void ensureNotificationsBadge() {
     ensureNotificationsRepository();
@@ -137,8 +154,15 @@ class AppDependency {
   static void ensureRestaurantDetailsRepository() {
     ensureDiscoveryRepository();
     putPermanentIfAbsent(
-      () => RestaurantDetailsRepository(Get.find<DiscoveryRepository>()),
+      () => RestaurantDetailsRepository(
+        Get.find<DiscoveryRepository>(),
+        Get.find<ApiClient>(),
+      ),
     );
+  }
+
+  static void ensureMenuRepository() {
+    putPermanentIfAbsent(() => MenuRepository(Get.find<ApiClient>()));
   }
 
   static void ensureBranchRepository() {
@@ -225,6 +249,7 @@ class AppDependency {
     ensureFavoritesRepository();
     ensureUsersRepository();
     ensureNotificationsBadge();
+    ensureReviewsRepository();
     putPermanentIfAbsent(() => ReservationRepository(Get.find<ApiClient>()));
   }
 
@@ -246,6 +271,7 @@ class AppDependency {
   /// Details / menu drill-down.
   static void ensureDetailsDependencies() {
     ensureRestaurantDetailsRepository();
+    ensureMenuRepository();
     ensureFavoritesRepository();
   }
 

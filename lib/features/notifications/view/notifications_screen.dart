@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../common/widgets/circle_back_button.dart';
 import '../../../common/widgets/hoverable_button.dart';
@@ -21,43 +22,7 @@ class NotificationsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: AppColors.surface,
-        elevation: 0,
-        titleSpacing: AppDimensions.pagePadding,
-        title: Row(
-          children: [
-            CircleBackButton(onPressed: Get.back),
-            const SizedBox(width: AppDimensions.regularSpacing),
-            Expanded(
-              child: Text(
-                AppStrings.notificationsTitle,
-                style: AppTextStyles.headerLogo,
-              ),
-            ),
-            Obx(() {
-              final bool busy = controller.isMarkingAll.value;
-              final bool hasUnread = controller.items.any(
-                (NotificationItemModel item) => !item.isRead,
-              );
-              if (!hasUnread || controller.requiresSignIn.value) {
-                return const SizedBox.shrink();
-              }
-              return HoverableButton(
-                child: TextButton(
-                  onPressed: busy ? null : controller.markAllRead,
-                  child: Text(
-                    AppStrings.notificationsMarkAllRead,
-                    style: AppTextStyles.authLinkEmphasis,
-                  ),
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
+      appBar: _NotificationsHeader(controller: controller),
       body: SafeArea(
         child: Obx(() {
           if (controller.isLoading.value && controller.items.isEmpty) {
@@ -136,6 +101,115 @@ class NotificationsScreen extends StatelessWidget {
         }),
       ),
     );
+  }
+}
+
+class _NotificationsHeader extends StatelessWidget
+    implements PreferredSizeWidget {
+  const _NotificationsHeader({required this.controller});
+
+  final NotificationsController controller;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(
+        AppDimensions.notificationsHeaderHeightWithAction,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final bool busy = controller.isMarkingAll.value;
+      final bool showMarkAll = !controller.requiresSignIn.value &&
+          controller.items.any((NotificationItemModel item) => !item.isRead);
+
+      return Material(
+        color: AppColors.surface,
+        child: SafeArea(
+          bottom: false,
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.border,
+                  width: AppDimensions.cardBorderWidth,
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppDimensions.pagePadding,
+                AppDimensions.smallSpacing,
+                AppDimensions.pagePadding,
+                AppDimensions.regularSpacing,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: AppDimensions.circleBackButtonSize,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: CircleBackButton(onPressed: Get.back),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.circleBackButtonSize +
+                                AppDimensions.smallSpacing,
+                          ),
+                          child: Text(
+                            AppStrings.notificationsTitle.toUpperCase(),
+                            style: AppTextStyles.notificationsTitle,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (showMarkAll) ...[
+                    const SizedBox(height: AppDimensions.regularSpacing),
+                    HoverableButton(
+                      child: OutlinedButton.icon(
+                        onPressed: busy ? null : controller.markAllRead,
+                        icon: const Icon(
+                          Symbols.done_all,
+                          size: AppDimensions.smallIconSize,
+                        ),
+                        label: Text(
+                          AppStrings.notificationsMarkAllRead.toUpperCase(),
+                          style: AppTextStyles.authLinkEmphasis,
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primaryDark,
+                          side: const BorderSide(
+                            color: AppColors.border,
+                            width: AppDimensions.cardBorderWidth,
+                          ),
+                          backgroundColor: AppColors.surfaceAlt,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.regularSpacing,
+                            vertical: AppDimensions.smallSpacing,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.pillRadius,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
   }
 }
 

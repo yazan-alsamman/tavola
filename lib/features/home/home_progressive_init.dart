@@ -79,9 +79,13 @@ class HomeProgressiveInit {
     }
     final Stopwatch stopwatch = Stopwatch()..start();
     if (Get.isRegistered<AuthSessionController>()) {
-      unawaited(
-        Get.find<AuthSessionController>().persistDeferredSessionArtifacts(),
-      );
+      final AuthSessionController session = Get.find<AuthSessionController>();
+      if (session.isAnonymousGuest) {
+        // Guest: clear deferred Keychain — never persist Bearer tokens.
+        session.flushDeferredGuestSecureStorage();
+      } else {
+        unawaited(session.persistDeferredSessionArtifacts());
+      }
     }
     _home.markProgressiveStage(0);
     _log('stage0 session disk', stopwatch);
@@ -119,11 +123,20 @@ class HomeProgressiveInit {
     unawaited(_home.loadRestaurants());
     _home.markProgressiveStage(3);
     _log('stage3 restaurants', stopwatch);
+    // Anonymous guest: public Discovery/taxonomy only — skip auth bands.
+    if (_isAnonymousGuestSession) {
+      _scheduleNextStage(_stageLocation);
+      return;
+    }
     _scheduleNextStage(_stageUserProfile);
   }
 
   void _stageUserProfile() {
     if (_cancelled || _home.isClosed) {
+      return;
+    }
+    if (_isAnonymousGuestSession) {
+      _scheduleNextStage(_stageLocation);
       return;
     }
     final Stopwatch stopwatch = Stopwatch()..start();
@@ -136,6 +149,10 @@ class HomeProgressiveInit {
 
   void _stagePreferences() {
     if (_cancelled || _home.isClosed) {
+      return;
+    }
+    if (_isAnonymousGuestSession) {
+      _scheduleNextStage(_stageLocation);
       return;
     }
     final Stopwatch stopwatch = Stopwatch()..start();
@@ -151,6 +168,10 @@ class HomeProgressiveInit {
     if (_cancelled || _home.isClosed) {
       return;
     }
+    if (_isAnonymousGuestSession) {
+      _scheduleNextStage(_stageLocation);
+      return;
+    }
     final Stopwatch stopwatch = Stopwatch()..start();
     AppDependency.ensureFavoritesRepository();
     unawaited(Get.find<FavoritesRepository>().ensureInitialized());
@@ -161,6 +182,10 @@ class HomeProgressiveInit {
 
   void _stageNotifications() {
     if (_cancelled || _home.isClosed) {
+      return;
+    }
+    if (_isAnonymousGuestSession) {
+      _scheduleNextStage(_stageLocation);
       return;
     }
     final Stopwatch stopwatch = Stopwatch()..start();
@@ -178,13 +203,33 @@ class HomeProgressiveInit {
       return;
     }
     final Stopwatch stopwatch = Stopwatch()..start();
+    // Guest jumps here from stage 3 — mark skipped auth bands for stage watchers.
+    if (_isAnonymousGuestSession) {
+      _home.markProgressiveStage(4);
+      _home.markProgressiveStage(5);
+      _home.markProgressiveStage(6);
+      _home.markProgressiveStage(7);
+    }
     AppDependency.ensureLocationStack();
+    // Nearby + offers for the Home Special Offer card (after location stack).
+    unawaited(_home.loadSpecialOfferPromo());
     _home.markProgressiveStage(stageComplete);
     _log('stage8 location', stopwatch);
   }
 
+  bool get _isAnonymousGuestSession {
+    if (!Get.isRegistered<AuthSessionController>()) {
+      return false;
+    }
+    return Get.find<AuthSessionController>().isAnonymousGuest;
+  }
+
   static Future<void> _loadPreferencesQuietly(UsersRepository users) async {
     try {
+      if (Get.isRegistered<AuthSessionController>() &&
+          Get.find<AuthSessionController>().isAnonymousGuest) {
+        return;
+      }
       if (Get.isRegistered<AuthTokenReader>()) {
         final String? access = await Get.find<AuthTokenReader>()
             .readAccessToken();

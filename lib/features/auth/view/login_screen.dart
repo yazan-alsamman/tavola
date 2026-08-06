@@ -48,6 +48,7 @@ class LoginScreen extends StatelessWidget {
                       controller: controller.phoneController,
                       hintText: AppStrings.enterYourNumber,
                       maxLengthRx: controller.phoneMaxLength,
+                      initialCountryCode: controller.countryCode.value,
                       onCountryChanged: controller.updateCountryCode,
                       onCountryInit: controller.syncCountryCode,
                     ),

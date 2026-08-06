@@ -661,6 +661,7 @@ class _MemoryAuthTokenStore implements AuthTokenSession {
   Future<void> updateSessionTokens({
     required String accessToken,
     required String refreshToken,
+    bool persistToDisk = true,
   }) async {
     _accessToken = accessToken;
     _refreshToken = refreshToken;

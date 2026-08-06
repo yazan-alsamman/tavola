@@ -41,6 +41,11 @@ class FavoritesRepository extends GetxService {
     }
     // Guests have no session — skip auth-only favorites to avoid 401 storms
     // that can stall Home after "Continue as guest".
+    if (Get.isRegistered<GuestModeReader>() &&
+        Get.find<GuestModeReader>().isAnonymousGuest) {
+      _initialized = true;
+      return;
+    }
     if (Get.isRegistered<AuthTokenReader>()) {
       final String? access = await Get.find<AuthTokenReader>()
           .readAccessToken();

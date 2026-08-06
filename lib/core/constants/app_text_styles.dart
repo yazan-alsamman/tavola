@@ -240,6 +240,30 @@ class AppTextStyles {
     height: 1.1,
   );
 
+  static TextStyle get reservationReviewEyebrow => AppFonts.ui(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    color: AppColors.primaryDark,
+    letterSpacing: 1.0,
+    height: 1.2,
+  );
+
+  static TextStyle get reservationReviewComment => AppFonts.ui(
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    color: AppColors.primaryDark,
+    height: 1.35,
+    letterSpacing: 0.1,
+  );
+
+  static TextStyle get reservationReviewAction => AppFonts.ui(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    color: AppColors.primaryDark,
+    letterSpacing: 0.4,
+    height: 1.2,
+  );
+
   static TextStyle get exploreBannerBody => AppFonts.ui(
     fontSize: 13,
     fontWeight: FontWeight.w400,
@@ -695,6 +719,14 @@ class AppTextStyles {
     fontSize: 30,
     fontWeight: FontWeight.w700,
     letterSpacing: 3,
+    height: 1,
+  );
+
+  static TextStyle get notificationsTitle => AppFonts.heading(
+    color: AppColors.primary,
+    fontSize: AppDimensions.notificationsTitleFontSize,
+    fontWeight: FontWeight.w700,
+    letterSpacing: AppDimensions.notificationsTitleLetterSpacing,
     height: 1,
   );
 

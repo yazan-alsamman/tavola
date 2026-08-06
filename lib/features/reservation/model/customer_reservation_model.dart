@@ -1,5 +1,7 @@
-/// Payload from `POST /reservations` / cancel / reschedule responses
-/// (`ReservationResponseDto`) plus booking UI labels.
+import '../../../core/network/api_exception.dart';
+
+/// Customer reservation DTO from create/cancel/reschedule and
+/// `GET /reservations/my*` (enriched list + flat detail).
 class CustomerReservationModel {
   const CustomerReservationModel({
     required this.reservationId,
@@ -7,6 +9,7 @@ class CustomerReservationModel {
     this.restaurantId = '',
     this.restaurantName = '',
     this.branchId = '',
+    this.branchName = '',
     this.tableId = '',
     this.guests = 0,
     this.reservationStartTime,
@@ -20,6 +23,7 @@ class CustomerReservationModel {
   final String restaurantId;
   final String restaurantName;
   final String branchId;
+  final String branchName;
   final String tableId;
   final int guests;
   final DateTime? reservationStartTime;
@@ -27,6 +31,7 @@ class CustomerReservationModel {
   final String? notes;
   final String imageUrl;
 
+  /// Pending / Approved (case-insensitive; API uses PascalCase).
   bool get isActive {
     final String normalized = status.trim().toLowerCase();
     return normalized == 'pending' || normalized == 'approved';
@@ -38,6 +43,7 @@ class CustomerReservationModel {
     String? restaurantId,
     String? restaurantName,
     String? branchId,
+    String? branchName,
     String? tableId,
     int? guests,
     DateTime? reservationStartTime,
@@ -51,6 +57,7 @@ class CustomerReservationModel {
       restaurantId: restaurantId ?? this.restaurantId,
       restaurantName: restaurantName ?? this.restaurantName,
       branchId: branchId ?? this.branchId,
+      branchName: branchName ?? this.branchName,
       tableId: tableId ?? this.tableId,
       guests: guests ?? this.guests,
       reservationStartTime: reservationStartTime ?? this.reservationStartTime,
@@ -60,25 +67,65 @@ class CustomerReservationModel {
     );
   }
 
+  /// Parses create/cancel/reschedule, enriched `/my*` list items, and detail.
   factory CustomerReservationModel.fromJson(
     Map<String, dynamic> json, {
     String restaurantName = '',
     String imageUrl = '',
   }) {
+    final String parsedName = ApiException.coerceString(
+      json['restaurantName'],
+    );
+    final String parsedImage = ApiException.coerceString(
+      json['restaurantImage'] ?? json['imageUrl'] ?? json['coverImageUrl'],
+    );
+    final Object? tableRaw = json['table'];
+    String tableId = ApiException.coerceString(json['tableId']);
+    if (tableId.isEmpty && tableRaw is Map) {
+      tableId = ApiException.coerceString(
+        Map<String, dynamic>.from(tableRaw)['tableId'] ??
+            Map<String, dynamic>.from(tableRaw)['id'],
+      );
+    }
+
+    final int guests =
+        _readInt(json['partySize']) ??
+        _readInt(json['guests']) ??
+        0;
+
+    final String notesRaw = ApiException.coerceString(
+      json['specialRequest'] ?? json['notes'],
+    );
+
     return CustomerReservationModel(
-      reservationId:
-          (json['reservationId'] as String?) ?? (json['id'] as String?) ?? '',
-      status: (json['status'] as String?)?.trim() ?? '',
-      restaurantId: (json['restaurantId'] as String?)?.trim() ?? '',
-      restaurantName: restaurantName,
-      branchId: (json['branchId'] as String?)?.trim() ?? '',
-      tableId: (json['tableId'] as String?)?.trim() ?? '',
-      guests: (json['guests'] as num?)?.toInt() ?? 0,
+      reservationId: ApiException.coerceString(
+        json['reservationId'] ?? json['id'],
+      ),
+      status: ApiException.coerceString(json['status']),
+      restaurantId: ApiException.coerceString(json['restaurantId']),
+      restaurantName: parsedName.isNotEmpty ? parsedName : restaurantName,
+      branchId: ApiException.coerceString(json['branchId']),
+      branchName: ApiException.coerceString(json['branchName']),
+      tableId: tableId,
+      guests: guests,
       reservationStartTime: _parseDate(json['reservationStartTime']),
       reservationEndTime: _parseDate(json['reservationEndTime']),
-      notes: (json['notes'] as String?)?.trim(),
-      imageUrl: imageUrl,
+      notes: notesRaw.isEmpty ? null : notesRaw,
+      imageUrl: parsedImage.isNotEmpty ? parsedImage : imageUrl,
     );
+  }
+
+  static int? _readInt(Object? raw) {
+    if (raw is int) {
+      return raw;
+    }
+    if (raw is num) {
+      return raw.toInt();
+    }
+    if (raw is String) {
+      return int.tryParse(raw.trim());
+    }
+    return null;
   }
 
   static DateTime? _parseDate(Object? raw) {

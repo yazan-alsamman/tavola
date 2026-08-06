@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tavla/core/network/auth_token_reader.dart';
 import 'package:tavla/features/auth/controller/auth_session_controller.dart';
+import 'package:tavla/features/auth/model/session_mode.dart';
+import 'package:tavla/features/auth/session_mode_preferences.dart';
 
 void main() {
   setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
     Get.testMode = true;
   });
 
@@ -26,6 +30,8 @@ void main() {
 
     tokens.completeClear();
     await enter;
+    await Future<void>.delayed(Duration.zero);
+    expect(await SessionModePreferences.read(), SessionMode.guest);
   });
 }
 
@@ -44,6 +50,7 @@ class _SlowAuthTokenSession implements AuthTokenSession {
   Future<void> updateSessionTokens({
     required String accessToken,
     required String refreshToken,
+    bool persistToDisk = true,
   }) async {}
 
   @override

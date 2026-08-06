@@ -31,6 +31,10 @@ class AppStrings {
       'The requested resource was not found.'.tr;
   static String get networkTooManyRequestsError =>
       'Too many attempts. Please wait and try again.'.tr;
+  /// HTTP Authorization header name (matches [ApiClient] Bearer attach).
+  static const String authorizationHeaderKey = 'Authorization';
+  static const String bearerTokenPrefix = 'Bearer ';
+
   static String get invalidAuthSessionPayload =>
       'Invalid authentication session payload.'.tr;
   static String get invalidCustomerRegistrationPayload =>
@@ -65,10 +69,16 @@ class AppStrings {
   static String get invalidTablePayload => 'Invalid table payload.'.tr;
   static String get invalidReservationPayload =>
       'Invalid reservation payload.'.tr;
+  static String get invalidMenuPayload => 'Invalid menu payload.'.tr;
   static String get reservationCreateFailed =>
       'Could not create reservation. Please try again.'.tr;
   static String get reservationAvailabilityFailed =>
       'Could not load table availability. Please try again.'.tr;
+  static String get reservationsLoadFailed =>
+      'Could not load reservations. Please try again.'.tr;
+  static String get menuLoadFailed =>
+      'Could not load the menu. Please try again.'.tr;
+  static String get menuEmpty => 'No menu items available.'.tr;
   static String get reservationWindowIncomplete =>
       'Choose a date, time, and party size before selecting a table.'.tr;
   static String get cancelReservation => 'Cancel reservation'.tr;
@@ -234,6 +244,11 @@ class AppStrings {
   static const String localeLanguageCodeKey = 'locale_language_code';
   static const String favoriteCuisinesSelectedKey =
       'favorite_cuisines_selected';
+  /// Persisted startup session mode ([SessionMode]) — SharedPreferences only.
+  static const String sessionModeKey = 'session_mode';
+  static const String sessionModeNoneValue = 'none';
+  static const String sessionModeGuestValue = 'guest';
+  static const String sessionModeAuthenticatedValue = 'authenticated';
 
   static String get favoriteCuisinesTitle => 'Favorite Cuisines'.tr;
   static String get favoriteCuisinesSubtitle =>
@@ -449,6 +464,11 @@ class AppStrings {
       'Enjoy a premium dinner experience with chef-selected flavors and a warm atmosphere.'
           .tr;
   static String get bookNow => 'Book now'.tr;
+  static String get offersLoadFailed =>
+      'Could not load offers. Please try again.'.tr;
+  static String get offersEmpty => 'No special offers available right now.'.tr;
+  static String get invalidOfferPayload => 'Invalid offer payload.'.tr;
+  static const String offerStatusPublished = 'Published';
 
   static String get profileUserName => 'Joan Pedro ';
   static String get exploreMoreRestaurantsDescription =>
@@ -596,8 +616,17 @@ class AppStrings {
   static const String apiAvatarFieldImageUrl = 'imageUrl';
   static const String apiAvatarFieldUrl = 'url';
   static const String apiAvatarFieldPath = 'path';
+  static const String apiAvatarUploadFieldFile = 'file';
+  static const String apiAvatarUploadFieldAvatar = 'avatar';
+  static const String apiAvatarUploadFieldImage = 'image';
+  static const String apiAvatarUploadFieldProfileImage = 'profileImage';
+  static const String apiReviewReservationIdField = 'reservationId';
+  static const String apiReviewRatingField = 'rating';
+  static const String apiReviewCommentField = 'comment';
+  static const String apiReviewImageUploadField = 'file';
   static const String apiHttpSchemePrefix = 'http:';
   static const String apiHttpsSchemePrefix = 'https:';
+  static const String apiIdempotencyKeyHeader = 'Idempotency-Key';
   static String get confirmReservation => 'CONFIRM RESERVATION'.tr;
   static String get floorPlan => 'FLOOR PLAN'.tr;
   static String get tableStatus => 'STATUS'.tr;
@@ -710,6 +739,45 @@ class AppStrings {
           .tr;
   static String get exploreGildedOlive => 'EXPLORE THE GILDED OLIVE'.tr;
   static String get conciergeMessageHint => 'Message your dining host...'.tr;
+  static String get conversationsSignInPrompt =>
+      'Sign in to message your dining host.'.tr;
+  static String get conversationsEmpty =>
+      'No conversations yet. Start one with a restaurant.'.tr;
+  static String get conversationsLoadFailed =>
+      'Could not load conversations. Please try again.'.tr;
+  static String get conversationMessagesLoadFailed =>
+      'Could not load messages. Please try again.'.tr;
+  static String get conversationSendFailed =>
+      'Could not send your message. Please try again.'.tr;
+  static String get conversationStartFailed =>
+      'Could not start the conversation. Please try again.'.tr;
+  static String get conversationCloseFailed =>
+      'Could not close the conversation. Please try again.'.tr;
+  static String get conversationClosedStatus => 'Closed'.tr;
+  static String get conversationOpenStatus => 'Open'.tr;
+  static String get conversationsStartNew => 'Start conversation'.tr;
+  static String get conversationsChooseRestaurant =>
+      'Choose a restaurant'.tr;
+  static String get conversationsCloseAction => 'Close chat'.tr;
+  static String get conversationsBackToList => 'All chats'.tr;
+  static String get conversationsClosedBanner =>
+      'This conversation is closed.'.tr;
+  static String get conversationsClosedHint =>
+      'You can start a new chat with another restaurant anytime.'.tr;
+  static String get conversationsChatAnotherRestaurant =>
+      'Chat with another restaurant'.tr;
+  static String get invalidConversationPayload =>
+      'Invalid conversation payload.'.tr;
+  static String get invalidConversationMessagePayload =>
+      'Invalid message payload.'.tr;
+  static const String apiConversationMessageBodyField = 'body';
+  static const String apiConversationMessageAttachmentField = 'attachment';
+  static const String conversationStatusOpen = 'Open';
+  static const String conversationStatusClosed = 'Closed';
+  static const String conversationStatusArchived = 'archived';
+  static const String conversationSenderCustomer = 'Customer';
+  static const String conversationSenderUser = 'user';
+  static const String conversationSenderGuest = 'guest';
   static String get favoriteDiningSelections => 'Favorite dining selections'.tr;
 
   static String get mapSearchHint => 'Search Resturant'.tr;
@@ -731,6 +799,24 @@ class AppStrings {
 
   static String get reservationHistory => 'Reservation history'.tr;
   static String get reservationHistoryCompleted => 'Completed'.tr;
+  static String get rateYourVisit => 'Rate your visit'.tr;
+  static String get yourReview => 'Your review'.tr;
+  static String get writeAReview => 'Write a review'.tr;
+  static String get submitReview => 'Submit review'.tr;
+  static String get reviewCommentHint => 'Share a few words about your evening.'.tr;
+  static String get reviewSubmitted => 'Review submitted successfully.'.tr;
+  static String get reviewSubmitFailed => 'Could not submit your review.'.tr;
+  static String get reviewDeleted => 'Review removed.'.tr;
+  static String get reviewDeleteFailed => 'Could not remove your review.'.tr;
+  static String get confirmDeleteReviewMessage =>
+      'Remove this review? This cannot be undone.'.tr;
+  static String get removeReview => 'Remove review'.tr;
+  static String get addReviewPhoto => 'Add photo'.tr;
+  static String get reviewPhotoOptional => 'Optional photo'.tr;
+  static String get selectReviewRating => 'Tap a star to rate'.tr;
+  static String get invalidReviewPayload => 'Invalid review payload.'.tr;
+  static String get invalidReviewRating => 'Choose a rating from 1 to 5.'.tr;
+  static String get reviewsLoadFailed => 'Could not load your reviews.'.tr;
   static const String reservationHistoryRestaurantIdOne = 'local-olive-oak';
   static const String reservationHistoryRestaurantIdTwo = 'local-otako-sushi';
   static const String reservationHistoryRestaurantIdThree =
@@ -766,12 +852,37 @@ class AppStrings {
   static String get dayFriday => 'Friday'.tr;
   static String get daySaturday => 'Saturday'.tr;
   static String get daySunday => 'Sunday'.tr;
+
+  /// API `dayOfWeek` labels: 0 = Sunday … 6 = Saturday.
+  static String workingHoursDayLabel(int dayOfWeek) {
+    switch (dayOfWeek) {
+      case 0:
+        return daySunday;
+      case 1:
+        return dayMonday;
+      case 2:
+        return dayTuesday;
+      case 3:
+        return dayWednesday;
+      case 4:
+        return dayThursday;
+      case 5:
+        return dayFriday;
+      case 6:
+        return daySaturday;
+      default:
+        return daySunday;
+    }
+  }
+
   static String get dayMondayToSaturday => 'Monday–Saturday'.tr;
   static String get dayTuesdayToThursday => 'Tuesday–Thursday'.tr;
   static String get dayFridayToSaturday => 'Friday–Saturday'.tr;
   static String get hoursWeekday => '12:00 PM – 11:00 PM'.tr;
   static String get hoursWeekend => '11:00 AM – 12:00 AM'.tr;
   static String get hoursClosed => 'Closed'.tr;
+  /// Shown in Details Hours card while working-hours API has no rows yet.
+  static String get hoursUnavailable => 'Hours unavailable.'.tr;
   static String get ratingUnavailable => '—'.tr;
   static String get restaurantDetailsEmpty =>
       'Restaurant details unavailable.'.tr;

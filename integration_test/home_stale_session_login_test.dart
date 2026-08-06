@@ -33,6 +33,7 @@ class _StaleTokens implements AuthTokenSession {
   Future<void> updateSessionTokens({
     required String accessToken,
     required String refreshToken,
+    bool persistToDisk = true,
   }) async {
     access = accessToken;
     refresh = refreshToken;

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 
 import '../../features/auth/model/auth_session_tokens_model.dart';
 import '../../features/auth/repository/auth_repository.dart';
@@ -24,11 +25,14 @@ import 'secure_auth_token_store.dart';
 /// - proactively before JWT expiry (see [AppDimensions.accessTokenRefreshSkew])
 /// - reactively on HTTP 401 (single retry)
 ///
+/// Anonymous guest sessions never attach Bearer tokens and never refresh.
+///
 /// Failed refresh on a 401 calls [onSessionExpired].
 class ApiClient {
   ApiClient({
     Dio? dio,
     AuthTokenReader? tokenReader,
+    this._guestModeReader = const NeverGuestModeReader(),
     this._authRepository,
     this._onSessionExpired,
     String? baseUrl,
@@ -87,42 +91,20 @@ class ApiClient {
       );
     }
     _dio.interceptors.add(
-      // Non-queued: public taxonomy (`skipAuth`) must never wait behind a
-      // hanging Keychain read / refresh / protected HTTP call. Refresh races
-      // are already serialized by [_refreshInFlight] + bare-Dio 401 retry.
+      // Non-queued + sync guest/skipAuth path: concurrent Home catalog calls
+      // must never stall behind an async interceptor Future (Dio can deadlock
+      // InterceptorsWrapper+async when cuisine/occasion/restaurants overlap).
+      // Authenticated attach/refresh stays async via [_attachAuthorization].
       InterceptorsWrapper(
         onRequest:
-            (RequestOptions options, RequestInterceptorHandler handler) async {
-              try {
-                if (options.extra[_skipAuthExtraKey] != true) {
-                  await _ensureFreshAccessToken();
-                  if (handler.isCompleted) {
-                    return;
-                  }
-                  final String? token = await _tokenReader.readAccessToken();
-                  if (token != null && token.isNotEmpty) {
-                    options.headers['Authorization'] = 'Bearer $token';
-                  } else {
-                    options.headers.remove('Authorization');
-                  }
-                }
-                if (!handler.isCompleted) {
-                  handler.next(options);
-                }
-              } catch (error) {
-                if (handler.isCompleted) {
-                  return;
-                }
-                handler.reject(
-                  error is DioException
-                      ? error
-                      : DioException(
-                          requestOptions: options,
-                          error: error,
-                          type: DioExceptionType.unknown,
-                        ),
-                );
+            (RequestOptions options, RequestInterceptorHandler handler) {
+              if (_isAnonymousGuest ||
+                  options.extra[_skipAuthExtraKey] == true) {
+                options.headers.remove('Authorization');
+                handler.next(options);
+                return;
               }
+              unawaited(_attachAuthorization(options, handler));
             },
         onError: (DioException error, ErrorInterceptorHandler handler) async {
           void passError([DioException? nextError]) {
@@ -141,7 +123,8 @@ class ApiClient {
           final bool alreadyRetried =
               requestOptions.extra[_retriedAfterRefreshExtraKey] == true;
           final bool skipRefresh =
-              requestOptions.extra[_skipAuthExtraKey] == true;
+              requestOptions.extra[_skipAuthExtraKey] == true ||
+              _isAnonymousGuest;
           final bool isUnauthorized = error.response?.statusCode == 401;
 
           if (!isUnauthorized || alreadyRetried || skipRefresh) {
@@ -226,6 +209,7 @@ class ApiClient {
 
   final Dio _dio;
   final AuthTokenReader _tokenReader;
+  final GuestModeReader _guestModeReader;
   final AuthRepository? _authRepository;
   final FutureOr<void> Function()? _onSessionExpired;
 
@@ -234,6 +218,52 @@ class ApiClient {
   DateTime? _proactiveRefreshCooldownUntil;
 
   Dio get dio => _dio;
+
+  /// Continue as Guest — never Bearer, never `/auth/refresh`.
+  bool get _isAnonymousGuest {
+    if (_guestModeReader.isAnonymousGuest) {
+      return true;
+    }
+    if (Get.isRegistered<GuestModeReader>()) {
+      return Get.find<GuestModeReader>().isAnonymousGuest;
+    }
+    return false;
+  }
+
+  /// Authenticated path only — never used for Guest / `skipAuth` public GETs.
+  Future<void> _attachAuthorization(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    try {
+      await _ensureFreshAccessToken();
+      if (handler.isCompleted) {
+        return;
+      }
+      final String? token = await _tokenReader.readAccessToken();
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+      } else {
+        options.headers.remove('Authorization');
+      }
+      if (!handler.isCompleted) {
+        handler.next(options);
+      }
+    } catch (error) {
+      if (handler.isCompleted) {
+        return;
+      }
+      handler.reject(
+        error is DioException
+            ? error
+            : DioException(
+                requestOptions: options,
+                error: error,
+                type: DioExceptionType.unknown,
+              ),
+      );
+    }
+  }
 
   /// HTTP fetch that bypasses auth interceptors (used for 401 retry).
   Future<Response<dynamic>> _fetchWithoutInterceptors(
@@ -413,6 +443,9 @@ class ApiClient {
   }
 
   Future<void> _ensureFreshAccessToken() async {
+    if (_isAnonymousGuest) {
+      return;
+    }
     final AuthTokenSession? session = _session;
     if (session == null || _authRepository == null) {
       return;
@@ -449,6 +482,9 @@ class ApiClient {
   }
 
   Future<_RefreshOutcome> _tryRefreshSession() async {
+    if (_isAnonymousGuest) {
+      return _RefreshOutcome.transient;
+    }
     final AuthTokenSession? session = _session;
     final AuthRepository? authRepository = _authRepository;
     if (session == null || authRepository == null) {

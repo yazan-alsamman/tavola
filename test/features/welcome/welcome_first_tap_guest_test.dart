@@ -50,8 +50,14 @@ void main() {
       final Completer<void> clearGate = Completer<void>();
       Get.put<AuthTokenReader>(_GatedAuthTokenSession(clearGate));
       Get.put(AuthRepository());
-      Get.put(AuthSessionController());
-      Get.put(ApiClient(tokenReader: Get.find<AuthTokenReader>()));
+      final AuthSessionController session = Get.put(AuthSessionController());
+      Get.put<GuestModeReader>(session);
+      Get.put(
+        ApiClient(
+          tokenReader: Get.find<AuthTokenReader>(),
+          guestModeReader: session,
+        ),
+      );
       Get.put(LocaleController()).syncFromLocale(const Locale('en'));
       Get.put<LocationService>(_FakeLocationService(), permanent: true);
 
@@ -116,6 +122,7 @@ class _GatedAuthTokenSession implements AuthTokenSession {
   Future<void> updateSessionTokens({
     required String accessToken,
     required String refreshToken,
+    bool persistToDisk = true,
   }) async {}
 
   @override

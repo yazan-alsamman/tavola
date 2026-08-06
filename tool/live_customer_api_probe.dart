@@ -15,7 +15,7 @@ import 'package:dio/dio.dart';
 Future<void> main() async {
   const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://187.127.76.76:3000/api/v1',
+    defaultValue: 'https://api.tavola.business/api/v1',
   );
   const String countryCode = String.fromEnvironment('CUSTOMER_COUNTRY_CODE');
   const String phoneNumber = String.fromEnvironment('CUSTOMER_PHONE');

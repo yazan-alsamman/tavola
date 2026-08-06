@@ -8,14 +8,27 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../reviews/model/review_model.dart';
 import '../model/reservation_history_item_model.dart';
+import 'profile_reservation_review_section.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 /// Premium frosted history card — accent-led glass veiled with primaryDark.
 class ProfileReservationHistoryCard extends StatelessWidget {
-  const ProfileReservationHistoryCard({super.key, required this.item});
+  const ProfileReservationHistoryCard({
+    super.key,
+    required this.item,
+    this.existingReview,
+    this.onWriteReview,
+    this.onDeleteReview,
+    this.isReviewBusy = false,
+  });
 
   final ReservationHistoryItemModel item;
+  final ReviewModel? existingReview;
+  final VoidCallback? onWriteReview;
+  final VoidCallback? onDeleteReview;
+  final bool isReviewBusy;
 
   @override
   Widget build(BuildContext context) {
@@ -121,70 +134,90 @@ class ProfileReservationHistoryCard extends StatelessWidget {
                       width: AppDimensions.cardBorderWidth,
                     ),
                   ),
-                  child: Row(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _RestaurantThumbnail(imageUrl: item.imageUrl),
-                      const SizedBox(width: AppDimensions.regularSpacing),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _RestaurantThumbnail(imageUrl: item.imageUrl),
+                          const SizedBox(width: AppDimensions.regularSpacing),
+                          Expanded(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    item.restaurantName,
-                                    style:
-                                        AppTextStyles.reservationHistoryTitle,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        item.restaurantName,
+                                        style: AppTextStyles
+                                            .reservationHistoryTitle,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: AppDimensions.smallSpacing,
+                                    ),
+                                    _StatusChip(
+                                      label: item.status.trim().isNotEmpty
+                                          ? AppStrings.localizeUiLabel(
+                                              item.status,
+                                            )
+                                          : AppStrings
+                                              .reservationHistoryCompleted,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: AppDimensions.regularSpacing,
+                                ),
+                                Container(
+                                  height: AppDimensions.cardBorderWidth,
+                                  width: double.infinity,
+                                  color: AppColors.primaryDark.withValues(
+                                    alpha: AppDimensions
+                                        .reservationHistoryBorderAlpha,
                                   ),
                                 ),
                                 const SizedBox(
-                                  width: AppDimensions.smallSpacing,
+                                  height: AppDimensions.regularSpacing,
                                 ),
-                                _StatusChip(
-                                  label: item.status.trim().isNotEmpty
-                                      ? item.status
-                                      : AppStrings.reservationHistoryCompleted,
+                                _MetaRow(
+                                  icon: Symbols.calendar_today,
+                                  label: item.date,
+                                ),
+                                const SizedBox(
+                                  height: AppDimensions.compactSpacing,
+                                ),
+                                _MetaRow(
+                                  icon: Symbols.schedule,
+                                  label: item.time,
+                                ),
+                                const SizedBox(
+                                  height: AppDimensions.compactSpacing,
+                                ),
+                                _MetaRow(
+                                  icon: Symbols.group,
+                                  label:
+                                      '${AppStrings.guests}${AppStrings.restaurantSummarySeparator}${item.guests}',
                                 ),
                               ],
                             ),
-                            const SizedBox(
-                              height: AppDimensions.regularSpacing,
-                            ),
-                            Container(
-                              height: AppDimensions.cardBorderWidth,
-                              width: double.infinity,
-                              color: AppColors.primaryDark.withValues(
-                                alpha:
-                                    AppDimensions.reservationHistoryBorderAlpha,
-                              ),
-                            ),
-                            const SizedBox(
-                              height: AppDimensions.regularSpacing,
-                            ),
-                            _MetaRow(
-                              icon: Symbols.calendar_today,
-                              label: item.date,
-                            ),
-                            const SizedBox(
-                              height: AppDimensions.compactSpacing,
-                            ),
-                            _MetaRow(icon: Symbols.schedule, label: item.time),
-                            const SizedBox(
-                              height: AppDimensions.compactSpacing,
-                            ),
-                            _MetaRow(
-                              icon: Symbols.group,
-                              label:
-                                  '${AppStrings.guests}${AppStrings.restaurantSummarySeparator}${item.guests}',
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                      if (item.canReview &&
+                          onWriteReview != null &&
+                          onDeleteReview != null)
+                        ProfileReservationReviewSection(
+                          existingReview: existingReview,
+                          onWriteReview: onWriteReview!,
+                          onDeleteReview: onDeleteReview!,
+                          isBusy: isReviewBusy,
+                        ),
                     ],
                   ),
                 ),

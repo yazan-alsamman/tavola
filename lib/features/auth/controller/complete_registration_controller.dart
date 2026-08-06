@@ -92,6 +92,12 @@ class CompleteRegistrationController extends GetxController {
         ),
       );
       await Get.find<AuthSessionController>().completeSignIn(response);
+      // Login payloads sometimes omit username; keep the signup name.
+      if (registrationArgs.username.trim().isNotEmpty) {
+        await Get.find<AuthSessionController>().rememberProfileUsername(
+          registrationArgs.username,
+        );
+      }
       signedIn = true;
     } on ApiException catch (error) {
       if (!isClosed) {

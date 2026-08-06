@@ -72,21 +72,120 @@ class UserProfileModel {
   }
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
+    final String? avatar = _readAvatarUrl(json);
     return UserProfileModel(
-      id: (json['userId'] as String?) ?? (json['id'] as String?) ?? '',
-      firstName: (json['firstName'] as String?) ?? '',
-      lastName: (json['lastName'] as String?) ?? '',
-      email: (json['email'] as String?) ?? '',
-      username: (json['username'] as String?)?.trim() ?? '',
-      phone: json['phone'] as String?,
-      language: json['language'] as String?,
-      preferredCurrency: json['preferredCurrency'] as String?,
-      avatarUrl:
-          (json['avatarUrl'] as String?) ??
-          (json['avatar'] as String?) ??
-          (json['imageUrl'] as String?),
-      createdAt: json['createdAt'] as String?,
-      updatedAt: json['updatedAt'] as String?,
+      id: _readString(json['userId']) ?? _readString(json['id']) ?? '',
+      firstName: _readString(json['firstName']) ?? '',
+      lastName: _readString(json['lastName']) ?? '',
+      email: _readString(json['email']) ?? '',
+      username: _readUsername(json),
+      phone: _readPhone(json),
+      language: _readString(json['language']),
+      preferredCurrency: _readString(json['preferredCurrency']),
+      avatarUrl: avatar,
+      createdAt: _readString(json['createdAt']),
+      updatedAt: _readString(json['updatedAt']),
     );
+  }
+
+  static String _readUsername(Map<String, dynamic> json) {
+    for (final String key in <String>[
+      'username',
+      'userName',
+      'name',
+      'displayName',
+      'preferredUsername',
+    ]) {
+      final String? value = _readString(json[key])?.trim();
+      if (value != null && value.isNotEmpty && !_looksLikeUuid(value)) {
+        return value;
+      }
+    }
+    return '';
+  }
+
+  static String? _readPhone(Map<String, dynamic> json) {
+    final String? direct = _readString(json['phone'])?.trim();
+    if (direct != null && direct.isNotEmpty) {
+      return direct;
+    }
+    final String? countryCode =
+        (_readString(json['countryCode']) ?? _readString(json['dialCode']))
+            ?.trim();
+    final String? national = (_readString(json['phoneNumber']) ??
+            _readString(json['nationalNumber']) ??
+            _readString(json['mobile']))
+        ?.trim();
+    if (countryCode != null &&
+        countryCode.isNotEmpty &&
+        national != null &&
+        national.isNotEmpty) {
+      final String dial =
+          countryCode.startsWith('+') ? countryCode : '+$countryCode';
+      final String digits = national.replaceAll(RegExp(r'\D'), '');
+      if (digits.isNotEmpty) {
+        return '$dial$digits';
+      }
+    }
+    if (national != null && national.isNotEmpty) {
+      return national;
+    }
+    return null;
+  }
+
+  static String? _readString(Object? raw) {
+    if (raw is String) {
+      return raw;
+    }
+    if (raw is num || raw is bool) {
+      return '$raw';
+    }
+    return null;
+  }
+
+  static final RegExp _uuidPattern = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+
+  static bool _looksLikeUuid(String value) => _uuidPattern.hasMatch(value);
+
+  static String? _readAvatarUrl(Map<String, dynamic> json) {
+    final String parsed = _extractAvatarUrl(json).trim();
+    return parsed.isEmpty ? null : parsed;
+  }
+
+  static String _extractAvatarUrl(Map<String, dynamic> payload) {
+    const List<String> preferredKeys = <String>[
+      'avatarUrl',
+      'avatar_url',
+      'avatar',
+      'imageUrl',
+      'url',
+      'path',
+      'avatarPath',
+      'profileImage',
+      'secure_url',
+    ];
+    for (final String key in preferredKeys) {
+      final Object? value = payload[key];
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+      if (value is Map<String, dynamic>) {
+        final String nested = _extractAvatarUrl(value).trim();
+        if (nested.isNotEmpty) {
+          return nested;
+        }
+      }
+    }
+    for (final Object? value in payload.values) {
+      if (value is Map<String, dynamic>) {
+        final String nested = _extractAvatarUrl(value).trim();
+        if (nested.isNotEmpty) {
+          return nested;
+        }
+      }
+    }
+    return '';
   }
 }

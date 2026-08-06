@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart' hide FormData, MultipartFile;
 
@@ -8,8 +9,10 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../core/network/api_response.dart';
 import '../../../core/network/auth_token_reader.dart';
+import '../../../core/network/customer_identity_payload.dart';
 import '../../../core/network/secure_auth_token_store.dart';
 import '../../home/model/restaurant_model.dart';
 import '../model/user_preferences_model.dart';
@@ -44,6 +47,7 @@ class UsersRepository {
   static const String favoritesPath = '/users/me/favorites';
   static const String _usernameKey = 'customer_username';
   static const String _phoneKey = 'customer_phone';
+  static const String _avatarUrlKey = 'customer_avatar_url';
 
   final Rxn<UserProfileModel> profileRx = Rxn<UserProfileModel>();
   UserPreferencesModel? _cachedPreferences;
@@ -52,6 +56,7 @@ class UsersRepository {
   Future<void>? _profileLoadInFlight;
   String _cachedUsername = '';
   String _cachedPhone = '';
+  String _cachedAvatarUrl = '';
   bool _identityHydrated = false;
 
   UserProfileModel? get cachedProfile => profileRx.value;
@@ -72,13 +77,27 @@ class UsersRepository {
     _profileLoadInFlight = null;
   }
 
-  /// Persists signup/login username + phone for the Profile header card.
-  Future<void> rememberCustomerIdentity({
+  /// Applies signup/login username + phone in memory (never blocks on Keychain).
+  ///
+  /// Empty [username] / [phone] mean "keep the current cached value" so a
+  /// partial login payload cannot wipe identity that already landed in memory.
+  void applyCustomerIdentityInMemory({
     required String username,
     required String phone,
-  }) async {
-    _cachedUsername = username.trim();
-    _cachedPhone = phone.trim();
+    String? avatarUrl,
+  }) {
+    final String nextUsername = username.trim();
+    final String nextPhone = phone.trim();
+    if (nextUsername.isNotEmpty) {
+      _cachedUsername = nextUsername;
+    }
+    if (nextPhone.isNotEmpty) {
+      _cachedPhone = nextPhone;
+    }
+    final String normalizedAvatar = _normalizeAvatarUrl(avatarUrl);
+    if (normalizedAvatar.isNotEmpty) {
+      _cachedAvatarUrl = normalizedAvatar;
+    }
     _identityHydrated = true;
 
     final UserProfileModel? current = profileRx.value;
@@ -88,6 +107,9 @@ class UsersRepository {
             ? _cachedUsername
             : current.username,
         phone: _cachedPhone.isNotEmpty ? _cachedPhone : current.phone,
+        avatarUrl: _cachedAvatarUrl.isNotEmpty
+            ? _cachedAvatarUrl
+            : current.avatarUrl,
       );
     } else if (_cachedUsername.isNotEmpty || _cachedPhone.isNotEmpty) {
       // Guest→login can finish before `/users/me` — expose identity immediately.
@@ -98,12 +120,26 @@ class UsersRepository {
         email: '',
         username: _cachedUsername,
         phone: _cachedPhone.isEmpty ? null : _cachedPhone,
+        avatarUrl: _cachedAvatarUrl.isEmpty ? null : _cachedAvatarUrl,
       );
     }
 
     // Memory is enough for Login→Home. Disk is scheduled by
     // [flushIdentityToDisk] after Home's first frames (shared Keychain vault).
     _identityDiskDirty = true;
+  }
+
+  /// Memory apply + marks identity dirty for a later Keychain flush.
+  Future<void> rememberCustomerIdentity({
+    required String username,
+    required String phone,
+    String? avatarUrl,
+  }) async {
+    applyCustomerIdentityInMemory(
+      username: username,
+      phone: phone,
+      avatarUrl: avatarUrl,
+    );
   }
 
   /// Allows `/users/me` to run again after guest probing skipped the load.
@@ -132,6 +168,9 @@ class UsersRepository {
         phone.isEmpty
             ? _vault.delete(_phoneKey)
             : _vault.write(_phoneKey, phone),
+        _cachedAvatarUrl.isEmpty
+            ? _vault.delete(_avatarUrlKey)
+            : _vault.write(_avatarUrlKey, _cachedAvatarUrl),
       ]).timeout(AppDimensions.secureStorageTimeout);
     } catch (_) {
       // Identity remains available in memory for this session.
@@ -141,6 +180,7 @@ class UsersRepository {
   Future<void> clearCustomerIdentity() async {
     _cachedUsername = '';
     _cachedPhone = '';
+    _cachedAvatarUrl = '';
     _identityHydrated = true;
     _identityDiskDirty = false;
     unawaited(_clearIdentityOnDisk());
@@ -151,6 +191,7 @@ class UsersRepository {
       await Future.wait<void>(<Future<void>>[
         _vault.delete(_usernameKey),
         _vault.delete(_phoneKey),
+        _vault.delete(_avatarUrlKey),
       ]).timeout(AppDimensions.secureStorageTimeout);
     } catch (_) {
       // Guest / logout must not block on storage.
@@ -165,12 +206,24 @@ class UsersRepository {
       final List<String?> values = await Future.wait<String?>(<Future<String?>>[
         _vault.read(_usernameKey),
         _vault.read(_phoneKey),
+        _vault.read(_avatarUrlKey),
       ]).timeout(AppDimensions.secureStorageTimeout);
-      _cachedUsername = values[0]?.trim() ?? '';
-      _cachedPhone = values[1]?.trim() ?? '';
+      final String diskUsername = values[0]?.trim() ?? '';
+      final String diskPhone = values[1]?.trim() ?? '';
+      final String diskAvatar = _normalizeAvatarUrl(values[2]);
+      // Login may call [rememberCustomerIdentity] while this await is in flight.
+      // Never clobber a fresher in-memory username/phone with empty Keychain.
+      if (_cachedUsername.isEmpty && diskUsername.isNotEmpty) {
+        _cachedUsername = diskUsername;
+      }
+      if (_cachedPhone.isEmpty && diskPhone.isNotEmpty) {
+        _cachedPhone = diskPhone;
+      }
+      if (_cachedAvatarUrl.isEmpty && diskAvatar.isNotEmpty) {
+        _cachedAvatarUrl = diskAvatar;
+      }
     } catch (_) {
-      _cachedUsername = '';
-      _cachedPhone = '';
+      // Keep any in-memory login identity; disk is best-effort only.
     }
     _identityHydrated = true;
   }
@@ -189,8 +242,12 @@ class UsersRepository {
     final Completer<void> completer = Completer<void>();
     _profileLoadInFlight = completer.future;
     try {
-      // Guests have no Bearer token — skip without locking the gate so a later
+      // Anonymous guest / no Bearer — skip without locking the gate so a later
       // login can still load `/users/me` (Home progressive init is one-shot).
+      if (Get.isRegistered<GuestModeReader>() &&
+          Get.find<GuestModeReader>().isAnonymousGuest) {
+        return;
+      }
       if (Get.isRegistered<AuthTokenReader>()) {
         final String? access = await Get.find<AuthTokenReader>()
             .readAccessToken();
@@ -214,11 +271,12 @@ class UsersRepository {
 
   Future<UserProfileModel> fetchMyProfile() async {
     await _hydrateCustomerIdentity();
+    final UserProfileModel? previous = profileRx.value;
     final ApiResponse<UserProfileModel> response = await _apiClient
         .get<UserProfileModel>(mePath, parseData: _parseProfile);
-    final String? previousAvatar = profileRx.value?.avatarUrl;
+    final String? previousAvatar = previous?.avatarUrl;
     UserProfileModel profile = _normalizeProfileAvatar(
-      _mergeCustomerIdentity(response.data),
+      _mergeCustomerIdentity(response.data, previous: previous),
     );
     // Profile DTO may omit avatar; keep the last uploaded URL when present.
     if ((profile.avatarUrl == null || profile.avatarUrl!.trim().isEmpty) &&
@@ -226,24 +284,60 @@ class UsersRepository {
         previousAvatar.trim().isNotEmpty) {
       profile = profile.copyWith(avatarUrl: previousAvatar);
     }
+    // `/users/me` currently omits username — never let that wipe login identity.
+    if (profile.username.trim().isEmpty) {
+      final String fallback = _cachedUsername.isNotEmpty
+          ? _cachedUsername
+          : (previous?.username.trim() ?? '');
+      if (fallback.isNotEmpty) {
+        profile = profile.copyWith(username: fallback);
+        _cachedUsername = fallback;
+      }
+    } else {
+      _cachedUsername = profile.username.trim();
+    }
+    if (kDebugMode) {
+      debugPrint(
+        '[ProfileIdentity] merged username="${profile.username}" '
+        'cache="$_cachedUsername"',
+      );
+    }
     profileRx.value = profile;
     _profileLoadAttempted = true;
+    _identityDiskDirty = true;
+    unawaited(flushIdentityToDisk());
     return profile;
   }
 
-  UserProfileModel _mergeCustomerIdentity(UserProfileModel profile) {
+  UserProfileModel _mergeCustomerIdentity(
+    UserProfileModel profile, {
+    UserProfileModel? previous,
+  }) {
+    final String previousUsername = previous?.username.trim() ?? '';
     final String username = profile.username.trim().isNotEmpty
         ? profile.username.trim()
-        : _cachedUsername;
+        : (_cachedUsername.isNotEmpty ? _cachedUsername : previousUsername);
     final String phone = (profile.phone?.trim().isNotEmpty == true)
         ? profile.phone!.trim()
-        : _cachedPhone;
-    if (username == profile.username && phone == (profile.phone ?? '')) {
+        : (_cachedPhone.isNotEmpty
+              ? _cachedPhone
+              : (previous?.phone?.trim() ?? ''));
+    final String avatarUrl = _normalizeAvatarUrl(
+      profile.avatarUrl?.trim().isNotEmpty == true
+          ? profile.avatarUrl
+          : (_cachedAvatarUrl.isNotEmpty
+                ? _cachedAvatarUrl
+                : previous?.avatarUrl),
+    );
+    if (username == profile.username &&
+        phone == (profile.phone ?? '') &&
+        avatarUrl == (profile.avatarUrl ?? '')) {
       return profile;
     }
     return profile.copyWith(
       username: username,
       phone: phone.isEmpty ? profile.phone : phone,
+      avatarUrl: avatarUrl.isEmpty ? profile.avatarUrl : avatarUrl,
     );
   }
 
@@ -314,25 +408,61 @@ class UsersRepository {
     required String filePath,
     String? fileName,
   }) async {
+    final String before = _normalizeAvatarUrl(profileRx.value?.avatarUrl);
+    final ApiResponse<String> response = await _postAvatarMultipart(
+      filePath: filePath,
+      fileName: fileName,
+    );
+    final UserProfileModel refreshedProfile = await fetchMyProfile();
+    final String fromProfile = _normalizeAvatarUrl(refreshedProfile.avatarUrl);
+    final String fromUpload = _normalizeAvatarUrl(response.data);
+    final String resolvedAvatar = fromProfile.isNotEmpty
+        ? fromProfile
+        : (fromUpload.isNotEmpty ? fromUpload : before);
+    if (resolvedAvatar.isEmpty) {
+      throw ApiException(message: AppStrings.avatarUploadFailed);
+    }
+    final UserProfileModel updated = refreshedProfile.copyWith(
+      avatarUrl: resolvedAvatar,
+    );
+    if (resolvedAvatar.isNotEmpty) {
+      _cachedAvatarUrl = resolvedAvatar;
+      _identityDiskDirty = true;
+      unawaited(flushIdentityToDisk());
+    }
+    profileRx.value = updated;
+    return updated;
+  }
+
+  Future<ApiResponse<String>> _postAvatarMultipart({
+    required String filePath,
+    String? fileName,
+  }) async {
     final FormData formData = FormData.fromMap(<String, dynamic>{
-      'file': await MultipartFile.fromFile(filePath, filename: fileName),
+      // Some deployments expect different multipart field names; send all
+      // aliases so avatar persistence does not depend on one backend variant.
+      AppStrings.apiAvatarUploadFieldFile: await MultipartFile.fromFile(
+        filePath,
+        filename: fileName,
+      ),
+      AppStrings.apiAvatarUploadFieldAvatar: await MultipartFile.fromFile(
+        filePath,
+        filename: fileName,
+      ),
+      AppStrings.apiAvatarUploadFieldImage: await MultipartFile.fromFile(
+        filePath,
+        filename: fileName,
+      ),
+      AppStrings.apiAvatarUploadFieldProfileImage: await MultipartFile.fromFile(
+        filePath,
+        filename: fileName,
+      ),
     });
-    final ApiResponse<String> response = await _apiClient.postMultipart<String>(
+    return _apiClient.postMultipart<String>(
       avatarPath,
       formData: formData,
       parseData: _parseAvatarUrl,
     );
-
-    UserProfileModel? current = profileRx.value;
-    current ??= await fetchMyProfile();
-    final String normalizedUploaded = _normalizeAvatarUrl(response.data);
-    final UserProfileModel updated = current.copyWith(
-      avatarUrl: normalizedUploaded.isNotEmpty
-          ? normalizedUploaded
-          : current.avatarUrl,
-    );
-    profileRx.value = updated;
-    return updated;
   }
 
   UserProfileModel _normalizeProfileAvatar(UserProfileModel profile) {
@@ -393,11 +523,24 @@ class UsersRepository {
   }
 
   static UserProfileModel _parseProfile(Object? raw) {
-    if (raw is Map<String, dynamic>) {
-      return UserProfileModel.fromJson(raw);
+    if (raw is Map) {
+      final Map<String, dynamic> flattened =
+          CustomerIdentityPayload.flatten(raw);
+      if (kDebugMode) {
+        debugPrint(
+          '[ProfileIdentity] keys=${flattened.keys.toList()} '
+          'username="${flattened['username'] ?? ''}"',
+        );
+      }
+      return UserProfileModel.fromJson(flattened);
     }
     throw ArgumentError(AppStrings.invalidUserProfilePayload);
   }
+
+  /// Test seam for `/users/me` identity flattening.
+  @visibleForTesting
+  static UserProfileModel parseProfileForTest(Object? raw) =>
+      _parseProfile(raw);
 
   static UserPreferencesModel _parsePreferences(Object? raw) {
     if (raw is Map<String, dynamic>) {
@@ -407,23 +550,48 @@ class UsersRepository {
   }
 
   static String _parseAvatarUrl(Object? raw) {
+    final String parsed = _extractAvatarUrl(raw);
+    return parsed.trim();
+  }
+
+  static String _extractAvatarUrl(Object? raw) {
     if (raw is String) {
-      final String direct = raw.trim();
-      if (direct.isNotEmpty) {
-        return direct;
+      return raw;
+    }
+    if (raw is! Map<String, dynamic>) {
+      return '';
+    }
+
+    const List<String> preferredKeys = <String>[
+      AppStrings.apiAvatarFieldAvatarUrl,
+      'avatar_url',
+      AppStrings.apiAvatarFieldAvatar,
+      AppStrings.apiAvatarFieldImageUrl,
+      AppStrings.apiAvatarFieldUrl,
+      AppStrings.apiAvatarFieldPath,
+      'avatarPath',
+      'profileImage',
+      'secure_url',
+    ];
+
+    for (final String key in preferredKeys) {
+      final Object? value = raw[key];
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+      if (value is Map<String, dynamic>) {
+        final String nested = _extractAvatarUrl(value).trim();
+        if (nested.isNotEmpty) {
+          return nested;
+        }
       }
     }
-    if (raw is Map<String, dynamic>) {
-      for (final String key in <String>[
-        AppStrings.apiAvatarFieldAvatarUrl,
-        AppStrings.apiAvatarFieldAvatar,
-        AppStrings.apiAvatarFieldImageUrl,
-        AppStrings.apiAvatarFieldUrl,
-        AppStrings.apiAvatarFieldPath,
-      ]) {
-        final Object? value = raw[key];
-        if (value is String && value.trim().isNotEmpty) {
-          return value.trim();
+
+    for (final Object? value in raw.values) {
+      if (value is Map<String, dynamic>) {
+        final String nested = _extractAvatarUrl(value).trim();
+        if (nested.isNotEmpty) {
+          return nested;
         }
       }
     }

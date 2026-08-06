@@ -6,15 +6,18 @@ import '../../../core/network/api_response.dart';
 import '../../branches/model/branch_model.dart';
 import '../../home/model/restaurant_model.dart';
 import '../model/discovery_floor_plan_model.dart';
+import '../model/restaurant_offer_model.dart';
 
 /// Customer Discovery APIs (Postman folder **Discovery**).
 ///
 /// Public (`skipAuth`), cross-tenant Active restaurants only:
 /// - `GET /discovery/restaurants`
+/// - `GET /discovery/restaurants/nearby`
 /// - `GET /discovery/restaurants/:restaurantId`
 /// - `GET /discovery/restaurants/:restaurantId/branches`
 /// - `GET /discovery/restaurants/:restaurantId/branches/:branchId`
 /// - `GET /discovery/restaurants/:restaurantId/branches/:branchId/floor-plan`
+/// - `GET /discovery/restaurants/:restaurantId/offers`
 ///
 /// Never calls admin `/restaurants` tenant APIs.
 class DiscoveryRepository {
@@ -86,6 +89,45 @@ class DiscoveryRepository {
       }
     }
     return items;
+  }
+
+  /// `GET /discovery/restaurants/nearby` (`lat`, `lng`, optional `radiusKm`).
+  Future<List<RestaurantModel>> listNearbyRestaurants({
+    required double latitude,
+    required double longitude,
+    double radiusKm = AppDimensions.nearbySearchRadiusKm,
+    int page = AppDimensions.apiDefaultPage,
+    int limit = AppDimensions.apiDefaultLimit,
+  }) async {
+    final ApiResponse<List<RestaurantModel>> response = await _apiClient
+        .get<List<RestaurantModel>>(
+          AppUrls.discoveryRestaurantsNearbyPath,
+          queryParameters: <String, dynamic>{
+            AppUrls.nearbyLatitudeQueryKey: latitude,
+            AppUrls.nearbyLongitudeQueryKey: longitude,
+            AppUrls.nearbyRadiusKmQueryKey: radiusKm,
+            'page': page,
+            'limit': limit,
+          },
+          options: ApiClient.skipAuthOptions(),
+          parseData: _parseRestaurantItems,
+        );
+    return List<RestaurantModel>.unmodifiable(response.data);
+  }
+
+  /// `GET /discovery/restaurants/:restaurantId/offers`
+  Future<List<RestaurantOfferModel>> listOffers(String restaurantId) async {
+    final String id = restaurantId.trim();
+    if (id.isEmpty) {
+      return const <RestaurantOfferModel>[];
+    }
+    final ApiResponse<List<RestaurantOfferModel>> response = await _apiClient
+        .get<List<RestaurantOfferModel>>(
+          AppUrls.discoveryOffersPath(id),
+          options: ApiClient.skipAuthOptions(),
+          parseData: _parseOfferItems,
+        );
+    return List<RestaurantOfferModel>.unmodifiable(response.data);
   }
 
   /// `GET /discovery/restaurants/:restaurantId`
@@ -251,6 +293,27 @@ class DiscoveryRepository {
       throw StateError(AppStrings.invalidBranchPayload);
     }
     return BranchModel.fromJson(Map<String, dynamic>.from(raw));
+  }
+
+  static List<RestaurantOfferModel> _parseOfferItems(Object? raw) {
+    final List<dynamic> items = _extractItems(raw);
+    final List<RestaurantOfferModel> parsed = <RestaurantOfferModel>[];
+    for (final dynamic item in items) {
+      if (item is! Map) {
+        continue;
+      }
+      try {
+        final RestaurantOfferModel offer = RestaurantOfferModel.fromJson(
+          Map<String, dynamic>.from(item),
+        );
+        if (offer.offerId.isNotEmpty || offer.title.isNotEmpty) {
+          parsed.add(offer);
+        }
+      } catch (_) {
+        // Skip malformed rows.
+      }
+    }
+    return parsed;
   }
 
   static List<dynamic> _extractItems(Object? raw) {

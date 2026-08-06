@@ -33,23 +33,37 @@ class DetailsInfoBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Hours card always stays visible inside restaurant details —
+          // never hide the section when the API is still loading / fails.
           Text(AppStrings.hours, style: AppTextStyles.detailsSectionLabel),
           const SizedBox(height: AppDimensions.regularSpacing),
-          ...openingHours.map(
-            (day) => Padding(
-              padding: const EdgeInsets.only(
-                bottom: AppDimensions.compactSpacing,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(day.day, style: AppTextStyles.detailsHoursDay),
-                  ),
-                  AppLtrText(day.hours, style: AppTextStyles.detailsHoursTime),
-                ],
+          if (openingHours.isEmpty)
+            Text(
+              AppStrings.hoursUnavailable,
+              style: AppTextStyles.detailsHoursTime,
+            )
+          else
+            ...openingHours.map(
+              (OpeningHoursDayModel day) => Padding(
+                padding: const EdgeInsets.only(
+                  bottom: AppDimensions.compactSpacing,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        day.day,
+                        style: AppTextStyles.detailsHoursDay,
+                      ),
+                    ),
+                    AppLtrText(
+                      day.hours,
+                      style: AppTextStyles.detailsHoursTime,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           const SizedBox(height: AppDimensions.sectionSpacing),
           const Divider(
             color: AppColors.border,

@@ -1,32 +1,71 @@
 import 'package:flutter/material.dart';
 
-import '../../../common/widgets/hoverable_card.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
 
 class ConciergeMessageCard extends StatelessWidget {
-  const ConciergeMessageCard({super.key, required this.message});
+  const ConciergeMessageCard({
+    super.key,
+    required this.message,
+    this.isFromCustomer = false,
+  });
 
   final String message;
+  final bool isFromCustomer;
 
   @override
   Widget build(BuildContext context) {
-    return FractionallySizedBox(
-      alignment: AlignmentDirectional.centerStart,
-      widthFactor: AppDimensions.conciergeMessageWidthFactor,
-      child: HoverableCard(
-        child: Container(
-          padding: const EdgeInsets.all(AppDimensions.contentPadding),
+    final BorderRadiusGeometry radius = BorderRadiusDirectional.only(
+      topStart: const Radius.circular(AppDimensions.conciergeBubbleRadius),
+      topEnd: const Radius.circular(AppDimensions.conciergeBubbleRadius),
+      bottomStart: Radius.circular(
+        isFromCustomer
+            ? AppDimensions.conciergeBubbleRadius
+            : AppDimensions.conciergeBubbleTailRadius,
+      ),
+      bottomEnd: Radius.circular(
+        isFromCustomer
+            ? AppDimensions.conciergeBubbleTailRadius
+            : AppDimensions.conciergeBubbleRadius,
+      ),
+    );
+
+    return Align(
+      alignment: isFromCustomer
+          ? AlignmentDirectional.centerEnd
+          : AlignmentDirectional.centerStart,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth:
+              MediaQuery.sizeOf(context).width *
+              AppDimensions.conciergeMessageWidthFactor,
+        ),
+        child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.surfaceAlt,
-            borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
-            border: Border.all(
-              color: AppColors.border,
-              width: AppDimensions.cardBorderWidth,
+            color: isFromCustomer ? AppColors.primary : AppColors.surfaceAlt,
+            borderRadius: radius,
+            border: isFromCustomer
+                ? null
+                : Border.all(
+                    color: AppColors.border,
+                    width: AppDimensions.cardBorderWidth,
+                  ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.contentPadding,
+              vertical: AppDimensions.regularSpacing,
+            ),
+            child: Text(
+              message,
+              style: AppTextStyles.conciergeMessage.copyWith(
+                color: isFromCustomer
+                    ? AppColors.textLight
+                    : AppColors.textPrimary,
+              ),
             ),
           ),
-          child: Text(message, style: AppTextStyles.conciergeMessage),
         ),
       ),
     );

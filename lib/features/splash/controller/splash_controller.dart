@@ -1,12 +1,16 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../../app/routes/app_routes.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/network/auth_token_reader.dart';
 import '../../../core/utils/favorite_cuisines_preferences.dart';
 import '../../../core/utils/onboarding_preferences.dart';
 import '../../auth/controller/auth_session_controller.dart';
+import '../../auth/model/session_mode.dart';
+import '../../auth/session_mode_preferences.dart';
 import '../splash_destination_prep.dart';
 
 class SplashController extends GetxController {
@@ -21,7 +25,7 @@ class SplashController extends GetxController {
     super.onInit();
     // Start preference reads immediately so navigation after the display
     // duration does not hitch on SharedPreferences I/O.
-    _destinationFuture = _resolveDestination();
+    _destinationFuture = resolveDestination();
   }
 
   @override
@@ -42,30 +46,129 @@ class SplashController extends GetxController {
     });
   }
 
-  Future<String> _resolveDestination() async {
+  /// Post-Splash named route from onboarding gates + persisted session mode.
+  ///
+  /// Controllers own this decision tree (MVC). Tests call the same method.
+  ///
+  /// Waits for token-store hydrate (via [AuthSessionController.syncFromStoredTokens])
+  /// + SessionMode prefs before deciding. Never clears
+  /// [SessionMode.authenticated] on a missing-token race — only Logout /
+  /// session expiry clear that mode.
+  static Future<String> resolveDestination() async {
     final bool onboardingCompleted = await OnboardingPreferences.isCompleted();
     if (!onboardingCompleted) {
-      return AppRoutes.onboarding;
+      return _finish(AppRoutes.onboarding, SessionMode.none, false, false);
     }
     final bool cuisinesCompleted =
         await FavoriteCuisinesPreferences.isCompleted();
     if (!cuisinesCompleted) {
-      return AppRoutes.favoriteCuisines;
+      return _finish(
+        AppRoutes.favoriteCuisines,
+        SessionMode.none,
+        false,
+        false,
+      );
     }
-    if (Get.isRegistered<AuthSessionController>()) {
-      final AuthSessionController session = Get.find<AuthSessionController>();
-      try {
-        await session.syncFromStoredTokens().timeout(
-          AppDimensions.secureStorageTimeout,
-        );
-      } on TimeoutException {
-        // Stuck Keychain must not pin Splash — fall through to Welcome.
-      }
-      if (session.hasAuthenticatedSession.value) {
-        return AppRoutes.home;
-      }
+    if (!Get.isRegistered<AuthSessionController>()) {
+      return _finish(AppRoutes.welcome, SessionMode.none, false, false);
     }
-    return AppRoutes.welcome;
+
+    final AuthSessionController session = Get.find<AuthSessionController>();
+    try {
+      // syncFromStoredTokens awaits SecureAuthTokenStore.hydrate() first.
+      await session.syncFromStoredTokens().timeout(
+        AppDimensions.secureStorageTimeout,
+      );
+    } on TimeoutException {
+      _debugLog('syncFromStoredTokens timeout — using SessionMode fallback');
+    }
+
+    final SessionMode mode = await SessionModePreferences.read();
+    final bool accessPresent = await _readTokenPresent(isRefresh: false);
+    final bool refreshPresent = await _readTokenPresent(isRefresh: true);
+
+    _debugLog(
+      'inputs mode=${mode.storageValue} access=$accessPresent '
+      'refresh=$refreshPresent '
+      'hasAuthenticatedSession=${session.hasAuthenticatedSession.value}',
+    );
+
+    if (session.hasAuthenticatedSession.value || accessPresent) {
+      session.restorePersistedAuthenticatedSession();
+      return _finish(
+        AppRoutes.home,
+        mode == SessionMode.none ? SessionMode.authenticated : mode,
+        accessPresent,
+        refreshPresent,
+      );
+    }
+
+    if (mode == SessionMode.guest) {
+      await session.restorePersistedGuestSession();
+      return _finish(
+        AppRoutes.home,
+        SessionMode.guest,
+        accessPresent,
+        refreshPresent,
+      );
+    }
+
+    if (mode == SessionMode.authenticated) {
+      // Persisted login survived process death. Tokens may still be hydrating
+      // (or Keychain timed out). Do NOT clear SessionMode — that was the Hot
+      // Restart → Welcome bug. Restore flags and open Home.
+      session.restorePersistedAuthenticatedSession();
+      return _finish(
+        AppRoutes.home,
+        SessionMode.authenticated,
+        accessPresent,
+        refreshPresent,
+      );
+    }
+
+    return _finish(AppRoutes.welcome, mode, accessPresent, refreshPresent);
+  }
+
+  static Future<bool> _readTokenPresent({required bool isRefresh}) async {
+    if (!Get.isRegistered<AuthTokenReader>()) {
+      return false;
+    }
+    final AuthTokenReader reader = Get.find<AuthTokenReader>();
+    try {
+      final String? value = isRefresh
+          ? (reader is AuthTokenSession
+                ? await reader.readRefreshToken().timeout(
+                    AppDimensions.secureStorageTimeout,
+                  )
+                : null)
+          : await reader.readAccessToken().timeout(
+              AppDimensions.secureStorageTimeout,
+            );
+      return value != null && value.trim().isNotEmpty;
+    } on TimeoutException {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static String _finish(
+    String destination,
+    SessionMode mode,
+    bool accessPresent,
+    bool refreshPresent,
+  ) {
+    _debugLog(
+      'final destination=$destination mode=${mode.storageValue} '
+      'access=$accessPresent refresh=$refreshPresent',
+    );
+    return destination;
+  }
+
+  static void _debugLog(String message) {
+    if (kDebugMode) {
+      debugPrint('[StartupSession] $message');
+    }
   }
 
   Future<void> _ensureDestinationPrepared() {
@@ -79,7 +182,8 @@ class SplashController extends GetxController {
   }
 
   Future<void> _prepareDestination() async {
-    final String route = await (_destinationFuture ?? _resolveDestination());
+    final String route =
+        await (_destinationFuture ?? resolveDestination());
     if (isClosed) {
       return;
     }
@@ -106,7 +210,8 @@ class SplashController extends GetxController {
     }
     _didNavigate = true;
 
-    final String route = await (_destinationFuture ?? _resolveDestination());
+    final String route =
+        await (_destinationFuture ?? resolveDestination());
     if (isClosed) {
       return;
     }

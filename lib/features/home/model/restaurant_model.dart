@@ -16,6 +16,7 @@ class RestaurantModel {
     this.occasionTags = const <String>[],
     this.hoursLabel = '',
     this.averageRating,
+    this.hasActiveOffer = false,
   });
 
   final String id;
@@ -38,11 +39,14 @@ class RestaurantModel {
   /// All occasion category names from `GET .../occasion-categories`.
   final List<String> occasionTags;
 
-  /// Today's hours from `GET .../working-hours` (e.g. `09:00 – 22:00`).
+  /// Today's hours from primary-branch working-hours (e.g. `09:00 – 22:00`).
   final String hoursLabel;
 
   /// Discovery `averageRating` when present.
   final double? averageRating;
+
+  /// Discovery `hasActiveOffer` when present.
+  final bool hasActiveOffer;
 
   RestaurantModel copyWith({
     String? id,
@@ -58,6 +62,7 @@ class RestaurantModel {
     List<String>? occasionTags,
     String? hoursLabel,
     double? averageRating,
+    bool? hasActiveOffer,
   }) {
     return RestaurantModel(
       id: id ?? this.id,
@@ -73,6 +78,7 @@ class RestaurantModel {
       occasionTags: occasionTags ?? this.occasionTags,
       hoursLabel: hoursLabel ?? this.hoursLabel,
       averageRating: averageRating ?? this.averageRating,
+      hasActiveOffer: hasActiveOffer ?? this.hasActiveOffer,
     );
   }
 
@@ -95,6 +101,7 @@ class RestaurantModel {
       isAvailable: isAvailable,
       cuisineTags: _readCuisineTags(json),
       averageRating: _readAverageRating(json),
+      hasActiveOffer: _readHasActiveOffer(json),
     );
   }
 
@@ -191,6 +198,21 @@ class RestaurantModel {
       return double.tryParse(raw.trim());
     }
     return null;
+  }
+
+  static bool _readHasActiveOffer(Map<String, dynamic> json) {
+    final Object? raw = json['hasActiveOffer'];
+    if (raw is bool) {
+      return raw;
+    }
+    if (raw is String) {
+      final String normalized = raw.trim().toLowerCase();
+      return normalized == 'true' || normalized == '1';
+    }
+    if (raw is num) {
+      return raw != 0;
+    }
+    return false;
   }
 
   static String _readImageUrl(Map<String, dynamic> json) {

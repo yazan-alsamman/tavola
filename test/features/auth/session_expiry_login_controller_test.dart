@@ -104,6 +104,7 @@ class _MemoryTokens implements AuthTokenSession {
   Future<void> updateSessionTokens({
     required String accessToken,
     required String refreshToken,
+    bool persistToDisk = true,
   }) async {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;

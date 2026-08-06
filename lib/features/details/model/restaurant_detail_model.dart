@@ -13,6 +13,9 @@ class RestaurantDetailModel {
     required this.menuItems,
     required this.locationNote,
     this.galleryImageUrls = const <String>[],
+    this.todayHoursLabel = '',
+    this.isOpenNow = false,
+    this.hasWorkingHours = false,
   });
 
   final String restaurantId;
@@ -26,6 +29,15 @@ class RestaurantDetailModel {
   final String locationNote;
   final List<String> galleryImageUrls;
 
+  /// Today's window from primary-branch working-hours.
+  final String todayHoursLabel;
+
+  /// Whether now falls inside today's opening window.
+  final bool isOpenNow;
+
+  /// True when a working-hours payload was loaded (even if all days closed).
+  final bool hasWorkingHours;
+
   RestaurantDetailModel copyWith({
     String? restaurantId,
     String? rating,
@@ -37,6 +49,9 @@ class RestaurantDetailModel {
     List<MenuItemModel>? menuItems,
     String? locationNote,
     List<String>? galleryImageUrls,
+    String? todayHoursLabel,
+    bool? isOpenNow,
+    bool? hasWorkingHours,
   }) {
     return RestaurantDetailModel(
       restaurantId: restaurantId ?? this.restaurantId,
@@ -49,6 +64,9 @@ class RestaurantDetailModel {
       menuItems: menuItems ?? this.menuItems,
       locationNote: locationNote ?? this.locationNote,
       galleryImageUrls: galleryImageUrls ?? this.galleryImageUrls,
+      todayHoursLabel: todayHoursLabel ?? this.todayHoursLabel,
+      isOpenNow: isOpenNow ?? this.isOpenNow,
+      hasWorkingHours: hasWorkingHours ?? this.hasWorkingHours,
     );
   }
 }

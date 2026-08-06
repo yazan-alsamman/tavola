@@ -5,20 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
+import '../../../app/routes/app_routes.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/navigation/app_navigation.dart';
 import '../../../core/navigation/bottom_nav_navigation.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/utils/app_dependency.dart';
 import '../../auth/controller/auth_session_controller.dart';
 import '../../details/controller/details_controller.dart';
 import '../../details/controller/restaurant_menu_controller.dart';
+import '../../details/repository/restaurant_details_repository.dart';
+import '../../discovery/model/restaurant_offer_model.dart';
+import '../../discovery/repository/discovery_repository.dart';
 import '../../favorites/repository/favorites_repository.dart';
+import '../../location/controller/user_location_controller.dart';
+import '../../reservation/controller/reservation_controller.dart';
 import '../../reservation/controller/select_restaurant_controller.dart';
+import '../../reservation/model/reservation_route_args.dart';
 import '../../taxonomy/model/cuisine_category_model.dart';
 import '../../taxonomy/model/occasion_category_model.dart';
 import '../../taxonomy/repository/taxonomy_repository.dart';
-import '../../discovery/repository/discovery_repository.dart';
 import '../home_progressive_init.dart';
 import '../model/restaurant_model.dart';
 
@@ -51,6 +58,13 @@ class HomeController extends GetxController {
   final RxnString restaurantsError = RxnString();
   final RxString searchQuery = ''.obs;
 
+  /// Featured Home promo from nearby/catalog + `GET .../offers`.
+  final Rxn<RestaurantOfferModel> featuredOffer = Rxn<RestaurantOfferModel>();
+  final Rxn<RestaurantModel> featuredOfferRestaurant = Rxn<RestaurantModel>();
+  final RxBool isLoadingSpecialOffer = false.obs;
+  final RxnString specialOfferError = RxnString();
+  bool _specialOfferLoadInFlight = false;
+
   /// Owns the Home search field so keyboard / MediaQuery rebuilds cannot
   /// recreate an uncontrolled [TextField] and drop focus mid-typing.
   final TextEditingController searchController = TextEditingController();
@@ -65,10 +79,18 @@ class HomeController extends GetxController {
   final RxBool shellLocationReady = false.obs;
 
   bool _postFrameLoadsStarted = false;
+  bool _progressiveInitCancelled = false;
   HomeProgressiveInit? _progressiveInit;
 
   /// Test/perf: true after the post-frame progressive kickoff has been scheduled.
   bool get didSchedulePostFrameLoads => _postFrameLoadsStarted;
+
+  /// Test-only: stop progressive bands so unit tests can drive loads explicitly.
+  @visibleForTesting
+  void cancelProgressiveInit() {
+    _progressiveInitCancelled = true;
+    _progressiveInit?.cancel();
+  }
 
   FavoritesRepository? get _favoritesOrNull =>
       Get.isRegistered<FavoritesRepository>()
@@ -86,7 +108,7 @@ class HomeController extends GetxController {
 
     // Progressive stages start after the first Home frame is committed.
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (isClosed || _postFrameLoadsStarted) {
+      if (isClosed || _postFrameLoadsStarted || _progressiveInitCancelled) {
         return;
       }
       _postFrameLoadsStarted = true;
@@ -245,8 +267,12 @@ class HomeController extends GetxController {
           _HomeListErrorKind.empty,
           AppStrings.restaurantsEmpty,
         );
+      } else {
+        unawaited(_enrichRestaurantHoursLabels());
       }
+      _logCatalog('restaurants ok', items.length);
     } on TimeoutException {
+      _logCatalog('restaurants timeout', 0);
       if (restaurants.isEmpty) {
         _setRestaurantsError(
           _HomeListErrorKind.timeout,
@@ -254,10 +280,12 @@ class HomeController extends GetxController {
         );
       }
     } on ApiException catch (error) {
+      _logCatalog('restaurants api: ${error.message}', 0);
       if (restaurants.isEmpty) {
         _setRestaurantsError(_HomeListErrorKind.api, error.message);
       }
-    } catch (_) {
+    } catch (error) {
+      _logCatalog('restaurants unexpected: $error', 0);
       if (restaurants.isEmpty) {
         _setRestaurantsError(
           _HomeListErrorKind.unexpected,
@@ -267,6 +295,42 @@ class HomeController extends GetxController {
     } finally {
       isLoadingRestaurants.value = false;
     }
+  }
+
+  /// Fills [RestaurantModel.hoursLabel] from primary-branch working-hours.
+  Future<void> _enrichRestaurantHoursLabels() async {
+    if (isClosed || restaurants.isEmpty) {
+      return;
+    }
+    AppDependency.ensureRestaurantDetailsRepository();
+    if (!Get.isRegistered<RestaurantDetailsRepository>()) {
+      return;
+    }
+    final RestaurantDetailsRepository details =
+        Get.find<RestaurantDetailsRepository>();
+    final List<RestaurantModel> snapshot = restaurants.toList(growable: false);
+    final List<RestaurantModel> enriched = await Future.wait(
+      snapshot.map((RestaurantModel restaurant) async {
+        if (restaurant.hoursLabel.trim().isNotEmpty) {
+          return restaurant;
+        }
+        try {
+          final String label = await details
+              .fetchTodayHoursLabel(restaurant.id)
+              .timeout(AppDimensions.homeCatalogLoadTimeout);
+          if (label.trim().isEmpty) {
+            return restaurant;
+          }
+          return restaurant.copyWith(hoursLabel: label);
+        } catch (_) {
+          return restaurant;
+        }
+      }),
+    );
+    if (isClosed) {
+      return;
+    }
+    restaurants.assignAll(enriched);
   }
 
   Future<void> loadCuisineCategories() async {
@@ -285,7 +349,9 @@ class HomeController extends GetxController {
       if (selectedFilterIndex.value >= restaurantFilters.length) {
         selectedFilterIndex.value = 0;
       }
+      _logCatalog('cuisine ok', items.length);
     } on TimeoutException {
+      _logCatalog('cuisine timeout', 0);
       if (cuisineCategories.isEmpty) {
         restaurantFilters.clear();
         _setCuisineError(
@@ -294,11 +360,13 @@ class HomeController extends GetxController {
         );
       }
     } on ApiException catch (error) {
+      _logCatalog('cuisine api: ${error.message}', 0);
       if (cuisineCategories.isEmpty) {
         restaurantFilters.clear();
         _setCuisineError(_HomeListErrorKind.api, error.message);
       }
-    } catch (_) {
+    } catch (error) {
+      _logCatalog('cuisine unexpected: $error', 0);
       if (cuisineCategories.isEmpty) {
         restaurantFilters.clear();
         _setCuisineError(
@@ -330,7 +398,9 @@ class HomeController extends GetxController {
       if (selected != null && !occasionCategories.contains(selected)) {
         selectedOccasion.value = null;
       }
+      _logCatalog('occasion ok', items.length);
     } on TimeoutException {
+      _logCatalog('occasion timeout', 0);
       if (occasionCategoryItems.isEmpty) {
         occasionCategories.clear();
         _setOccasionError(
@@ -339,11 +409,13 @@ class HomeController extends GetxController {
         );
       }
     } on ApiException catch (error) {
+      _logCatalog('occasion api: ${error.message}', 0);
       if (occasionCategoryItems.isEmpty) {
         occasionCategories.clear();
         _setOccasionError(_HomeListErrorKind.api, error.message);
       }
-    } catch (_) {
+    } catch (error) {
+      _logCatalog('occasion unexpected: $error', 0);
       if (occasionCategoryItems.isEmpty) {
         occasionCategories.clear();
         _setOccasionError(
@@ -353,6 +425,12 @@ class HomeController extends GetxController {
       }
     } finally {
       isLoadingOccasionCategories.value = false;
+    }
+  }
+
+  static void _logCatalog(String label, int count) {
+    if (kDebugMode) {
+      debugPrint('[HomeCatalog] $label (count=$count)');
     }
   }
 
@@ -443,6 +521,158 @@ class HomeController extends GetxController {
 
   void openReservation() {
     SelectRestaurantController.open();
+  }
+
+  /// Book the restaurant behind the featured Discovery offer.
+  void openFeaturedOfferReservation() {
+    final RestaurantModel? restaurant = featuredOfferRestaurant.value;
+    if (restaurant == null || restaurant.id.trim().isEmpty) {
+      SelectRestaurantController.open();
+      return;
+    }
+    if (Get.isRegistered<ReservationController>()) {
+      Get.delete<ReservationController>(force: true);
+    }
+    AppDependency.ensureReservationFlowDependencies();
+    AppNavigation.pushOnce(
+      AppRoutes.reservation,
+      arguments: ReservationRouteArgs(
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name.isNotEmpty
+            ? restaurant.name
+            : AppStrings.specialOffer,
+      ),
+    );
+  }
+
+  /// Loads one published offer for the Home Special Offer card.
+  ///
+  /// Prefers `GET /discovery/restaurants/nearby` + offers; falls back to catalog
+  /// restaurants with `hasActiveOffer` (or probes catalog when the flag is absent).
+  Future<void> loadSpecialOfferPromo() async {
+    if (isClosed || _specialOfferLoadInFlight) {
+      return;
+    }
+    _specialOfferLoadInFlight = true;
+    isLoadingSpecialOffer.value = true;
+    specialOfferError.value = null;
+    try {
+      if (Get.isRegistered<UserLocationController>()) {
+        try {
+          await Get.find<UserLocationController>()
+              .refreshStatus()
+              .timeout(AppDimensions.homeCatalogLoadTimeout);
+        } catch (_) {
+          // Location is optional; catalog fallback still applies.
+        }
+      }
+
+      final List<RestaurantModel> nearbyCandidates =
+          await _loadNearbyOfferCandidates();
+      final RestaurantOfferModel? fromNearby = await _firstPublishedOffer(
+        nearbyCandidates,
+      );
+      if (fromNearby != null) {
+        return;
+      }
+
+      List<RestaurantModel> catalog = restaurants.toList(growable: false);
+      if (catalog.isEmpty) {
+        try {
+          catalog = await _discoveryRepository
+              .listRestaurants()
+              .timeout(AppDimensions.homeCatalogLoadTimeout);
+        } catch (_) {
+          catalog = const <RestaurantModel>[];
+        }
+      }
+
+      final List<RestaurantModel> flagged = catalog
+          .where((RestaurantModel item) => item.hasActiveOffer)
+          .toList(growable: false);
+      final RestaurantOfferModel? fromFlagged = await _firstPublishedOffer(
+        flagged.isNotEmpty ? flagged : catalog,
+      );
+      if (fromFlagged != null) {
+        return;
+      }
+
+      featuredOffer.value = null;
+      featuredOfferRestaurant.value = null;
+      specialOfferError.value = AppStrings.offersEmpty;
+    } on ApiException catch (error) {
+      if (featuredOffer.value == null) {
+        specialOfferError.value = error.message;
+      }
+    } catch (_) {
+      if (featuredOffer.value == null) {
+        specialOfferError.value = AppStrings.offersLoadFailed;
+      }
+    } finally {
+      _specialOfferLoadInFlight = false;
+      if (!isClosed) {
+        isLoadingSpecialOffer.value = false;
+      }
+    }
+  }
+
+  Future<List<RestaurantModel>> _loadNearbyOfferCandidates() async {
+    if (!Get.isRegistered<UserLocationController>()) {
+      return const <RestaurantModel>[];
+    }
+    final UserLocationController location = Get.find<UserLocationController>();
+    final double? latitude = location.latitude;
+    final double? longitude = location.longitude;
+    if (!location.canProvideRecommendations ||
+        latitude == null ||
+        longitude == null) {
+      return const <RestaurantModel>[];
+    }
+    try {
+      final List<RestaurantModel> nearby = await _discoveryRepository
+          .listNearbyRestaurants(latitude: latitude, longitude: longitude)
+          .timeout(AppDimensions.homeCatalogLoadTimeout);
+      final List<RestaurantModel> flagged = nearby
+          .where((RestaurantModel item) => item.hasActiveOffer)
+          .toList(growable: false);
+      return flagged.isNotEmpty ? flagged : nearby;
+    } catch (_) {
+      return const <RestaurantModel>[];
+    }
+  }
+
+  Future<RestaurantOfferModel?> _firstPublishedOffer(
+    List<RestaurantModel> candidates,
+  ) async {
+    final int limit = AppDimensions.homeOfferCandidateProbeLimit;
+    for (final RestaurantModel restaurant in candidates.take(limit)) {
+      if (restaurant.id.trim().isEmpty) {
+        continue;
+      }
+      try {
+        final List<RestaurantOfferModel> offers = await _discoveryRepository
+            .listOffers(restaurant.id)
+            .timeout(AppDimensions.homeCatalogLoadTimeout);
+        for (final RestaurantOfferModel offer in offers) {
+          if (!offer.isPublished && offer.status.trim().isNotEmpty) {
+            continue;
+          }
+          if (offer.title.trim().isEmpty && offer.description.trim().isEmpty) {
+            continue;
+          }
+          if (isClosed) {
+            return null;
+          }
+          featuredOffer.value = offer;
+          featuredOfferRestaurant.value = restaurant;
+          specialOfferError.value = null;
+          return offer;
+        }
+      } catch (_) {
+        // Try the next restaurant.
+      }
+    }
+    return null;
   }
 
   void openDetails(RestaurantModel restaurant) {

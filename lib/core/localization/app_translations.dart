@@ -65,6 +65,7 @@ class AppTranslations extends Translations {
   static const Map<String, String> _en = {
     'Business Lunch': 'Business Lunch',
     'Casual': 'Casual',
+    'Cancelled': 'Cancelled',
     'Changing language': 'Changing language',
     'Could not load map restaurants. Showing available pins.':
         'Could not load map restaurants. Showing available pins.',
@@ -114,6 +115,7 @@ class AppTranslations extends Translations {
     'American': 'American',
     'Anniversary': 'Anniversary',
     'April': 'April',
+    'Approved': 'Approved',
     'Arabic': 'Arabic',
     'Asian': 'Asian',
     'Ask Tavola AI for a recommendation...':
@@ -155,6 +157,30 @@ class AppTranslations extends Translations {
     'Charred greens with citrus vinaigrette.':
         'Charred greens with citrus vinaigrette.',
     'Chat': 'Chat',
+    'Sign in to message your dining host.':
+        'Sign in to message your dining host.',
+    'No conversations yet. Start one with a restaurant.':
+        'No conversations yet. Start one with a restaurant.',
+    'Could not load conversations. Please try again.':
+        'Could not load conversations. Please try again.',
+    'Could not load messages. Please try again.':
+        'Could not load messages. Please try again.',
+    'Could not send your message. Please try again.':
+        'Could not send your message. Please try again.',
+    'Could not start the conversation. Please try again.':
+        'Could not start the conversation. Please try again.',
+    'Could not close the conversation. Please try again.':
+        'Could not close the conversation. Please try again.',
+    'Start conversation': 'Start conversation',
+    'Choose a restaurant': 'Choose a restaurant',
+    'Close chat': 'Close chat',
+    'All chats': 'All chats',
+    'This conversation is closed.': 'This conversation is closed.',
+    'You can start a new chat with another restaurant anytime.':
+        'You can start a new chat with another restaurant anytime.',
+    'Chat with another restaurant': 'Chat with another restaurant',
+    'Invalid conversation payload.': 'Invalid conversation payload.',
+    'Invalid message payload.': 'Invalid message payload.',
     'CHECK YOUR WHATSAPP': 'CHECK YOUR WHATSAPP',
     'Chef’s table experiences': 'Chef’s table experiences',
     'Chef’s tasting selection of seasonal spice plates.':
@@ -237,6 +263,11 @@ class AppTranslations extends Translations {
     'English': 'English',
     'Enjoy a premium dinner experience with chef-selected flavors and a warm atmosphere.':
         'Enjoy a premium dinner experience with chef-selected flavors and a warm atmosphere.',
+    'Could not load offers. Please try again.':
+        'Could not load offers. Please try again.',
+    'No special offers available right now.':
+        'No special offers available right now.',
+    'Invalid offer payload.': 'Invalid offer payload.',
     'Account created. Please log in.': 'Account created. Please log in.',
     'Password updated. Please log in.': 'Password updated. Please log in.',
     'This username is already taken. Please choose a different username.':
@@ -316,6 +347,7 @@ class AppTranslations extends Translations {
     'Home': 'Home',
     'Host Member': 'Host Member',
     'HOURS': 'HOURS',
+    'Hours unavailable.': 'Hours unavailable.',
     'Hummus, grilled halloumi, and charcoal flatbread.':
         'Hummus, grilled halloumi, and charcoal flatbread.',
     'Indian': 'Indian',
@@ -475,6 +507,18 @@ class AppTranslations extends Translations {
         'Could not create reservation. Please try again.',
     'Could not load table availability. Please try again.':
         'Could not load table availability. Please try again.',
+    'Could not load reservations. Please try again.':
+        'Could not load reservations. Please try again.',
+    'Could not load your reviews.': 'Could not load your reviews.',
+    'Could not load the menu. Please try again.':
+        'Could not load the menu. Please try again.',
+    'Could not submit your review.': 'Could not submit your review.',
+    'Could not remove your review.': 'Could not remove your review.',
+    'Choose a rating from 1 to 5.': 'Choose a rating from 1 to 5.',
+    'Invalid review payload.': 'Invalid review payload.',
+    'Invalid review rating.': 'Invalid review rating.',
+    'No menu items available.': 'No menu items available.',
+    'Invalid menu payload.': 'Invalid menu payload.',
     'Choose a date, time, and party size before selecting a table.':
         'Choose a date, time, and party size before selecting a table.',
     'Invalid user profile payload.': 'Invalid user profile payload.',
@@ -526,6 +570,7 @@ class AppTranslations extends Translations {
     'Omakase Duo': 'Omakase Duo',
     'On Elm Avenue’s dining strip, with valet at the entrance and shaded sidewalk seating.':
         'On Elm Avenue’s dining strip, with valet at the entrance and shaded sidewalk seating.',
+    'Open': 'Open',
     'Open now': 'Open now',
     'OpenStreetMap contributors': 'OpenStreetMap contributors',
     'CARTO': 'CARTO',
@@ -539,6 +584,21 @@ class AppTranslations extends Translations {
     'Last Reservations': 'Last Reservations',
     'Payment history': 'Payment history',
     'Payments': 'Payments',
+    'Pending': 'Pending',
+    'Rate your visit': 'Rate your visit',
+    'Your review': 'Your review',
+    'Write a review': 'Write a review',
+    'Submit review': 'Submit review',
+    'Share a few words about your evening.':
+        'Share a few words about your evening.',
+    'Review submitted successfully.': 'Review submitted successfully.',
+    'Review removed.': 'Review removed.',
+    'Remove this review? This cannot be undone.':
+        'Remove this review? This cannot be undone.',
+    'Remove review': 'Remove review',
+    'Add photo': 'Add photo',
+    'Optional photo': 'Optional photo',
+    'Tap a star to rate': 'Tap a star to rate',
     'Reservation history': 'Reservation history',
     'Perched above Hillview, offering elevated city views and a discreet rooftop entrance.':
         'Perched above Hillview, offering elevated city views and a discreet rooftop entrance.',
@@ -728,6 +788,7 @@ class AppTranslations extends Translations {
   static const Map<String, String> _ar = {
     'Business Lunch': 'غداء عمل',
     'Casual': 'عادي',
+    'Cancelled': 'ملغى',
     'Celebration': 'احتفال',
     'Changing language': 'جاري تغيير اللغة',
     'Corporate': 'شركات',
@@ -781,6 +842,7 @@ class AppTranslations extends Translations {
     'American': 'أمريكي',
     'Anniversary': 'ذكرى سنوية',
     'April': 'أبريل',
+    'Approved': 'مقبول',
     'Arabic': 'العربية',
     'Asian': 'آسيوي',
     'Ask Tavola AI for a recommendation...': 'اطلب توصية من Tavola AI...',
@@ -819,6 +881,30 @@ class AppTranslations extends Translations {
     'Charcoal Aubergine': 'باذنجان على الفحم',
     'Charred greens with citrus vinaigrette.': 'خضروات مشوية مع تتبيلة حمضيات.',
     'Chat': 'المحادثة',
+    'Sign in to message your dining host.':
+        'سجّل الدخول لمراسلة مضيف الطعام.',
+    'No conversations yet. Start one with a restaurant.':
+        'لا توجد محادثات بعد. ابدأ محادثة مع مطعم.',
+    'Could not load conversations. Please try again.':
+        'تعذر تحميل المحادثات. يرجى المحاولة مرة أخرى.',
+    'Could not load messages. Please try again.':
+        'تعذر تحميل الرسائل. يرجى المحاولة مرة أخرى.',
+    'Could not send your message. Please try again.':
+        'تعذر إرسال الرسالة. يرجى المحاولة مرة أخرى.',
+    'Could not start the conversation. Please try again.':
+        'تعذر بدء المحادثة. يرجى المحاولة مرة أخرى.',
+    'Could not close the conversation. Please try again.':
+        'تعذر إغلاق المحادثة. يرجى المحاولة مرة أخرى.',
+    'Start conversation': 'بدء محادثة',
+    'Choose a restaurant': 'اختر مطعماً',
+    'Close chat': 'إغلاق المحادثة',
+    'All chats': 'كل المحادثات',
+    'This conversation is closed.': 'هذه المحادثة مغلقة.',
+    'You can start a new chat with another restaurant anytime.':
+        'يمكنك بدء محادثة جديدة مع مطعم آخر في أي وقت.',
+    'Chat with another restaurant': 'تحدث مع مطعم آخر',
+    'Invalid conversation payload.': 'بيانات المحادثة غير صالحة.',
+    'Invalid message payload.': 'بيانات الرسالة غير صالحة.',
     'CHECK YOUR WHATSAPP': 'تحقق من واتساب',
     'Chef’s table experiences': 'تجارب طاولة الشيف',
     'Chef’s tasting selection of seasonal spice plates.':
@@ -898,6 +984,11 @@ class AppTranslations extends Translations {
     'English': 'الإنجليزية',
     'Enjoy a premium dinner experience with chef-selected flavors and a warm atmosphere.':
         'استمتع بعشاء فاخر بنكهات يختارها الشيف وأجواء دافئة.',
+    'Could not load offers. Please try again.':
+        'تعذر تحميل العروض. يرجى المحاولة مرة أخرى.',
+    'No special offers available right now.':
+        'لا تتوفر عروض خاصة حالياً.',
+    'Invalid offer payload.': 'بيانات العرض غير صالحة.',
     'Account created. Please log in.': 'تم إنشاء الحساب. يرجى تسجيل الدخول.',
     'Password updated. Please log in.':
         'تم تحديث كلمة المرور. يرجى تسجيل الدخول.',
@@ -974,6 +1065,7 @@ class AppTranslations extends Translations {
     'Home': 'الرئيسية',
     'Host Member': 'عضو مضيف',
     'HOURS': 'الساعات',
+    'Hours unavailable.': 'ساعات العمل غير متاحة.',
     'Hummus, grilled halloumi, and charcoal flatbread.':
         'حمص، حلوم مشوي، وخبز مسطح على الفحم.',
     'Indian': 'هندي',
@@ -1128,6 +1220,18 @@ class AppTranslations extends Translations {
     'Invalid reservation payload.': 'بيانات الحجز غير صالحة.',
     'Could not create reservation. Please try again.':
         'تعذر إنشاء الحجز. حاول مرة أخرى.',
+    'Could not load reservations. Please try again.':
+        'تعذر تحميل الحجوزات. حاول مرة أخرى.',
+    'Could not load your reviews.': 'تعذر تحميل تقييماتك.',
+    'Could not load the menu. Please try again.':
+        'تعذر تحميل القائمة. حاول مرة أخرى.',
+    'Could not submit your review.': 'تعذر إرسال تقييمك.',
+    'Could not remove your review.': 'تعذر حذف تقييمك.',
+    'Choose a rating from 1 to 5.': 'اختر تقييماً من 1 إلى 5.',
+    'Invalid review payload.': 'بيانات التقييم غير صالحة.',
+    'Invalid review rating.': 'تقييم غير صالح.',
+    'No menu items available.': 'لا توجد أصناف في القائمة.',
+    'Invalid menu payload.': 'بيانات القائمة غير صالحة.',
     'Could not load table availability. Please try again.':
         'تعذر تحميل توفر الطاولات. حاول مرة أخرى.',
     'Choose a date, time, and party size before selecting a table.':
@@ -1181,6 +1285,7 @@ class AppTranslations extends Translations {
     'Omakase Duo': 'أوماكاسي ثنائي',
     'On Elm Avenue’s dining strip, with valet at the entrance and shaded sidewalk seating.':
         'على شريط المطاعم في شارع إلم، مع خدمة صف عند المدخل ومقاعد مظللة على الرصيف.',
+    'Open': 'مفتوح',
     'Open now': 'مفتوح الآن',
     'OpenStreetMap contributors': 'مساهمو OpenStreetMap',
     'CARTO': 'CARTO',
@@ -1194,6 +1299,20 @@ class AppTranslations extends Translations {
     'Last Reservations': 'آخر الحجوزات',
     'Payment history': 'سجل المدفوعات',
     'Payments': 'المدفوعات',
+    'Pending': 'قيد الانتظار',
+    'Rate your visit': 'قيّم زيارتك',
+    'Your review': 'تقييمك',
+    'Write a review': 'اكتب تقييماً',
+    'Submit review': 'إرسال التقييم',
+    'Share a few words about your evening.': 'شاركنا بضع كلمات عن أمسيتك.',
+    'Review submitted successfully.': 'تم إرسال التقييم بنجاح.',
+    'Review removed.': 'تم حذف التقييم.',
+    'Remove this review? This cannot be undone.':
+        'حذف هذا التقييم؟ لا يمكن التراجع عن ذلك.',
+    'Remove review': 'حذف التقييم',
+    'Add photo': 'إضافة صورة',
+    'Optional photo': 'صورة اختيارية',
+    'Tap a star to rate': 'اضغط على نجمة للتقييم',
     'Reservation history': 'سجل الحجوزات',
     'Perched above Hillview, offering elevated city views and a discreet rooftop entrance.':
         'يعلو هيلفيو، ويوفّر إطلالات مرتفعة على المدينة ومدخلًا سريًا إلى السطح.',

@@ -8,18 +8,24 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_exception.dart';
+import '../model/auth_device_session_model.dart';
 import '../model/auth_session_tokens_model.dart';
+import '../model/change_password_request_model.dart';
 import '../model/customer_auth_response_model.dart';
 import '../model/customer_login_request_model.dart';
 import '../model/customer_password_reset_request_models.dart';
 import '../model/customer_registration_request_models.dart';
 import '../model/customer_registration_response_model.dart';
 
-/// Public customer authentication and session endpoints under `/auth`.
+/// Customer authentication and session endpoints under `/auth`.
 ///
-/// Uses a dedicated Dio instance (no Bearer interceptor) because login,
-/// registration, password reset, and refresh are public (`noauth`) and must
-/// not recurse through [ApiClient] auth refresh.
+/// Uses a dedicated Dio instance (no Bearer interceptor) so login,
+/// registration, password reset, and refresh stay public (`noauth`) and cannot
+/// recurse through [ApiClient] auth refresh.
+///
+/// Authenticated session ops (`/auth/logout`, sessions, change-password) pass
+/// an explicit Bearer header on this same client — still without refresh —
+/// so a failing logout never triggers token rotation.
 class AuthRepository {
   AuthRepository({Dio? dio, String? baseUrl})
     : _dio =
@@ -70,6 +76,10 @@ class AuthRepository {
       '/auth/customer/password-reset/verify';
   static const String customerPasswordResetCompletePath =
       '/auth/customer/password-reset/complete';
+  static const String logoutPath = AppUrls.authLogoutPath;
+  static const String logoutAllPath = AppUrls.authLogoutAllPath;
+  static const String sessionsPath = AppUrls.authSessionsPath;
+  static const String changePasswordPath = AppUrls.authChangePasswordPath;
 
   /// `POST /auth/customer/login`
   Future<CustomerAuthResponseModel> loginCustomer(
@@ -200,6 +210,76 @@ class AuthRepository {
     return AuthOperationResponseModel(message: result.message);
   }
 
+  /// `POST /auth/logout` — revoke the current device session (Bearer required).
+  Future<void> logoutCurrentSession(String accessToken) async {
+    await _authorizedVoid(
+      'POST',
+      logoutPath,
+      accessToken: accessToken,
+      timeout: AppDimensions.authLogoutTimeout,
+    );
+  }
+
+  /// `POST /auth/logout-all` — revoke every device session (Bearer required).
+  Future<void> logoutAllSessions(String accessToken) async {
+    await _authorizedVoid(
+      'POST',
+      logoutAllPath,
+      accessToken: accessToken,
+      timeout: AppDimensions.authLogoutTimeout,
+    );
+  }
+
+  /// `GET /auth/sessions` — list active device sessions (Bearer required).
+  Future<List<AuthDeviceSessionModel>> listSessions(String accessToken) async {
+    final Object? raw = await _authorizedRaw(
+      'GET',
+      sessionsPath,
+      accessToken: accessToken,
+    );
+    return AuthDeviceSessionModel.listFromPayload(raw);
+  }
+
+  /// `DELETE /auth/sessions/:sessionId` — revoke one session (Bearer required).
+  Future<void> revokeSession({
+    required String accessToken,
+    required String sessionId,
+  }) async {
+    final String id = sessionId.trim();
+    if (id.isEmpty) {
+      throw ApiException(message: AppStrings.invalidAuthSessionPayload);
+    }
+    await _authorizedVoid(
+      'DELETE',
+      AppUrls.authSessionPath(id),
+      accessToken: accessToken,
+    );
+  }
+
+  /// `POST /auth/change-password` — may return rotated tokens in `data`.
+  Future<AuthSessionTokensModel?> changePassword({
+    required String accessToken,
+    required ChangePasswordRequestModel request,
+  }) async {
+    final Object? raw = await _authorizedRaw(
+      'POST',
+      changePasswordPath,
+      accessToken: accessToken,
+      data: request.toJson(),
+    );
+    if (raw == null) {
+      return null;
+    }
+    try {
+      final AuthSessionTokensModel tokens = AuthSessionTokensModel.fromJson(
+        _requireStringKeyedMap(raw),
+      );
+      return tokens.isValid ? tokens : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// `POST /auth/refresh` — rotates refresh token and issues a new access token.
   Future<AuthSessionTokensModel> refreshSession(String refreshToken) async {
     final String trimmed = refreshToken.trim();
@@ -232,6 +312,97 @@ class AuthRepository {
       );
     }
     return result.data;
+  }
+
+  Future<void> _authorizedVoid(
+    String method,
+    String path, {
+    required String accessToken,
+    Map<String, dynamic>? data,
+    Duration? timeout,
+  }) async {
+    await _authorizedRaw(
+      method,
+      path,
+      accessToken: accessToken,
+      data: data,
+      timeout: timeout,
+    );
+  }
+
+  Future<Object?> _authorizedRaw(
+    String method,
+    String path, {
+    required String accessToken,
+    Map<String, dynamic>? data,
+    Duration? timeout,
+  }) async {
+    final String bearer = accessToken.trim();
+    if (bearer.isEmpty) {
+      throw ApiException(
+        message: AppStrings.authRefreshTokenMissing,
+        statusCode: 401,
+      );
+    }
+    final Duration wait = timeout ?? AppDimensions.authSubmitTimeout;
+    final CancelToken cancelToken = CancelToken();
+    final Options options = Options(
+      method: method,
+      headers: <String, dynamic>{
+        AppStrings.authorizationHeaderKey:
+            '${AppStrings.bearerTokenPrefix}$bearer',
+      },
+      sendTimeout: wait,
+      receiveTimeout: wait,
+    );
+    try {
+      final Response<dynamic> response = await _dio
+          .request<dynamic>(
+            path,
+            data: data,
+            cancelToken: cancelToken,
+            options: options,
+          )
+          .timeout(
+            wait,
+            onTimeout: () {
+              if (!cancelToken.isCancelled) {
+                cancelToken.cancel(AppStrings.networkTimeoutError);
+              }
+              throw ApiException.timeout();
+            },
+          );
+      // 204 / empty body is success for logout-style endpoints.
+      final Object? body = response.data;
+      if (body == null || (body is String && body.trim().isEmpty)) {
+        return null;
+      }
+      final Map<String, dynamic>? envelope = _asStringKeyedMap(body);
+      if (envelope == null) {
+        return body;
+      }
+      if (envelope.containsKey('success') && envelope['success'] != true) {
+        throw ApiException.fromErrorBody(
+          envelope,
+          statusCode: response.statusCode,
+        );
+      }
+      return envelope['data'] ?? envelope;
+    } on ApiException {
+      rethrow;
+    } on DioException catch (error) {
+      try {
+        throw _mapDioException(error);
+      } on ApiException {
+        rethrow;
+      } catch (_) {
+        throw ApiException.unexpected();
+      }
+    } on TimeoutException {
+      throw ApiException.timeout();
+    } catch (_) {
+      throw ApiException.unexpected();
+    }
   }
 
   Future<({T data, String message})> _post<T>(

@@ -56,7 +56,13 @@ class ProfileScreen extends StatelessWidget {
                         AppDimensions.contentPadding,
                       ),
                       child: Obx(() {
-                        if (controller.isLoadingProfile.value) {
+                        final bool loading = controller.isLoadingProfile.value;
+                        final bool hasCachedIdentity =
+                            (controller.userProfile.value?.displayName ?? '')
+                                .trim()
+                                .isNotEmpty;
+                        // Keep login username visible while `/users/me` loads.
+                        if (loading && !hasCachedIdentity) {
                           return const SizedBox(
                             height: AppDimensions.avatarSize,
                             child: Center(
@@ -70,7 +76,7 @@ class ProfileScreen extends StatelessWidget {
 
                         final String? profileError =
                             controller.profileError.value;
-                        if (profileError != null) {
+                        if (profileError != null && !hasCachedIdentity) {
                           return Row(
                             children: [
                               Expanded(
@@ -322,8 +328,46 @@ class ProfileScreen extends StatelessWidget {
                   Obx(() {
                     if (controller.selectedSectionIndex.value ==
                         ProfileController.lastReservationsSectionIndex) {
+                      if (controller.isLoadingReservations.value) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppDimensions.sectionSpacing,
+                          ),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth:
+                                  AppDimensions.progressIndicatorStrokeWidth,
+                            ),
+                          ),
+                        );
+                      }
+                      final String? historyError =
+                          controller.reservationsError.value;
+                      if (historyError != null &&
+                          controller.reservationHistory.isEmpty) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                historyError,
+                                style: AppTextStyles.body,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: controller.loadReservations,
+                              child: Text(AppStrings.retry),
+                            ),
+                          ],
+                        );
+                      }
+                      // Touch reviews map so Obx rebuilds after submit/delete.
+                      controller.reviewForReservation('');
                       return ProfileReservationHistoryPanel(
                         items: controller.reservationHistory,
+                        reviewForReservation: controller.reviewForReservation,
+                        onWriteReview: controller.openWriteReview,
+                        onDeleteReview: controller.deleteReviewForItem,
+                        isReviewBusy: controller.isReviewBusy.value,
                       );
                     }
 
@@ -351,8 +395,42 @@ class ProfileScreen extends StatelessWidget {
                       );
                     }
 
+                    if (controller.isLoadingReservations.value) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: AppDimensions.sectionSpacing,
+                        ),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth:
+                                AppDimensions.progressIndicatorStrokeWidth,
+                          ),
+                        ),
+                      );
+                    }
+
+                    final String? reservationsError =
+                        controller.reservationsError.value;
                     final activeReservations =
                         controller.activeCustomerReservations;
+                    if (reservationsError != null &&
+                        activeReservations.isEmpty) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              reservationsError,
+                              style: AppTextStyles.body,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: controller.loadReservations,
+                            child: Text(AppStrings.retry),
+                          ),
+                        ],
+                      );
+                    }
+
                     if (activeReservations.isEmpty) {
                       return ProfileReservationsEmptyState(
                         onBookPressed: SelectRestaurantController.open,

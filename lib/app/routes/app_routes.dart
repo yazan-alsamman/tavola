@@ -172,6 +172,7 @@ class AppRoutes {
       name: concierge,
       page: () => const ConciergeScreen(),
       binding: BindingsBuilder(() {
+        AppDependency.ensureConciergeDependencies();
         AppDependency.putPermanentIfAbsent(ConciergeController.new);
       }),
     ),

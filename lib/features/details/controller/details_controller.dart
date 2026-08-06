@@ -109,7 +109,17 @@ class DetailsController extends GetxController {
       final RestaurantDetailModel freshDetail = await _detailsRepository
           .fetchDetails(id);
       final RestaurantModel base = _restaurant ?? restaurant;
-      _restaurant = _withHeroImage(base, freshDetail);
+      RestaurantModel merged = _withHeroImage(base, freshDetail);
+      if (freshDetail.hasWorkingHours) {
+        merged = merged.copyWith(
+          hoursLabel: freshDetail.todayHoursLabel,
+          availabilityLabel: freshDetail.isOpenNow
+              ? AppStrings.openNow
+              : AppStrings.hoursClosed,
+          isAvailable: freshDetail.isOpenNow,
+        );
+      }
+      _restaurant = merged;
       _detail = freshDetail;
     } on ApiException catch (error) {
       if (_detail == null ||

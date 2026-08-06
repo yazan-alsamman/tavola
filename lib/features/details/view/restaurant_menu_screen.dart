@@ -58,17 +58,53 @@ class RestaurantMenuScreen extends StatelessWidget {
                   height: AppDimensions.dividerHeight,
                   color: AppColors.border,
                 ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppDimensions.pagePadding),
-                    child: DetailsMenuSection(menuItems: controller.menuItems),
-                  ),
-                ),
+                Expanded(child: _buildBody(controller)),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildBody(RestaurantMenuController controller) {
+    if (controller.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          strokeWidth: AppDimensions.progressIndicatorStrokeWidth,
+        ),
+      );
+    }
+
+    final String? error = controller.error;
+    if (error != null && controller.menuItems.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(AppDimensions.pagePadding),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              error,
+              style: AppTextStyles.body,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppDimensions.regularSpacing),
+            TextButton(
+              onPressed: controller.retry,
+              child: Text(AppStrings.retry),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.pagePadding),
+      child: DetailsMenuSection(
+        menuItems: controller.menuItems,
+        categories: controller.categories,
+        menuTitle: controller.menu?.name,
+      ),
     );
   }
 }

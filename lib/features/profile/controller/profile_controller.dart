@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../app/routes/app_routes.dart';
 import '../../../common/widgets/app_confirm_dialog.dart';
@@ -24,6 +25,9 @@ import '../../reservation/controller/reservation_controller.dart';
 import '../../reservation/model/customer_reservation_model.dart';
 import '../../reservation/model/reservation_route_args.dart';
 import '../../reservation/repository/reservation_repository.dart';
+import '../../reviews/model/review_model.dart';
+import '../../reviews/repository/reviews_repository.dart';
+import '../../reviews/widgets/write_review_sheet.dart';
 import '../../users/model/user_preferences_model.dart';
 import '../../users/model/user_profile_model.dart';
 import '../../users/repository/users_repository.dart';
@@ -47,6 +51,7 @@ class ProfileController extends GetxController {
   final UsersRepository _usersRepository = Get.find<UsersRepository>();
   final ReservationRepository _reservationRepository =
       Get.find<ReservationRepository>();
+  final ReviewsRepository _reviewsRepository = Get.find<ReviewsRepository>();
   final ImagePicker _imagePicker = ImagePicker();
 
   final RxInt selectedSectionIndex = 0.obs;
@@ -61,8 +66,11 @@ class ProfileController extends GetxController {
   final Rxn<UserProfileModel> userProfile = Rxn<UserProfileModel>();
   final Rxn<UserPreferencesModel> userPreferences = Rxn<UserPreferencesModel>();
   final RxBool isLoadingProfile = false.obs;
+  final RxBool isLoadingReservations = false.obs;
   final RxBool isUploadingAvatar = false.obs;
+  final RxBool isReviewBusy = false.obs;
   final RxnString profileError = RxnString();
+  final RxnString reservationsError = RxnString();
 
   @override
   void onInit() {
@@ -93,6 +101,8 @@ class ProfileController extends GetxController {
         }
         unawaited(loadUserProfile());
         unawaited(loadUserPreferences());
+        unawaited(loadReservations());
+        unawaited(loadMyReviews());
       });
     }
     reloadLocalizedData();
@@ -111,6 +121,8 @@ class ProfileController extends GetxController {
       unawaited(loadRestaurants());
       unawaited(loadUserProfile());
       unawaited(loadUserPreferences());
+      unawaited(loadReservations());
+      unawaited(loadMyReviews());
       if (Get.isRegistered<NotificationsBadgeController>()) {
         Get.find<NotificationsBadgeController>().scheduleRefresh();
       }
@@ -216,15 +228,18 @@ class ProfileController extends GetxController {
 
   /// Profile card name = signup/login username from API identity.
   String get profileDisplayName {
-    final UserProfileModel? profile = userProfile.value;
-    if (profile == null) {
-      return AppStrings.userProfileEmpty;
+    // Touch both Rx sources so Obx rebuilds after login identity lands.
+    final String fromController =
+        userProfile.value?.displayName.trim() ?? '';
+    final String fromRepository =
+        _usersRepository.profileRx.value?.displayName.trim() ?? '';
+    if (fromController.isNotEmpty) {
+      return fromController;
     }
-    final String name = profile.displayName;
-    if (name.isEmpty) {
-      return AppStrings.userProfileEmpty;
+    if (fromRepository.isNotEmpty) {
+      return fromRepository;
     }
-    return name;
+    return AppStrings.userProfileEmpty;
   }
 
   String? get profilePhone {
@@ -247,15 +262,194 @@ class ProfileController extends GetxController {
     return const <RestaurantModel>[];
   }
 
-  /// Active bookings from in-session `POST /reservations` cache.
+  /// Active / upcoming bookings from `GET /reservations/my/upcoming`.
   List<CustomerReservationModel> get activeCustomerReservations {
+    _reservationRepository.upcomingReservations.length;
     _reservationRepository.myReservations.length;
     return _reservationRepository.activeReservations;
   }
 
   /// Rebuild Profile reservation tabs after create / cancel / reschedule.
   void refreshReservations() {
-    _syncReservationLists();
+    unawaited(loadReservations());
+  }
+
+  /// `GET /reservations/my/upcoming` + `GET /reservations/my/history`.
+  Future<void> loadReservations() async {
+    if (isClosed) {
+      return;
+    }
+    if (!await _hasAccessToken()) {
+      reservationsError.value = null;
+      isLoadingReservations.value = false;
+      _syncReservationLists();
+      return;
+    }
+    isLoadingReservations.value = true;
+    reservationsError.value = null;
+    try {
+      await _reservationRepository.syncProfileReservations();
+      if (!isClosed) {
+        _syncReservationLists();
+      }
+      unawaited(loadMyReviews());
+    } on ApiException catch (error) {
+      if (!isClosed) {
+        reservationsError.value = error.message;
+        _syncReservationLists();
+      }
+    } catch (_) {
+      if (!isClosed) {
+        reservationsError.value = AppStrings.reservationsLoadFailed;
+        _syncReservationLists();
+      }
+    } finally {
+      if (!isClosed) {
+        isLoadingReservations.value = false;
+      }
+    }
+  }
+
+  /// `GET /users/me/reviews` — hydrate card review state by reservationId.
+  Future<void> loadMyReviews() async {
+    if (isClosed) {
+      return;
+    }
+    if (!await _hasAccessToken()) {
+      _reviewsRepository.myReviewsByReservationId.clear();
+      return;
+    }
+    try {
+      await _reviewsRepository.syncMyReviews();
+    } catch (_) {
+      // History cards remain usable without review badges.
+    }
+  }
+
+  ReviewModel? reviewForReservation(String reservationId) {
+    _reviewsRepository.myReviewsByReservationId.length;
+    return _reviewsRepository.reviewForReservation(reservationId);
+  }
+
+  Future<void> openWriteReview(ReservationHistoryItemModel item) async {
+    if (!item.canReview) {
+      return;
+    }
+    if (!await _requireSignIn()) {
+      return;
+    }
+    await WriteReviewSheet.open(
+      restaurantName: item.restaurantName,
+      onPickImage: _pickReviewImagePath,
+      onSubmit:
+          ({
+            required int rating,
+            required String comment,
+            String? imagePath,
+          }) {
+            return submitReview(
+              reservationId: item.reservationId,
+              rating: rating,
+              comment: comment,
+              imagePath: imagePath,
+            );
+          },
+    );
+  }
+
+  Future<String?> _pickReviewImagePath() async {
+    try {
+      final XFile? file = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: AppDimensions.avatarPickerMaxWidth,
+        maxHeight: AppDimensions.avatarPickerMaxHeight,
+        imageQuality: AppDimensions.avatarPickerImageQuality,
+      );
+      return file?.path;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// `POST /reviews` then optional `POST /reviews/:id/images`.
+  Future<bool> submitReview({
+    required String reservationId,
+    required int rating,
+    required String comment,
+    String? imagePath,
+  }) async {
+    if (isReviewBusy.value) {
+      return false;
+    }
+    isReviewBusy.value = true;
+    try {
+      final ReviewModel review = await _reviewsRepository.submitReview(
+        reservationId: reservationId,
+        rating: rating,
+        comment: comment,
+      );
+      final String path = (imagePath ?? '').trim();
+      if (path.isNotEmpty && review.hasId) {
+        try {
+          final ReviewImageModel image = await _reviewsRepository
+              .uploadReviewImage(reviewId: review.reviewId, filePath: path);
+          final ReviewModel? current = _reviewsRepository.reviewForReservation(
+            reservationId,
+          );
+          if (current != null) {
+            _reviewsRepository.myReviewsByReservationId[reservationId] = current
+                .copyWith(images: <ReviewImageModel>[...current.images, image]);
+          }
+        } catch (_) {
+          // Review text/rating already saved — photo is optional.
+        }
+      }
+      if (!isClosed) {
+        Get.snackbar(AppStrings.rateYourVisit, AppStrings.reviewSubmitted);
+      }
+      return true;
+    } on ApiException catch (error) {
+      Get.snackbar(AppStrings.rateYourVisit, error.message);
+      return false;
+    } catch (_) {
+      Get.snackbar(AppStrings.rateYourVisit, AppStrings.reviewSubmitFailed);
+      return false;
+    } finally {
+      if (!isClosed) {
+        isReviewBusy.value = false;
+      }
+    }
+  }
+
+  /// Soft-delete `DELETE /reviews/:id`.
+  Future<void> deleteReviewForItem(ReservationHistoryItemModel item) async {
+    final ReviewModel? review = reviewForReservation(item.reservationId);
+    if (review == null || !review.hasId) {
+      return;
+    }
+    final bool confirmed = await AppConfirmDialog.show(
+      title: AppStrings.areYouSure,
+      message: AppStrings.confirmDeleteReviewMessage,
+      icon: Symbols.delete,
+    );
+    if (!confirmed) {
+      return;
+    }
+    isReviewBusy.value = true;
+    try {
+      await _reviewsRepository.deleteReview(review.reviewId);
+      if (!isClosed) {
+        Get.snackbar(AppStrings.rateYourVisit, AppStrings.reviewDeleted);
+      }
+    } on ApiException catch (error) {
+      Get.snackbar(AppStrings.rateYourVisit, error.message);
+    } catch (_) {
+      Get.snackbar(AppStrings.rateYourVisit, AppStrings.reviewDeleteFailed);
+    } finally {
+      if (!isClosed) {
+        isReviewBusy.value = false;
+      }
+    }
   }
 
   RestaurantModel restaurantPreviewFor(CustomerReservationModel reservation) {
@@ -270,7 +464,7 @@ class ProfileController extends GetxController {
       occasion: '',
       description: '',
       imageUrl: reservation.imageUrl,
-      location: '',
+      location: reservation.branchName,
       availabilityLabel: reservation.status,
       isAvailable: reservation.isActive,
     );
@@ -354,6 +548,7 @@ class ProfileController extends GetxController {
       );
       if (!isClosed) {
         _syncReservationLists();
+        unawaited(loadReservations());
       }
     } on ApiException catch (error) {
       if (!isClosed) {
@@ -391,9 +586,13 @@ class ProfileController extends GetxController {
   }
 
   void _syncReservationLists() {
+    // Observe server lists so Obx rebuilds when sync completes.
+    _reservationRepository.historyReservationsList.length;
+    _reservationRepository.upcomingReservations.length;
     reservationHistory.assignAll(
       _reservationRepository.historyReservations.map(
         (CustomerReservationModel item) => ReservationHistoryItemModel(
+          reservationId: item.reservationId,
           restaurantId: item.restaurantId,
           restaurantName: item.restaurantName.isNotEmpty
               ? item.restaurantName
@@ -402,9 +601,8 @@ class ProfileController extends GetxController {
           date: _formatDate(item.reservationStartTime),
           time: _formatTime(item.reservationStartTime),
           guests: item.guests > 0 ? '${item.guests}' : '',
-          status: item.status.isNotEmpty
-              ? item.status
-              : AppStrings.reservationHistoryCompleted,
+          // Keep raw API status (never a translated label) for review gating.
+          status: item.status,
         ),
       ),
     );

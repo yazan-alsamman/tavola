@@ -171,6 +171,9 @@ class SecureAuthTokenStore implements AuthTokenSession {
   String? _accessTokenCache;
   String? _refreshTokenCache;
   bool _hydrated = false;
+  /// After one Keychain timeout, allow a single retry (Hot Restart recovery).
+  /// A second timeout marks hydrated empty so Home bands cannot storm SecItem*.
+  bool _hydrateTimedOutOnce = false;
   Future<void>? _hydrateInFlight;
   Future<void>? _diskPersistInFlight;
   bool _diskDirty = false;
@@ -217,11 +220,23 @@ class SecureAuthTokenStore implements AuthTokenSession {
       // Never wipe in-memory tokens that [updateSessionTokens] may have written
       // while Keychain was hung — that caused "signed in" UI with a null Bearer
       // and reservation calls failing as unauthorized.
-      _hydrated = true;
-      _log('hydrate timeout', stopwatch);
+      //
+      // First timeout: leave [_hydrated] false so Splash can retry once.
+      // Second timeout: mark hydrated empty to stop SecItem* storms on Home.
+      if (_hydrateTimedOutOnce) {
+        _hydrated = true;
+        _log('hydrate timeout (final)', stopwatch);
+      } else {
+        _hydrateTimedOutOnce = true;
+        _log('hydrate timeout (will retry)', stopwatch);
+      }
     } catch (_) {
-      // Same rule: leave any existing memory session intact.
-      _hydrated = true;
+      // Leave memory intact; allow one later hydrate retry.
+      if (_hydrateTimedOutOnce) {
+        _hydrated = true;
+      } else {
+        _hydrateTimedOutOnce = true;
+      }
       _log('hydrate error', stopwatch);
     } finally {
       if (!completer.isCompleted) {
@@ -255,6 +270,7 @@ class SecureAuthTokenStore implements AuthTokenSession {
   Future<void> updateSessionTokens({
     required String accessToken,
     required String refreshToken,
+    bool persistToDisk = true,
   }) async {
     final Stopwatch stopwatch = Stopwatch()..start();
     final String nextAccess = accessToken.trim();
@@ -271,9 +287,14 @@ class SecureAuthTokenStore implements AuthTokenSession {
     _pendingDiskRefresh = refreshCache;
     _diskDirty = true;
     _log('updateSessionTokens memory', stopwatch);
-    // Intentionally do NOT start Keychain here. Login→Home must paint first;
-    // callers invoke [scheduleDiskPersist] / [flushPendingDiskWrites] after
-    // navigation (see HomeProgressiveInit + ApiClient refresh).
+    // Login passes persistToDisk: false so SharedPreferences SessionMode can
+    // finish before SecItem* occupies the platform thread (otherwise prefs
+    // await never completes → Login spinner freezes forever).
+    // Refresh / other callers keep the default and persist soon.
+    // Never await here — SecItem* must stay off the Login critical path.
+    if (persistToDisk) {
+      scheduleDiskPersist();
+    }
   }
 
   /// Starts best-effort Keychain persistence for the latest memory session.
@@ -323,7 +344,10 @@ class SecureAuthTokenStore implements AuthTokenSession {
       return;
     }
     _diskPersistRetryScheduled = true;
-    Future<void>.delayed(AppDimensions.secureStorageTimeout, () {
+    // Microtask — not a multi-second delay — so a disk clear that raced
+    // Login (Guest→Login) is followed by persist before Hot Restart can
+    // observe an empty Keychain.
+    scheduleMicrotask(() {
       _diskPersistRetryScheduled = false;
       if (_diskDirty) {
         scheduleDiskPersist();
@@ -356,8 +380,21 @@ class SecureAuthTokenStore implements AuthTokenSession {
   @override
   Future<void> clearSessionTokens() async {
     clearMemorySessionOnly();
-    // Logout / guest must drop Keychain copies; still never block the caller.
-    scheduleDiskClear();
+    // Logout awaits a bounded Keychain wipe so the next cold start cannot
+    // hydrate leftover tokens and re-open Home as authenticated.
+    // Callers that must not wait should use [clearMemorySessionOnly] +
+    // [scheduleDiskClear] (Guest bridge) or `unawaited(clearSessionTokens())`.
+    final Future<void> clear = _clearSessionOnDisk();
+    _diskPersistInFlight = clear;
+    try {
+      await clear.timeout(AppDimensions.secureStorageTimeout);
+    } catch (_) {
+      // Navigation / logout UI must still proceed.
+    } finally {
+      if (identical(_diskPersistInFlight, clear)) {
+        _diskPersistInFlight = null;
+      }
+    }
   }
 
   /// Waits for the latest scheduled disk write/clear (tests / diagnostics).

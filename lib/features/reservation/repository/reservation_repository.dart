@@ -3,7 +3,9 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 
+import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/api_response.dart';
@@ -17,35 +19,56 @@ import '../model/reservation_time_window.dart';
 /// - `POST /reservations`
 /// - `POST /reservations/:id/cancel`
 /// - `POST /reservations/:id/reschedule`
-///
-/// There is no customer “list my reservations” endpoint yet, so bookings created
-/// in-session are kept in [myReservations] for Profile cancel/reschedule UI.
+/// - `GET /reservations/my`
+/// - `GET /reservations/my/upcoming`
+/// - `GET /reservations/my/history`
+/// - `GET /reservations/my/:reservationId`
 class ReservationRepository {
   ReservationRepository(this._apiClient);
 
   final ApiClient _apiClient;
 
-  static const String _reservationsPath = '/reservations';
-  static const String _availabilityPath = '/reservations/availability';
-
+  /// Combined in-session cache (create/cancel + last API sync).
   final RxList<CustomerReservationModel> myReservations =
       <CustomerReservationModel>[].obs;
 
-  List<CustomerReservationModel> get activeReservations => myReservations
-      .where((CustomerReservationModel item) => item.isActive)
-      .toList(growable: false);
+  /// Server upcoming (`GET /reservations/my/upcoming`).
+  final RxList<CustomerReservationModel> upcomingReservations =
+      <CustomerReservationModel>[].obs;
 
-  List<CustomerReservationModel> get historyReservations => myReservations
-      .where((CustomerReservationModel item) => !item.isActive)
-      .toList(growable: false);
+  /// Server history (`GET /reservations/my/history`).
+  final RxList<CustomerReservationModel> historyReservationsList =
+      <CustomerReservationModel>[].obs;
 
-  /// Clears in-session bookings when the account/session changes.
-  ///
-  /// There is no customer list endpoint yet — Profile only shows bookings
-  /// created in this process, so a prior account must never leak into the next.
+  bool _serverListsHydrated = false;
+
+  List<CustomerReservationModel> get activeReservations {
+    if (_serverListsHydrated) {
+      return upcomingReservations.toList(growable: false);
+    }
+    return myReservations
+        .where((CustomerReservationModel item) => item.isActive)
+        .toList(growable: false);
+  }
+
+  List<CustomerReservationModel> get historyReservations {
+    if (_serverListsHydrated) {
+      return historyReservationsList.toList(growable: false);
+    }
+    return myReservations
+        .where((CustomerReservationModel item) => !item.isActive)
+        .toList(growable: false);
+  }
+
+  /// Clears bookings when the account/session changes.
   void clearSessionState() {
+    _serverListsHydrated = false;
     myReservations.clear();
+    upcomingReservations.clear();
+    historyReservationsList.clear();
     myReservations.refresh();
+    upcomingReservations.refresh();
+    historyReservationsList.refresh();
   }
 
   /// Search Availability — tables with `isAvailable` for the booking window.
@@ -55,7 +78,7 @@ class ReservationRepository {
     await _ensureAuthenticated();
     final ApiResponse<List<RestaurantTableModel>> response = await _apiClient
         .get<List<RestaurantTableModel>>(
-          _availabilityPath,
+          AppUrls.reservationsAvailabilityPath,
           queryParameters: <String, dynamic>{
             'branchId': window.branchId,
             'reservationStartTime': window.startTimeIso,
@@ -64,6 +87,87 @@ class ReservationRepository {
           },
           parseData: _parseAvailabilityTables,
         );
+    return response.data;
+  }
+
+  /// `GET /reservations/my`
+  Future<List<CustomerReservationModel>> fetchMyReservations({
+    int page = AppDimensions.apiDefaultPage,
+    int limit = AppDimensions.apiDefaultLimit,
+  }) async {
+    await _ensureAuthenticated();
+    final ApiResponse<List<CustomerReservationModel>> response =
+        await _apiClient.get<List<CustomerReservationModel>>(
+          AppUrls.reservationsMyPath,
+          queryParameters: <String, dynamic>{'page': page, 'limit': limit},
+          parseData: _parseReservationItems,
+        );
+    return response.data;
+  }
+
+  /// `GET /reservations/my/upcoming`
+  Future<List<CustomerReservationModel>> fetchMyUpcoming({
+    int page = AppDimensions.apiDefaultPage,
+    int limit = AppDimensions.apiDefaultLimit,
+  }) async {
+    await _ensureAuthenticated();
+    final ApiResponse<List<CustomerReservationModel>> response =
+        await _apiClient.get<List<CustomerReservationModel>>(
+          AppUrls.reservationsMyUpcomingPath,
+          queryParameters: <String, dynamic>{'page': page, 'limit': limit},
+          parseData: _parseReservationItems,
+        );
+    upcomingReservations.assignAll(response.data);
+    _mergeIntoMyReservations(response.data);
+    return response.data;
+  }
+
+  /// `GET /reservations/my/history`
+  Future<List<CustomerReservationModel>> fetchMyHistory({
+    int page = AppDimensions.apiDefaultPage,
+    int limit = AppDimensions.apiDefaultLimit,
+  }) async {
+    await _ensureAuthenticated();
+    final ApiResponse<List<CustomerReservationModel>> response =
+        await _apiClient.get<List<CustomerReservationModel>>(
+          AppUrls.reservationsMyHistoryPath,
+          queryParameters: <String, dynamic>{'page': page, 'limit': limit},
+          parseData: _parseReservationItems,
+        );
+    historyReservationsList.assignAll(response.data);
+    _mergeIntoMyReservations(response.data);
+    return response.data;
+  }
+
+  /// Loads upcoming + history for Profile tabs (parallel).
+  Future<void> syncProfileReservations() async {
+    await _ensureAuthenticated();
+    await Future.wait<void>(<Future<void>>[
+      fetchMyUpcoming(),
+      fetchMyHistory(),
+    ]);
+    _serverListsHydrated = true;
+  }
+
+  /// `GET /reservations/my/:reservationId`
+  Future<CustomerReservationModel> fetchMyReservationById(
+    String reservationId,
+  ) async {
+    await _ensureAuthenticated();
+    final String id = reservationId.trim();
+    if (id.isEmpty) {
+      throw ApiException(message: AppStrings.invalidReservationPayload);
+    }
+    final ApiResponse<CustomerReservationModel> response = await _apiClient
+        .get<CustomerReservationModel>(
+          AppUrls.reservationsMyDetailPath(id),
+          parseData: (Object? raw) => _parseReservation(
+            raw,
+            restaurantName: _cachedName(id),
+            imageUrl: _cachedImage(id),
+          ),
+        );
+    _upsert(response.data);
     return response.data;
   }
 
@@ -82,7 +186,7 @@ class ReservationRepository {
     await _ensureAuthenticated();
     final ApiResponse<CustomerReservationModel> response = await _apiClient
         .post<CustomerReservationModel>(
-          _reservationsPath,
+          AppUrls.reservationsPath,
           data: <String, dynamic>{
             'branchId': branchId,
             'tableId': tableId,
@@ -92,7 +196,9 @@ class ReservationRepository {
             if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
           },
           options: Options(
-            headers: <String, dynamic>{'Idempotency-Key': _newIdempotencyKey()},
+            headers: <String, dynamic>{
+              AppStrings.apiIdempotencyKeyHeader: _newIdempotencyKey(),
+            },
           ),
           parseData: (Object? raw) => _parseReservation(
             raw,
@@ -110,6 +216,11 @@ class ReservationRepository {
       imageUrl: imageUrl.isNotEmpty ? imageUrl : response.data.imageUrl,
     );
     _upsert(created);
+    if (created.isActive) {
+      _upsertInto(upcomingReservations, created);
+    } else {
+      _upsertInto(historyReservationsList, created);
+    }
     return created;
   }
 
@@ -121,7 +232,7 @@ class ReservationRepository {
     await _ensureAuthenticated();
     final ApiResponse<CustomerReservationModel> response = await _apiClient
         .post<CustomerReservationModel>(
-          '$_reservationsPath/$reservationId/cancel',
+          AppUrls.reservationsCancelPath(reservationId),
           data: <String, dynamic>{
             if (reason != null && reason.trim().isNotEmpty)
               'reason': reason.trim(),
@@ -133,6 +244,7 @@ class ReservationRepository {
           ),
         );
     _upsert(response.data);
+    _moveToHistory(response.data);
     return response.data;
   }
 
@@ -164,7 +276,7 @@ class ReservationRepository {
 
     final ApiResponse<CustomerReservationModel> response = await _apiClient
         .post<CustomerReservationModel>(
-          '$_reservationsPath/$reservationId/reschedule',
+          AppUrls.reservationsReschedulePath(reservationId),
           data: data,
           parseData: (Object? raw) => _parseReservation(
             raw,
@@ -173,7 +285,32 @@ class ReservationRepository {
           ),
         );
     _upsert(response.data);
+    if (response.data.isActive) {
+      _upsertInto(upcomingReservations, response.data);
+      historyReservationsList.removeWhere(
+        (CustomerReservationModel item) =>
+            item.reservationId == response.data.reservationId,
+      );
+      historyReservationsList.refresh();
+    } else {
+      _moveToHistory(response.data);
+    }
     return response.data;
+  }
+
+  void _moveToHistory(CustomerReservationModel reservation) {
+    upcomingReservations.removeWhere(
+      (CustomerReservationModel item) =>
+          item.reservationId == reservation.reservationId,
+    );
+    upcomingReservations.refresh();
+    _upsertInto(historyReservationsList, reservation);
+  }
+
+  void _mergeIntoMyReservations(List<CustomerReservationModel> items) {
+    for (final CustomerReservationModel item in items) {
+      _upsert(item);
+    }
   }
 
   void _upsert(CustomerReservationModel reservation) {
@@ -193,6 +330,9 @@ class ReservationRepository {
         imageUrl: reservation.imageUrl.isNotEmpty
             ? reservation.imageUrl
             : previous.imageUrl,
+        branchName: reservation.branchName.isNotEmpty
+            ? reservation.branchName
+            : previous.branchName,
       );
     } else {
       myReservations.insert(0, reservation);
@@ -200,8 +340,37 @@ class ReservationRepository {
     myReservations.refresh();
   }
 
+  void _upsertInto(
+    RxList<CustomerReservationModel> list,
+    CustomerReservationModel reservation,
+  ) {
+    if (reservation.reservationId.isEmpty) {
+      return;
+    }
+    final int index = list.indexWhere(
+      (CustomerReservationModel item) =>
+          item.reservationId == reservation.reservationId,
+    );
+    if (index >= 0) {
+      list[index] = reservation;
+    } else {
+      list.insert(0, reservation);
+    }
+    list.refresh();
+  }
+
   String _cachedName(String reservationId) {
     for (final CustomerReservationModel item in myReservations) {
+      if (item.reservationId == reservationId) {
+        return item.restaurantName;
+      }
+    }
+    for (final CustomerReservationModel item in upcomingReservations) {
+      if (item.reservationId == reservationId) {
+        return item.restaurantName;
+      }
+    }
+    for (final CustomerReservationModel item in historyReservationsList) {
       if (item.reservationId == reservationId) {
         return item.restaurantName;
       }
@@ -215,16 +384,50 @@ class ReservationRepository {
         return item.imageUrl;
       }
     }
+    for (final CustomerReservationModel item in upcomingReservations) {
+      if (item.reservationId == reservationId) {
+        return item.imageUrl;
+      }
+    }
+    for (final CustomerReservationModel item in historyReservationsList) {
+      if (item.reservationId == reservationId) {
+        return item.imageUrl;
+      }
+    }
     return '';
   }
 
   static List<RestaurantTableModel> _parseAvailabilityTables(Object? raw) {
     final List<dynamic> items = _extractItems(raw);
     return items
-        .whereType<Map<String, dynamic>>()
-        .map(RestaurantTableModel.fromJson)
+        .whereType<Map>()
+        .map(
+          (Map item) =>
+              RestaurantTableModel.fromJson(Map<String, dynamic>.from(item)),
+        )
         .where((RestaurantTableModel table) => table.id.isNotEmpty)
         .toList(growable: false);
+  }
+
+  static List<CustomerReservationModel> _parseReservationItems(Object? raw) {
+    final List<dynamic> items = _extractItems(raw);
+    final List<CustomerReservationModel> parsed =
+        <CustomerReservationModel>[];
+    for (final dynamic item in items) {
+      if (item is! Map) {
+        continue;
+      }
+      try {
+        final CustomerReservationModel model =
+            CustomerReservationModel.fromJson(Map<String, dynamic>.from(item));
+        if (model.reservationId.isNotEmpty) {
+          parsed.add(model);
+        }
+      } catch (_) {
+        // Skip malformed rows.
+      }
+    }
+    return parsed;
   }
 
   static CustomerReservationModel _parseReservation(
@@ -232,11 +435,12 @@ class ReservationRepository {
     String restaurantName = '',
     String imageUrl = '',
   }) {
-    if (raw is Map<String, dynamic>) {
-      if (raw['reservationId'] != null || raw['id'] != null) {
+    if (raw is Map) {
+      final Map<String, dynamic> map = Map<String, dynamic>.from(raw);
+      if (map['reservationId'] != null || map['id'] != null) {
         final CustomerReservationModel model =
             CustomerReservationModel.fromJson(
-              raw,
+              map,
               restaurantName: restaurantName,
               imageUrl: imageUrl,
             );
@@ -244,11 +448,11 @@ class ReservationRepository {
           return model;
         }
       }
-      final Object? nested = raw['reservation'] ?? raw['item'];
-      if (nested is Map<String, dynamic>) {
+      final Object? nested = map['reservation'] ?? map['item'];
+      if (nested is Map) {
         final CustomerReservationModel model =
             CustomerReservationModel.fromJson(
-              nested,
+              Map<String, dynamic>.from(nested),
               restaurantName: restaurantName,
               imageUrl: imageUrl,
             );
@@ -261,7 +465,7 @@ class ReservationRepository {
   }
 
   static List<dynamic> _extractItems(Object? raw) {
-    if (raw is Map<String, dynamic>) {
+    if (raw is Map) {
       for (final String key in const <String>[
         'items',
         'tables',

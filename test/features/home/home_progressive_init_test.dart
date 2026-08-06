@@ -169,9 +169,25 @@ Future<void> _pumpProgressiveStages(WidgetTester tester) async {
         Get.find<HomeController>().progressiveStage.value >=
             HomeProgressiveInit.stageComplete &&
         Get.isRegistered<UserLocationController>()) {
-      return;
+      break;
     }
   }
+
+  // Flush Special Offer nearby/offers Dio work started at the location stage.
+  for (int i = 0; i < 60; i++) {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+    if (!Get.isRegistered<HomeController>()) {
+      break;
+    }
+    final HomeController home = Get.find<HomeController>();
+    if (!home.isLoadingSpecialOffer.value &&
+        (home.featuredOffer.value != null ||
+            home.specialOfferError.value != null)) {
+      break;
+    }
+  }
+  await tester.pump(const Duration(milliseconds: 50));
 }
 
 class _FakeTaxonomyRepository extends TaxonomyRepository {

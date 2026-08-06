@@ -35,10 +35,14 @@ Future<void> main() async {
 
   AppDependency.putPermanent(AuthRepository());
   AppDependency.putPermanent<AuthTokenReader>(tokenStore);
-  AppDependency.putPermanent(AuthSessionController());
+  final AuthSessionController authSession = AppDependency.putPermanent(
+    AuthSessionController(),
+  );
+  AppDependency.putPermanent<GuestModeReader>(authSession);
   AppDependency.putPermanent(
     ApiClient(
       tokenReader: tokenStore,
+      guestModeReader: authSession,
       authRepository: Get.find<AuthRepository>(),
       onSessionExpired: () async {
         await Get.find<AuthSessionController>().handleSessionExpired();

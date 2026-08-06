@@ -96,13 +96,16 @@ class PasswordResetController extends GetxController {
 
     // Navigate only after clearing loading — goShell disposes this controller.
     if (completed && !isClosed) {
-      // Reset LoginController to avoid stale permanent-state after password
-      // reset (old password/error values can survive across route re-entry).
-      final LoginController loginController = AppDependency.putPermanent(
-        LoginController(),
-      );
+      // Reuse the permanent LoginController. Force-replacing it wiped the
+      // verified phone/country and left the picker on the AE default, so
+      // post-reset login sent the wrong countryCode with the new password.
+      final LoginController loginController =
+          AppDependency.putPermanentIfAbsent(LoginController.new);
       loginController.prepareForPasswordResetReturn(
         AppStrings.authPasswordResetComplete,
+        countryCode: resetArgs.countryCode,
+        dialCode: resetArgs.dialCode,
+        phoneNumber: resetArgs.phoneNumber,
       );
       AppNavigation.goShell(
         AppRoutes.login,

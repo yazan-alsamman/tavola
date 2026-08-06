@@ -40,6 +40,11 @@ class AppDimensions {
   static const double compactFavoriteIconSize = 18.0;
   static const double bookingRestaurantCardSpacing = 12.0;
   static const double promoHeight = 190.0;
+  static const double homeOccasionScrollTopInset = 6.0;
+  static const double homeOccasionScrollMinDelta = 8.0;
+  static const Duration homeOccasionScrollDuration = Duration(
+    milliseconds: 900,
+  );
   static const double reservationCardHeight = 136.0;
   static const double reservationImageWidth = 130.0;
   /// Single-line slots so Date / Time / Guests values stay on one baseline.
@@ -132,10 +137,22 @@ class AppDimensions {
   static const double reservationHistoryTitleLetterSpacing = 0.2;
   static const double reservationHistoryStatusLetterSpacing = 0.6;
   static const double reservationHistoryHeaderIconFillAlpha = 0.45;
+  static const double reservationReviewStarSize = 22.0;
+  static const double reservationReviewSheetStarSize = 36.0;
+  static const double reservationReviewSheetMaxHeightFactor = 0.88;
+  static const double reservationReviewPhotoThumbSize = 64.0;
+  static const int reviewMinRating = 1;
+  static const int reviewMaxRating = 5;
+  static const int reviewCommentMaxLength = 500;
+  static const int reviewsMaxSyncPages = 10;
   static const double profileReservationsEmptyIconContainer = 64.0;
   static const double profileReservationsEmptyIconSize = 30.0;
 
   static const double headerHeight = 72.0;
+  static const double notificationsHeaderHeight = 112.0;
+  static const double notificationsHeaderHeightWithAction = 156.0;
+  static const double notificationsTitleFontSize = 24.0;
+  static const double notificationsTitleLetterSpacing = 2.0;
   static const double headerLogoIconSize = 27.0;
   static const double headerNotificationIconSize = 24.0;
   static const double headerProfileSize = 38.0;
@@ -146,11 +163,13 @@ class AppDimensions {
 
   static const double conciergeContentMaxWidth = 720.0;
   static const double conciergeStatusDotSize = 9.0;
-  static const double conciergeMessageWidthFactor = 0.9;
+  static const double conciergeMessageWidthFactor = 0.82;
   static const double conciergeComposerRadius = 26.0;
   static const double conciergeSendButtonSize = 44.0;
   static const double conciergeSendIconSize = 20.0;
-
+  static const double conciergeBubbleRadius = 18.0;
+  static const double conciergeBubbleTailRadius = 4.0;
+  static const double conciergeHeaderAvatarSize = 40.0;
   static const double mapInitialZoom = 14.2;
   static const double mapInitialLatitude = 51.5124;
   static const double mapInitialLongitude = -0.1472;
@@ -314,6 +333,10 @@ class AppDimensions {
   /// so a dead host cannot stall every authenticated API for a full login wait.
   static const Duration authRefreshTimeout = Duration(seconds: 8);
 
+  /// Ceiling for `POST /auth/logout` / logout-all before local session clear.
+  /// Must stay short so Profile Log out never feels frozen offline.
+  static const Duration authLogoutTimeout = Duration(seconds: 8);
+
   /// After a transient refresh failure, skip proactive refresh this long so
   /// Home catalog calls are not serially blocked. Reactive 401 refresh still runs.
   static const Duration accessTokenRefreshFailureCooldown = Duration(
@@ -322,6 +345,18 @@ class AppDimensions {
 
   static const int apiDefaultPage = 1;
   static const int apiDefaultLimit = 20;
+
+  /// Default search radius for `GET /discovery/restaurants/nearby`.
+  static const double nearbySearchRadiusKm = 50;
+
+  /// Max nearby/catalog restaurants to probe for a published offer.
+  static const int homeOfferCandidateProbeLimit = 8;
+
+  /// Default `limit` for `GET /conversations` (cursor pagination).
+  static const int conversationsPageSize = apiDefaultLimit;
+
+  /// Max height factor for the start-conversation restaurant picker sheet.
+  static const double conversationsPickerMaxHeightFactor = 0.7;
 
   /// Home cuisine / occasion / restaurants loads must not spin forever.
   /// Ceiling for Home taxonomy loads — matches [apiHardRequestTimeout] so the

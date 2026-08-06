@@ -77,7 +77,27 @@ void main() {
 
   group('SecureAuthTokenStore', () {
     test(
-      'updateSessionTokens does not touch vault until disk persist is scheduled',
+      'updateSessionTokens schedules disk persist without awaiting Keychain',
+      () async {
+        final _HangingVault vault = _HangingVault();
+        final SecureAuthTokenStore store = SecureAuthTokenStore(vault: vault);
+
+        final Stopwatch watch = Stopwatch()..start();
+        await store.updateSessionTokens(
+          accessToken: 'mem-only',
+          refreshToken: 'mem-refresh',
+        );
+        watch.stop();
+
+        // Memory is live immediately; Keychain write is fire-and-forget.
+        expect(watch.elapsedMilliseconds, lessThan(50));
+        expect(await store.readAccessToken(), 'mem-only');
+        expect(await store.readRefreshToken(), 'mem-refresh');
+      },
+    );
+
+    test(
+      'updateSessionTokens persistToDisk:false skips Keychain schedule',
       () async {
         final _MemoryVault vault = _MemoryVault();
         final SecureAuthTokenStore store = SecureAuthTokenStore(vault: vault);
@@ -85,17 +105,16 @@ void main() {
         await store.updateSessionTokens(
           accessToken: 'mem-only',
           refreshToken: 'mem-refresh',
+          persistToDisk: false,
         );
+        await Future<void>.delayed(Duration.zero);
 
-        expect(await store.readAccessToken(), 'mem-only');
         expect(vault.values, isEmpty);
+        expect(await store.readAccessToken(), 'mem-only');
 
+        store.scheduleDiskPersist();
         await store.flushPendingDiskWrites();
         expect(vault.values[SecureAuthTokenStore.accessTokenKey], 'mem-only');
-        expect(
-          vault.values[SecureAuthTokenStore.refreshTokenKey],
-          'mem-refresh',
-        );
       },
     );
 
@@ -265,17 +284,17 @@ void main() {
       },
     );
 
-    test('hydrate timeout does not re-enter vault on later reads', () async {
+    test('hydrate timeout allows a later vault retry for Hot Restart', () async {
       final _HangingVault vault = _HangingVault();
       final SecureAuthTokenStore store = SecureAuthTokenStore(vault: vault);
 
       expect(await store.readAccessToken(), isNull);
       final int readsAfterFirstTimeout = vault.readCount;
 
-      // Second band must use the hydrated-empty memory path — no Keychain storm.
+      // After timeout, Splash / next read must retry Keychain — not permanently
+      // treat the session as logged-out.
       expect(await store.readAccessToken(), isNull);
-      expect(await store.readRefreshToken(), isNull);
-      expect(vault.readCount, readsAfterFirstTimeout);
+      expect(vault.readCount, greaterThan(readsAfterFirstTimeout));
     });
 
     test('concurrent hydrate shares one vault round-trip', () async {
@@ -310,16 +329,15 @@ void main() {
           accessToken: 'rotated-access',
           refreshToken: 'rotated-refresh',
         );
-        store.scheduleDiskPersist();
+        // updateSessionTokens auto-schedules persist; first attempt fails.
         await store.flushPendingDiskWrites();
 
-        // First persist failed — tokens must remain in memory, not lost.
+        // Memory must never be lost when disk fails.
         expect(await store.readAccessToken(), 'rotated-access');
         expect(await store.readRefreshToken(), 'rotated-refresh');
-        expect(vault.values, isEmpty);
 
-        // Explicit retry (same path as delayed Keychain retry).
-        store.scheduleDiskPersist();
+        // Microtask retry (same dirty-flag path) then succeeds.
+        await Future<void>.delayed(Duration.zero);
         await store.flushPendingDiskWrites();
 
         expect(

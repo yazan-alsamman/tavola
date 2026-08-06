@@ -67,12 +67,30 @@ class LoginController extends GetxController {
 
   /// Called when password reset completes and Login is shown again.
   ///
-  /// Clears stale password/error state from a previously mounted permanent
-  /// controller so the next submit uses only the newly entered password.
-  void prepareForPasswordResetReturn(String message) {
+  /// Clears stale password/error state from the permanent controller so the
+  /// next submit uses only the newly entered password. Optionally restores
+  /// the phone identity verified during reset — recreating LoginController
+  /// would wipe that and leave the country picker on the AE default, so
+  /// login would send the wrong `countryCode` with the new password.
+  void prepareForPasswordResetReturn(
+    String message, {
+    String? countryCode,
+    String? dialCode,
+    String? phoneNumber,
+  }) {
     passwordController.clear();
     errorMessage.value = null;
     showValidationHints.value = false;
+    if (countryCode != null && countryCode.trim().isNotEmpty) {
+      this.countryCode.value = countryCode.trim().toUpperCase();
+    }
+    if (dialCode != null && dialCode.trim().isNotEmpty) {
+      countryDialCode.value = dialCode.trim();
+    }
+    if (phoneNumber != null) {
+      phoneController.text = AuthValidation.digitsOnly(phoneNumber);
+    }
+    _applyCountryPhoneLimits();
     _updateValidation();
     showSuccessMessage(message);
   }

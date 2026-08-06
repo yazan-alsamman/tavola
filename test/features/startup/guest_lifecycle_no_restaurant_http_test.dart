@@ -70,8 +70,15 @@ void main() {
 
     Get.put<AuthTokenReader>(const EmptyAuthTokenReader());
     Get.put(AuthRepository());
-    Get.put(AuthSessionController());
-    Get.put(ApiClient(dio: dio, tokenReader: Get.find<AuthTokenReader>()));
+    final AuthSessionController session = Get.put(AuthSessionController());
+    Get.put<GuestModeReader>(session);
+    Get.put(
+      ApiClient(
+        dio: dio,
+        tokenReader: Get.find<AuthTokenReader>(),
+        guestModeReader: session,
+      ),
+    );
     Get.put(LocaleController()).syncFromLocale(const Locale('en'));
     Get.put<LocationService>(_FakeLocationService(), permanent: true);
 
@@ -81,7 +88,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    Get.find<AuthSessionController>().isGuest.value = true;
+    await session.enterAsGuest();
     Get.offAllNamed(AppRoutes.home);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));

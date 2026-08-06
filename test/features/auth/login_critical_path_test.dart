@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tavla/core/network/api_client.dart';
 import 'package:tavla/core/network/auth_token_reader.dart';
@@ -13,6 +14,10 @@ import 'package:tavla/features/users/repository/users_repository.dart';
 /// writes must not block navigation to Home.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
 
   tearDown(Get.reset);
 
@@ -50,8 +55,8 @@ void main() {
         isTrue,
       );
       expect(Get.find<AuthSessionController>().isGuest.value, isFalse);
-      // Identity Keychain must stay off the Login critical path.
-      expect(users.identityStarted, isFalse);
+      // Identity write may start in background, but must not block login.
+      expect(users.identityCompleted, isFalse);
 
       final Future<void> deferred = Get.find<AuthSessionController>()
           .persistDeferredSessionArtifacts();
@@ -80,6 +85,7 @@ class _MemoryTokens implements AuthTokenSession {
   Future<void> updateSessionTokens({
     required String accessToken,
     required String refreshToken,
+    bool persistToDisk = true,
   }) async {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
@@ -111,6 +117,7 @@ class _SlowIdentityUsers extends UsersRepository {
   Future<void> rememberCustomerIdentity({
     required String username,
     required String phone,
+    String? avatarUrl,
   }) async {
     identityStarted = true;
     await _identity.future;
