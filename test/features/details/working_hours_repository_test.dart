@@ -19,7 +19,7 @@ void main() {
   tearDown(Get.reset);
 
   test(
-    'fetchDetails fills openingHours from GET branch working-hours',
+    'fetchDetails fills openingHours from discovery workingHours',
     () async {
       Get.put<AuthTokenReader>(_TokenReader());
       final Dio dio = Dio(BaseOptions(baseUrl: AppUrls.apiBaseUrl));
@@ -40,20 +40,7 @@ void main() {
                       data: <String, dynamic>{
                         'success': true,
                         'message': 'ok',
-                        'data': <String, dynamic>{
-                          'entries': <dynamic>[
-                            <String, dynamic>{
-                              'dayOfWeek': 0,
-                              'openingTime': '10:00',
-                              'closingTime': '22:00',
-                            },
-                            <String, dynamic>{
-                              'dayOfWeek': 1,
-                              'openingTime': '10:00',
-                              'closingTime': '22:00',
-                            },
-                          ],
-                        },
+                        'data': <String, dynamic>{},
                       },
                     ),
                   );
@@ -74,7 +61,6 @@ void main() {
                               'city': 'Chicago',
                               'district': 'River North',
                               'address': '451 N LaSalle St',
-                              'phone': '+13125550188',
                             },
                           ],
                         },
@@ -95,6 +81,18 @@ void main() {
                         'name': 'Hours Bistro',
                         'status': 'Active',
                         'description': 'Test',
+                        'workingHours': <dynamic>[
+                          <String, dynamic>{
+                            'dayOfWeek': 0,
+                            'openingTime': '10:00',
+                            'closingTime': '22:00',
+                          },
+                          <String, dynamic>{
+                            'dayOfWeek': 1,
+                            'openingTime': '10:00',
+                            'closingTime': '22:00',
+                          },
+                        ],
                       },
                     },
                   ),
@@ -113,24 +111,14 @@ void main() {
       expect(detail.openingHours, hasLength(7));
       expect(detail.openingHours.first.hours, '10:00 – 22:00');
       expect(detail.todayHoursLabel, isNotEmpty);
-      expect(
-        workingHoursPaths.single,
-        AppUrls.branchWorkingHoursPath(
-          restaurantId: 'rest-1',
-          branchId: 'branch-1',
-        ),
-      );
-      expect(
-        workingHoursPaths.single.contains('/restaurants/rest-1/working-hours'),
-        isFalse,
-      );
+      expect(workingHoursPaths, isEmpty);
 
       final String cardLabel = await repo.fetchTodayHoursLabel('rest-1');
       expect(cardLabel, isNotEmpty);
     },
   );
 
-  test('fetchDetails skips hours when restaurant has no branches', () async {
+  test('fetchDetails skips hours when discovery workingHours is empty', () async {
     Get.put<AuthTokenReader>(_TokenReader());
     final Dio dio = Dio(BaseOptions(baseUrl: AppUrls.apiBaseUrl));
     Get.put(ApiClient(dio: dio, tokenReader: Get.find<AuthTokenReader>()));
@@ -168,6 +156,7 @@ void main() {
                   'name': 'Hours Bistro',
                   'status': 'Active',
                   'description': 'Test',
+                  'workingHours': <dynamic>[],
                 },
               },
             ),

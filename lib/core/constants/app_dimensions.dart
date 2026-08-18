@@ -137,14 +137,46 @@ class AppDimensions {
   static const double reservationHistoryTitleLetterSpacing = 0.2;
   static const double reservationHistoryStatusLetterSpacing = 0.6;
   static const double reservationHistoryHeaderIconFillAlpha = 0.45;
+
+  /// Compare Restaurants layout.
+  static const double compareTwoColumnBreakpoint = 600.0;
+  static const double comparePickerMaxHeightFactor = 0.72;
+  static const double compareSelectorIconSize = 36.0;
+  static const double compareCardImageAspectRatio = 1.35;
+  static const double compareCardImageSize = 72.0;
+  static const double compareCardImageRadius = 16.0;
+  static const double compareCardRadius = 22.0;
+  static const double compareCardPadding = 14.0;
+  static const double compareColumnGap = 12.0;
+  static const double compareFeatureIconSize = 16.0;
+  static const double compareFeatureRowSpacing = 10.0;
+  static const double compareOrbSize = 112.0;
+  static const int compareAboutMaxLines = 3;
+  static const Duration compareCardsEntranceDuration = Duration(
+    milliseconds: 2500,
+  );
+  static const double compareCardEntranceSlideY = 0.18;
+
+  /// `POST /discovery/restaurants/compare` accepts 2–5 restaurant IDs.
+  static const int compareMinRestaurants = 2;
+  static const int compareMaxRestaurants = 5;
+  static const int comparePriceLevelMin = 1;
+  static const int comparePriceLevelMax = 5;
   static const double reservationReviewStarSize = 22.0;
   static const double reservationReviewSheetStarSize = 36.0;
   static const double reservationReviewSheetMaxHeightFactor = 0.88;
   static const double reservationReviewPhotoThumbSize = 64.0;
+  /// Drag handle on modal bottom sheets (Write Review, Compare picker, etc.).
+  static const double bottomSheetGrabberWidth = 48.0;
+  static const double bottomSheetGrabberHeight = 3.0;
+  /// Soft fill behind the login password-reset success banner.
+  static const double loginSuccessBannerFillAlpha = 0.12;
   static const int reviewMinRating = 1;
   static const int reviewMaxRating = 5;
   static const int reviewCommentMaxLength = 500;
+  static const int reviewCommentExcerptMaxLength = 120;
   static const int reviewsMaxSyncPages = 10;
+  static const double detailsReviewImageSize = 72.0;
   static const double profileReservationsEmptyIconContainer = 64.0;
   static const double profileReservationsEmptyIconSize = 30.0;
 
@@ -346,8 +378,14 @@ class AppDimensions {
   static const int apiDefaultPage = 1;
   static const int apiDefaultLimit = 20;
 
+  /// Debounce for Home Discovery `q` search before hitting the API.
+  static const Duration homeSearchDebounce = Duration(milliseconds: 400);
+
   /// Default search radius for `GET /discovery/restaurants/nearby`.
   static const double nearbySearchRadiusKm = 50;
+
+  /// Decode budget for restaurant network thumbs (reduces memory / flicker).
+  static const int restaurantImageCacheWidth = 720;
 
   /// Max nearby/catalog restaurants to probe for a published offer.
   static const int homeOfferCandidateProbeLimit = 8;
@@ -670,6 +708,21 @@ class AppDimensions {
   static const double favoriteCuisinesChipHorizontalPadding = 16.0;
   static const double favoriteCuisinesChipVerticalPadding = 10.0;
   static const double favoriteCuisinesMaxWidth = 420.0;
+
+  /// Frosted green success toast (e.g. change-password confirmation).
+  static const Duration successToastDuration = Duration(milliseconds: 2800);
+
+  /// Wait for Login shell overlay after `offAllNamed` before showing the toast.
+  static const Duration successToastRevealDelay = Duration(milliseconds: 350);
+  static const double successToastBlurSigma = 18.0;
+  static const double successToastFillAlpha = 0.78;
+  static const double successToastFillAlphaStrong = 0.92;
+  static const double successToastBorderAlpha = 0.35;
+  static const double successToastShadowAlpha = 0.28;
+  static const double successToastShadowBlur = 18.0;
+  static const double successToastIconCircleSize = 36.0;
+  static const double successToastIconCircleAlpha = 0.22;
+  static const double successToastIconSize = 22.0;
 
   static const double welcomeTitleAlignX = 0.0;
 

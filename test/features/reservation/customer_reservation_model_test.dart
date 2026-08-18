@@ -1,14 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tavla/core/constants/app_urls.dart';
 import 'package:tavla/features/reservation/model/customer_reservation_model.dart';
 
 void main() {
   test('parses enriched /reservations/my list item fields', () {
+    const String imageId = '11111111-1111-1111-1111-111111111111';
     final CustomerReservationModel model = CustomerReservationModel.fromJson(
       <String, dynamic>{
         'reservationId': 'r1',
         'restaurantId': 'rest-1',
         'restaurantName': 'The Old Mill',
-        'restaurantImage': 'img-uuid',
+        'restaurantImage': imageId,
         'branchId': 'b1',
         'branchName': '123 Main St',
         'reservationStartTime': '2026-09-12T18:00:00.000Z',
@@ -26,7 +28,10 @@ void main() {
 
     expect(model.reservationId, 'r1');
     expect(model.restaurantName, 'The Old Mill');
-    expect(model.imageUrl, 'img-uuid');
+    expect(
+      model.imageUrl,
+      '${AppUrls.apiBaseUrl}${AppUrls.mediaFilePath(imageId)}',
+    );
     expect(model.branchName, '123 Main St');
     expect(model.guests, 2);
     expect(model.notes, 'Window seat');

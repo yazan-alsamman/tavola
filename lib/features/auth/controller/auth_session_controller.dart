@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
 import '../../../app/routes/app_routes.dart';
@@ -14,7 +15,9 @@ import '../../../core/network/secure_auth_token_store.dart';
 import '../../../core/utils/app_dependency.dart';
 import '../../details/repository/restaurant_details_repository.dart';
 import '../../favorites/repository/favorites_repository.dart';
+import '../../home/controller/home_controller.dart';
 import '../../home/home_entry_warmup.dart';
+import '../../notifications/service/push_identity_service.dart';
 import '../../profile/controller/profile_controller.dart';
 import '../../reservation/repository/reservation_repository.dart';
 import '../../users/repository/users_repository.dart';
@@ -168,6 +171,9 @@ class AuthSessionController extends GetxController implements GuestModeReader {
     isGuest.value = true;
     hasAuthenticatedSession.value = false;
     _pendingIdentity = null;
+    _pendingSignupUsername = null;
+    _postLoginBootstrapPending = false;
+    _resetHomeAuthenticatedBootstrapGate();
     // Persist guest so Splash restores Home after Hot Restart / reboot.
     // SharedPreferences must not block Welcome → Home.
     unawaited(_persistSessionMode(SessionMode.guest));
@@ -175,6 +181,16 @@ class AuthSessionController extends GetxController implements GuestModeReader {
       _deferGuestDiskClear = true;
     } else {
       unawaited(_clearGuestIdentity());
+    }
+  }
+
+  void _resetHomeAuthenticatedBootstrapGate() {
+    try {
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().resetAuthenticatedBootstrapGate();
+      }
+    } catch (_) {
+      // Home may not exist yet (Welcome / Splash).
     }
   }
 
@@ -238,19 +254,18 @@ class AuthSessionController extends GetxController implements GuestModeReader {
     }
   }
 
+  /// Login/register critical path: **memory tokens + session flags only**.
+  ///
+  /// Never starts Keychain, SharedPreferences, UsersRepository, Home catch-up,
+  /// or cache wipes here — those race `goShell(home)` on iOS and can kill the
+  /// process (`Lost connection to device`). Call [schedulePostLoginBootstrap]
+  /// only after navigation to Home returns.
   Future<void> completeSignIn(CustomerAuthResponseModel response) async {
     final Stopwatch stopwatch = Stopwatch()..start();
     final AuthTokenReader reader = Get.find<AuthTokenReader>();
     if (reader is! AuthTokenSession) {
       throw ApiException(message: AppStrings.invalidAuthSessionPayload);
     }
-    // New account session — never keep the previous account's in-memory bookings.
-    _clearReservationSessionCaches();
-    // Blocking Login path: memory tokens only — then SessionMode — then navigate.
-    // Keychain must NOT start before SessionMode: SecItem* blocks the iOS
-    // platform thread, so awaiting SharedPreferences after scheduleDiskPersist
-    // freezes Login forever (spinner after a correct password).
-    // Disk tokens flush in [persistDeferredSessionArtifacts] after Home paints.
     final Stopwatch tokenWatch = Stopwatch()..start();
     await reader.updateSessionTokens(
       accessToken: response.accessToken,
@@ -258,25 +273,85 @@ class AuthSessionController extends GetxController implements GuestModeReader {
       persistToDisk: false,
     );
     _perf('updateSessionTokens', tokenWatch);
-    // Clear guest immediately so the Login CTA never stays after a real login.
+    // Cancel any deferred Guest Keychain clear so a later bootstrap persist
+    // cannot be wiped by a stale Guest disk-clear still in flight.
+    _deferGuestDiskClear = false;
     isGuest.value = false;
     hasAuthenticatedSession.value = true;
-    // Guest may have probed working-hours without Bearer — allow a fresh fetch.
+    _pendingIdentity = response;
+    _postLoginBootstrapPending = true;
+    _perf('completeSignIn total', stopwatch);
+  }
+
+  bool _postLoginBootstrapPending = false;
+
+  /// Runs every side-effect that used to race Login — only after Home paints.
+  ///
+  /// Call immediately after [AppNavigation.goShell] to Home (Login / Sign Up).
+  void schedulePostLoginBootstrap() {
+    if (!_postLoginBootstrapPending && _pendingIdentity == null) {
+      return;
+    }
+    scheduleMicrotask(() {
+      final SchedulerBinding binding = SchedulerBinding.instance;
+      // Two frames: (1) Login dispose / Home mount (2) Home first paint settled.
+      binding.addPostFrameCallback((_) {
+        binding.addPostFrameCallback((_) {
+          unawaited(_runPostLoginBootstrap());
+        });
+        binding.scheduleFrame();
+      });
+      binding.scheduleFrame();
+    });
+  }
+
+  /// Runs deferred post-login work immediately (idempotent). Used by tests;
+  /// production relies on [schedulePostLoginBootstrap] after Home paints.
+  Future<void> flushPostLoginBootstrap() => _runPostLoginBootstrap();
+
+  Future<void> _runPostLoginBootstrap() async {
+    if (!_postLoginBootstrapPending) {
+      return;
+    }
+    _postLoginBootstrapPending = false;
+    final CustomerAuthResponseModel? identity = _pendingIdentity;
+
+    // Cache / prefs / Keychain / identity — all off the Login submit stack.
+    _clearReservationSessionCaches();
     _clearWorkingHoursCacheBestEffort();
-    // SharedPreferences while the platform thread is still free — Hot Restart
-    // then sees SessionMode.authenticated even if Keychain lags.
     await _persistSessionMode(SessionMode.authenticated);
-    // Start Keychain after SessionMode (never await). Covers first login /
-    // registration if the process dies before Home progressive Stage 0.
-    // Home [persistDeferredSessionArtifacts] still flushes as a second chance.
+    final AuthTokenReader? reader = Get.isRegistered<AuthTokenReader>()
+        ? Get.find<AuthTokenReader>()
+        : null;
     if (reader is SecureAuthTokenStore) {
       reader.scheduleDiskPersist();
     }
-    _pendingIdentity = response;
-    // Synchronous memory identity — `/users/me` omits username and must not
-    // wipe the login name. Keychain flush stays deferred (Login freeze rule).
-    _applyPendingIdentityInMemory(response);
-    _perf('completeSignIn total', stopwatch);
+    if (identity != null) {
+      _applyPendingIdentityInMemory(identity);
+    }
+    final String? signupUsername = _pendingSignupUsername?.trim();
+    if (signupUsername != null && signupUsername.isNotEmpty) {
+      try {
+        AppDependency.ensureUsersRepository();
+        Get.find<UsersRepository>().applyCustomerIdentityInMemory(
+          username: signupUsername,
+          phone: '',
+        );
+      } catch (_) {
+        // Disk flush still happens in persistDeferredSessionArtifacts.
+      }
+    }
+    _notifyHomeBecameAuthenticated();
+  }
+
+  void _notifyHomeBecameAuthenticated() {
+    try {
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().onBecameAuthenticated();
+      }
+    } catch (_) {
+      // Home created later; its first progressive start sees auth session.
+    }
   }
 
   void _applyPendingIdentityInMemory(CustomerAuthResponseModel response) {
@@ -299,7 +374,6 @@ class AuthSessionController extends GetxController implements GuestModeReader {
         phone: response.phone,
         avatarUrl: response.avatarUrl,
       );
-      unawaited(users.ensureProfileLoaded());
     } catch (error, stack) {
       if (kDebugMode) {
         debugPrint('[ProfileIdentity] remember failed: $error\n$stack');
@@ -327,6 +401,16 @@ class AuthSessionController extends GetxController implements GuestModeReader {
   }
 
   CustomerAuthResponseModel? _pendingIdentity;
+  String? _pendingSignupUsername;
+
+  /// Stashes signup username in memory until [schedulePostLoginBootstrap].
+  void stashSignupUsername(String username) {
+    final String value = username.trim();
+    if (value.isEmpty) {
+      return;
+    }
+    _pendingSignupUsername = value;
+  }
 
   /// Flushes memory session + identity to Keychain after Login→Home paints.
   ///
@@ -342,6 +426,22 @@ class AuthSessionController extends GetxController implements GuestModeReader {
     _pendingIdentity = null;
     if (pending != null) {
       await _persistCustomerIdentity(pending);
+    }
+    final String? signupUsername = _pendingSignupUsername;
+    _pendingSignupUsername = null;
+    if (signupUsername != null && signupUsername.isNotEmpty) {
+      await rememberProfileUsername(signupUsername);
+    }
+    // Non-blocking push identity JWT for OneSignal / backend registration.
+    unawaited(_syncPushIdentityBestEffort());
+  }
+
+  Future<void> _syncPushIdentityBestEffort() async {
+    try {
+      AppDependency.ensurePushIdentityService();
+      await Get.find<PushIdentityService>().syncIdentityToken();
+    } catch (_) {
+      // Push identity is optional for App Store customer flows.
     }
   }
 
@@ -425,10 +525,16 @@ class AuthSessionController extends GetxController implements GuestModeReader {
     await _revokeRemoteSessionBestEffort(allDevices: allDevices);
     await _clearLocalSessionTokensBestEffort();
     unawaited(_clearGuestIdentity());
+    if (Get.isRegistered<PushIdentityService>()) {
+      Get.find<PushIdentityService>().clear();
+    }
     _pendingIdentity = null;
+    _pendingSignupUsername = null;
+    _postLoginBootstrapPending = false;
     _deferGuestDiskClear = false;
     isGuest.value = false;
     hasAuthenticatedSession.value = false;
+    _resetHomeAuthenticatedBootstrapGate();
     // Clear persisted mode before Welcome so the next cold start is Fresh.
     await _persistSessionMode(SessionMode.none);
     AppNavigation.goShell(AppRoutes.logoutTransition);
@@ -504,6 +610,7 @@ class AuthSessionController extends GetxController implements GuestModeReader {
     if (hadSession) {
       // Real session expired — leave guest mode and send user to Login.
       isGuest.value = false;
+      _resetHomeAuthenticatedBootstrapGate();
       await _persistSessionMode(SessionMode.none);
       // Register Login before navigation: expiry often fires from ApiClient's
       // 401 interceptor while Home is still mounting. Relying only on the

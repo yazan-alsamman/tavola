@@ -20,6 +20,7 @@ class ApiException implements Exception {
   bool get isForbidden => statusCode == 403;
   bool get isNotFound => statusCode == 404;
   bool get isValidation => code == 'VALIDATION_ERROR' || statusCode == 422;
+  bool get isCancelled => code == 'REQUEST_CANCELLED';
 
   factory ApiException.fromErrorBody(
     Map<String, dynamic> json, {
@@ -213,6 +214,14 @@ class ApiException implements Exception {
       message: (message != null && message.trim().isNotEmpty)
           ? message
           : AppStrings.networkUnexpectedError,
+    );
+  }
+
+  /// Caller cancelled the in-flight request (e.g. newer Home search).
+  factory ApiException.cancelled() {
+    return const ApiException(
+      message: '',
+      code: 'REQUEST_CANCELLED',
     );
   }
 

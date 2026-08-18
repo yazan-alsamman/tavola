@@ -107,4 +107,99 @@ void main() {
     expect(menus.single.id, 'menu-1');
     expect(menus.single.isDefault, isTrue);
   });
+
+  test('getCategoryById and getItemById hit Postman category/item paths', () async {
+    Get.testMode = true;
+    String? categoryPath;
+    String? itemPath;
+    final Dio dio = Dio(BaseOptions(baseUrl: AppUrls.apiBaseUrl));
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
+          if (options.path.contains('/categories/') &&
+              !options.path.contains('/items/')) {
+            categoryPath = options.path;
+            handler.resolve(
+              Response<dynamic>(
+                requestOptions: options,
+                statusCode: 200,
+                data: <String, dynamic>{
+                  'success': true,
+                  'message': 'ok',
+                  'data': <String, dynamic>{
+                    'id': 'cat-1',
+                    'name': 'Starters',
+                    'displayOrder': 0,
+                    'items': <dynamic>[],
+                  },
+                },
+              ),
+            );
+            return;
+          }
+          if (options.path.contains('/items/')) {
+            itemPath = options.path;
+            handler.resolve(
+              Response<dynamic>(
+                requestOptions: options,
+                statusCode: 200,
+                data: <String, dynamic>{
+                  'success': true,
+                  'message': 'ok',
+                  'data': <String, dynamic>{
+                    'id': 'item-1',
+                    'name': 'Shrimp Cocktail',
+                    'description': 'Chilled shrimp',
+                    'price': 14,
+                  },
+                },
+              ),
+            );
+            return;
+          }
+          handler.reject(
+            DioException(
+              requestOptions: options,
+              type: DioExceptionType.badResponse,
+            ),
+          );
+        },
+      ),
+    );
+    final MenuRepository repo = MenuRepository(
+      ApiClient(dio: dio, tokenReader: const EmptyAuthTokenReader()),
+    );
+
+    final category = await repo.getCategoryById(
+      restaurantId: 'rest-1',
+      menuId: 'menu-1',
+      categoryId: 'cat-1',
+    );
+    final item = await repo.getItemById(
+      restaurantId: 'rest-1',
+      menuId: 'menu-1',
+      categoryId: 'cat-1',
+      itemId: 'item-1',
+    );
+
+    expect(
+      categoryPath,
+      AppUrls.restaurantMenuCategoryPath(
+        restaurantId: 'rest-1',
+        menuId: 'menu-1',
+        categoryId: 'cat-1',
+      ),
+    );
+    expect(
+      itemPath,
+      AppUrls.restaurantMenuItemPath(
+        restaurantId: 'rest-1',
+        menuId: 'menu-1',
+        categoryId: 'cat-1',
+        itemId: 'item-1',
+      ),
+    );
+    expect(category.name, 'Starters');
+    expect(item.id, 'item-1');
+  });
 }

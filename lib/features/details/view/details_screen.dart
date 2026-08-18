@@ -15,6 +15,7 @@ import '../widgets/details_hero_header.dart';
 import '../widgets/details_info_box.dart';
 import '../widgets/details_location_footer.dart';
 import '../widgets/details_menu_section.dart';
+import '../widgets/details_reviews_section.dart';
 
 class DetailsScreen extends StatelessWidget {
   const DetailsScreen({super.key});
@@ -115,7 +116,7 @@ class DetailsScreen extends StatelessWidget {
                 const SizedBox(height: AppDimensions.sectionSpacing),
                 DetailsInfoBox(
                   openingHours: controller.detail.openingHours,
-                  phone: controller.detail.phone,
+                  onComparePressed: controller.openCompare,
                 ),
                 if (controller.showMenu) ...[
                   const SizedBox(height: AppDimensions.sectionSpacing),
@@ -125,6 +126,8 @@ class DetailsScreen extends StatelessWidget {
                 DetailsLocationFooter(
                   locationNote: controller.detail.locationNote,
                 ),
+                const SizedBox(height: AppDimensions.sectionSpacing),
+                DetailsReviewsSection(controller: controller),
                 const SizedBox(height: AppDimensions.sectionSpacing),
                 SizedBox(
                   width: double.infinity,

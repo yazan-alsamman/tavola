@@ -42,6 +42,10 @@ class LoginController extends GetxController {
   final RxnString errorMessage = RxnString();
   final RxnString successMessage = RxnString();
 
+  /// Sticky flag for Forgot-Password → Login success UI (banner + toast).
+  /// Cleared only when the user starts typing a password.
+  final RxBool showPasswordResetSuccess = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -49,7 +53,8 @@ class LoginController extends GetxController {
     passwordController.addListener(_updateValidation);
     final Object? arguments = Get.arguments;
     if (arguments is String && arguments.trim().isNotEmpty) {
-      successMessage.value = arguments;
+      showSuccessMessage(arguments.trim());
+      showPasswordResetSuccess.value = true;
     }
     _updateValidation();
   }
@@ -93,6 +98,7 @@ class LoginController extends GetxController {
     _applyCountryPhoneLimits();
     _updateValidation();
     showSuccessMessage(message);
+    showPasswordResetSuccess.value = true;
   }
 
   @override
@@ -242,6 +248,8 @@ class LoginController extends GetxController {
       AppNavigation.goShell(AppRoutes.home);
       _loginPerf('goShell(home)', navWatch);
       _loginPerf('submit total (pre-Home)', total);
+      // Keychain / SessionMode / Home catch-up only after Home has painted.
+      Get.find<AuthSessionController>().schedulePostLoginBootstrap();
     }
   }
 
@@ -313,9 +321,10 @@ class LoginController extends GetxController {
   }
 
   void _updateValidation() {
-    if (successMessage.value != null &&
-        (phoneController.text.isNotEmpty ||
-            passwordController.text.isNotEmpty)) {
+    // Dismiss reset-success UI only when the user starts typing a password.
+    if (showPasswordResetSuccess.value &&
+        passwordController.text.isNotEmpty) {
+      showPasswordResetSuccess.value = false;
       successMessage.value = null;
     }
     final bool phoneValid = _isPhoneValid();

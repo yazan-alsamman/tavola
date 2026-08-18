@@ -1,4 +1,5 @@
 import '../../../core/network/api_exception.dart';
+import '../../../core/utils/media_url_resolver.dart';
 
 /// Customer reservation DTO from create/cancel/reschedule and
 /// `GET /reservations/my*` (enriched list + flat detail).
@@ -76,8 +77,12 @@ class CustomerReservationModel {
     final String parsedName = ApiException.coerceString(
       json['restaurantName'],
     );
-    final String parsedImage = ApiException.coerceString(
-      json['restaurantImage'] ?? json['imageUrl'] ?? json['coverImageUrl'],
+    final String parsedImage = MediaUrlResolver.resolve(
+      json['restaurantImage'] ??
+          json['imageUrl'] ??
+          json['coverImageUrl'] ??
+          json['coverImageId'] ??
+          json['logoId'],
     );
     final Object? tableRaw = json['table'];
     String tableId = ApiException.coerceString(json['tableId']);

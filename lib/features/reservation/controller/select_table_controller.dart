@@ -173,31 +173,38 @@ class SelectTableController extends GetxController {
 
   bool get showSelectedTableDetails => selectedTable != null;
 
-  bool get canJoinWaitlist {
-    if (isLoadingTables.value ||
-        isJoiningWaitlist.value ||
-        isCreatingReservation.value) {
+  /// Floor has no bookable tables (empty plan or every table non-available).
+  bool get tablesAreFull {
+    if (isLoadingTables.value || tablesError.value != null) {
       return false;
     }
     final ReservationController? reservation = _reservationOrNull();
     if (reservation == null || reservation.restaurantId.value.trim().isEmpty) {
       return false;
     }
-    if (tablesError.value != null) {
-      return false;
-    }
-    final bool noAvailable =
-        floorPlanTables.isEmpty ||
+    return floorPlanTables.isEmpty ||
         floorPlanTables.every(
           (RestaurantTableModel table) => table.status != TableStatus.available,
         );
-    return noAvailable;
+  }
+
+  bool get canJoinWaitlist {
+    if (isJoiningWaitlist.value || isCreatingReservation.value) {
+      return false;
+    }
+    if (canCancelWaitlist) {
+      return false;
+    }
+    return tablesAreFull;
   }
 
   bool get canCancelWaitlist {
     final String? id = waitlistEntryId.value?.trim();
     return id != null && id.isNotEmpty && !isJoiningWaitlist.value;
   }
+
+  /// Show the simple waitlist card (join or leave).
+  bool get showWaitlistCard => canJoinWaitlist || canCancelWaitlist;
 
   void selectTable(RestaurantTableModel table) {
     selectedTableId.value = table.id;
@@ -254,7 +261,10 @@ class SelectTableController extends GetxController {
 
     if (!hasBookingContext) {
       // Onboarding / preview only — never create a real reservation.
-      _showLocalConfirmation(table, AppStrings.confirmationReferenceCode);
+      _showLocalConfirmation(
+        table,
+        AppStrings.onboardingPreviewReferenceLabel,
+      );
       return;
     }
 
@@ -327,6 +337,12 @@ class SelectTableController extends GetxController {
 
   Future<void> joinWaitlist() async {
     if (!canJoinWaitlist) {
+      return;
+    }
+
+    final AuthSessionController session = Get.find<AuthSessionController>();
+    if (!await session.requireSignInForProtectedAction()) {
+      Get.snackbar(AppStrings.waitlistJoin, AppStrings.authSignInRequired);
       return;
     }
 
@@ -480,9 +496,20 @@ class SelectTableController extends GetxController {
     final DateTime day = reservation.selectedDay.value;
     final String weekday = AppStrings.weekdayNames[day.weekday - 1];
     final String month = AppStrings.monthNames[day.month - 1];
-    final String time =
-        reservation.timeSlots[reservation.selectedTimeSlotIndex.value];
+    final String time;
+    if (reservation.timeSlots.isEmpty) {
+      time = '';
+    } else {
+      final int index = reservation.selectedTimeSlotIndex.value.clamp(
+        0,
+        reservation.timeSlots.length - 1,
+      );
+      time = reservation.timeSlots[index];
+    }
 
+    if (time.isEmpty) {
+      return '$weekday, ${day.day} $month';
+    }
     return '$weekday, ${day.day} $month${AppStrings.dateTimeSeparator}$time';
   }
 

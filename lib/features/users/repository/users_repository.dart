@@ -14,13 +14,19 @@ import '../../../core/network/api_response.dart';
 import '../../../core/network/auth_token_reader.dart';
 import '../../../core/network/customer_identity_payload.dart';
 import '../../../core/network/secure_auth_token_store.dart';
+import '../../../core/utils/media_url_resolver.dart';
 import '../../home/model/restaurant_model.dart';
+import '../model/delete_account_result_model.dart';
+import '../model/export_user_data_result_model.dart';
 import '../model/user_preferences_model.dart';
 import '../model/user_profile_model.dart';
 
 /// Users self-service APIs under `/users/me` (Profile + Favorites).
 ///
 /// - `GET/PATCH /users/me`
+/// - `DELETE /users/me` (request account deletion)
+/// - `POST /users/me/cancel-deletion`
+/// - `GET /users/me/export`
 /// - `GET/PATCH /users/me/preferences`
 /// - `POST /users/me/avatar`
 /// - `GET /users/me/favorites`
@@ -41,15 +47,22 @@ class UsersRepository {
   final ApiClient _apiClient;
   final SecureKeyValueStore _vault;
 
-  static const String mePath = '/users/me';
-  static const String preferencesPath = '/users/me/preferences';
-  static const String avatarPath = '/users/me/avatar';
-  static const String favoritesPath = '/users/me/favorites';
+  static const String mePath = AppUrls.usersMePath;
+  static const String exportPath = AppUrls.usersMeExportPath;
+  static const String cancelDeletionPath = AppUrls.usersMeCancelDeletionPath;
+  static const String preferencesPath = AppUrls.usersMePreferencesPath;
+  static const String avatarPath = AppUrls.usersMeAvatarPath;
+  static const String favoritesPath = AppUrls.usersMeFavoritesPath;
+  static const String _pageQueryKey = 'page';
+  static const String _pageSizeQueryKey = 'pageSize';
   static const String _usernameKey = 'customer_username';
   static const String _phoneKey = 'customer_phone';
   static const String _avatarUrlKey = 'customer_avatar_url';
+  static const String _pendingDeletionAtKey =
+      'customer_pending_account_deletion_at';
 
   final Rxn<UserProfileModel> profileRx = Rxn<UserProfileModel>();
+  final RxBool hasPendingAccountDeletion = false.obs;
   UserPreferencesModel? _cachedPreferences;
   List<RestaurantModel> _cachedFavoriteRestaurants = const <RestaurantModel>[];
   bool _profileLoadAttempted = false;
@@ -474,30 +487,10 @@ class UsersRepository {
   }
 
   String _normalizeAvatarUrl(String? raw) {
-    final String value = (raw ?? '').trim();
-    if (value.isEmpty) {
-      return '';
-    }
-    if (value.startsWith('${AppStrings.apiHttpSchemePrefix}//') ||
-        value.startsWith('${AppStrings.apiHttpsSchemePrefix}//')) {
-      return value;
-    }
-    if (value.startsWith('//')) {
-      final Uri base = Uri.parse(AppUrls.apiBaseUrl);
-      final String scheme = base.scheme.isNotEmpty
-          ? base.scheme
-          : AppStrings.apiHttpSchemePrefix.replaceAll(':', '');
-      return '$scheme:$value';
-    }
-    final Uri base = Uri.parse(AppUrls.apiBaseUrl);
-    final String origin = '${base.scheme}://${base.authority}';
-    if (value.startsWith('/')) {
-      return '$origin$value';
-    }
-    return '$origin/$value';
+    return MediaUrlResolver.normalize(raw);
   }
 
-  /// `GET /users/me/favorites` — restaurant summaries for Profile / Favorites UI.
+  /// `GET /users/me/favorites?page=&pageSize=` — favorites list.
   Future<List<RestaurantModel>> fetchFavoriteRestaurants({
     int page = AppDimensions.apiDefaultPage,
     int limit = AppDimensions.apiDefaultLimit,
@@ -505,7 +498,10 @@ class UsersRepository {
     final ApiResponse<List<RestaurantModel>> response = await _apiClient
         .get<List<RestaurantModel>>(
           favoritesPath,
-          queryParameters: <String, dynamic>{'page': page, 'limit': limit},
+          queryParameters: <String, dynamic>{
+            _pageQueryKey: page,
+            _pageSizeQueryKey: limit,
+          },
           parseData: _parseFavoriteRestaurants,
         );
     _cachedFavoriteRestaurants = List<RestaurantModel>.unmodifiable(
@@ -515,11 +511,115 @@ class UsersRepository {
   }
 
   Future<void> addFavoriteRestaurant(String restaurantId) async {
-    await _apiClient.postNoContent('$favoritesPath/$restaurantId');
+    await _apiClient.postNoContent(AppUrls.usersMeFavoritePath(restaurantId));
   }
 
   Future<void> removeFavoriteRestaurant(String restaurantId) async {
-    await _apiClient.deleteNoContent('$favoritesPath/$restaurantId');
+    await _apiClient.deleteNoContent(
+      AppUrls.usersMeFavoritePath(restaurantId),
+    );
+  }
+
+  /// `GET /users/me/export` — GDPR portability export bundle.
+  Future<ExportUserDataResultModel> exportMyData() async {
+    final ApiResponse<ExportUserDataResultModel> response = await _apiClient
+        .get<ExportUserDataResultModel>(
+          exportPath,
+          parseData: (Object? raw) {
+            if (raw is Map) {
+              return ExportUserDataResultModel.fromJson(
+                Map<String, dynamic>.from(raw),
+              );
+            }
+            return const ExportUserDataResultModel(
+              exportedAt: '',
+              reservationsTotal: 0,
+              reviewsTotal: 0,
+              favoritesTotal: 0,
+            );
+          },
+        );
+    return ExportUserDataResultModel(
+      exportedAt: response.data.exportedAt,
+      reservationsTotal: response.data.reservationsTotal,
+      reviewsTotal: response.data.reviewsTotal,
+      favoritesTotal: response.data.favoritesTotal,
+      message: response.message,
+    );
+  }
+
+  /// `DELETE /users/me` — schedule anonymization (grace period).
+  Future<DeleteAccountResultModel> requestAccountDeletion({
+    required String password,
+  }) async {
+    final ApiResponse<DeleteAccountResultModel> response = await _apiClient
+        .delete<DeleteAccountResultModel>(
+          mePath,
+          data: <String, dynamic>{'password': password},
+          parseData: (Object? raw) {
+            if (raw is Map) {
+              return DeleteAccountResultModel.fromJson(
+                Map<String, dynamic>.from(raw),
+              );
+            }
+            return const DeleteAccountResultModel(
+              scheduledAnonymizationAt: '',
+            );
+          },
+        );
+    final DeleteAccountResultModel result = DeleteAccountResultModel(
+      scheduledAnonymizationAt: response.data.scheduledAnonymizationAt,
+      message: response.message,
+    );
+    await markPendingAccountDeletion(
+      scheduledAnonymizationAt: result.scheduledAnonymizationAt,
+    );
+    return result;
+  }
+
+  /// `POST /users/me/cancel-deletion` — 204, idempotent.
+  Future<void> cancelAccountDeletion() async {
+    await _apiClient.postNoContent(cancelDeletionPath);
+    await clearPendingAccountDeletion();
+  }
+
+  Future<void> markPendingAccountDeletion({
+    required String scheduledAnonymizationAt,
+  }) async {
+    hasPendingAccountDeletion.value = true;
+    final String value = scheduledAnonymizationAt.trim().isEmpty
+        ? 'pending'
+        : scheduledAnonymizationAt.trim();
+    try {
+      await _vault.write(_pendingDeletionAtKey, value).timeout(
+        AppDimensions.secureStorageTimeout,
+      );
+    } catch (_) {
+      // In-memory flag still drives Settings cancel row.
+    }
+  }
+
+  Future<void> clearPendingAccountDeletion() async {
+    hasPendingAccountDeletion.value = false;
+    try {
+      await _vault.delete(_pendingDeletionAtKey).timeout(
+        AppDimensions.secureStorageTimeout,
+      );
+    } catch (_) {
+      // Best-effort disk clear.
+    }
+  }
+
+  Future<void> hydratePendingAccountDeletion() async {
+    try {
+      final String? raw = await _vault
+          .read(_pendingDeletionAtKey)
+          .timeout(AppDimensions.secureStorageTimeout);
+      hasPendingAccountDeletion.value =
+          raw != null && raw.trim().isNotEmpty;
+    } catch (_) {
+      // Keep current in-memory value.
+    }
   }
 
   static UserProfileModel _parseProfile(Object? raw) {

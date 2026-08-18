@@ -13,6 +13,8 @@ import '../../../core/theme/app_button_styles.dart';
 import 'review_star_rating.dart';
 
 /// Premium compose sheet → `POST /reviews` (+ optional image upload).
+///
+/// Keyboard inset is already applied by `Get.bottomSheet` — do not pad again.
 class WriteReviewSheet extends StatefulWidget {
   const WriteReviewSheet({
     super.key,
@@ -52,6 +54,7 @@ class WriteReviewSheet extends StatefulWidget {
       ),
       isScrollControlled: true,
       backgroundColor: AppColors.transparent,
+      enableDrag: true,
     );
   }
 
@@ -103,181 +106,180 @@ class _WriteReviewSheetState extends State<WriteReviewSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final double maxHeight =
-        MediaQuery.sizeOf(context).height *
+    final double maxHeight = MediaQuery.sizeOf(context).height *
         AppDimensions.reservationReviewSheetMaxHeightFactor;
 
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Material(
-          color: AppColors.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppDimensions.cardRadius),
-          ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppDimensions.pagePadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Center(
-                    child: Container(
-                      width: AppDimensions.sectionSpacing * 2,
-                      height: AppDimensions.cardBorderWidth * 3,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.pillRadius,
-                        ),
+    return Material(
+      color: AppColors.surface,
+      borderRadius: const BorderRadius.vertical(
+        top: Radius.circular(AppDimensions.cardRadius),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.all(AppDimensions.pagePadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: AppDimensions.bottomSheetGrabberWidth,
+                    height: AppDimensions.bottomSheetGrabberHeight,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.pillRadius,
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppDimensions.regularSpacing),
-                  Text(
-                    AppStrings.writeAReview,
-                    style: AppTextStyles.reservationHistoryTitle,
-                  ),
-                  const SizedBox(height: AppDimensions.tinySpacing),
-                  Text(
-                    widget.restaurantName,
-                    style: AppTextStyles.reservationHistoryMeta,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppDimensions.sectionSpacing),
-                  Text(
-                    AppStrings.selectReviewRating.toUpperCase(),
-                    style: AppTextStyles.reservationReviewEyebrow,
-                  ),
-                  const SizedBox(height: AppDimensions.smallSpacing),
-                  ReviewStarRating(
-                    rating: _rating,
-                    size: AppDimensions.reservationReviewSheetStarSize,
-                    onChanged: (int value) => setState(() => _rating = value),
-                  ),
-                  const SizedBox(height: AppDimensions.sectionSpacing),
-                  TextField(
-                    controller: _commentController,
-                    maxLines: 4,
-                    maxLength: AppDimensions.reviewCommentMaxLength,
-                    textInputAction: TextInputAction.newline,
-                    style: AppTextStyles.reservationReviewComment,
-                    decoration: InputDecoration(
-                      hintText: AppStrings.reviewCommentHint,
-                      hintStyle: AppTextStyles.reservationHistoryMeta,
-                      filled: true,
-                      fillColor: AppColors.surfaceAlt,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.cardRadius,
-                        ),
-                        borderSide: const BorderSide(color: AppColors.border),
+                ),
+                const SizedBox(height: AppDimensions.regularSpacing),
+                Text(
+                  AppStrings.writeAReview,
+                  style: AppTextStyles.reservationHistoryTitle,
+                ),
+                const SizedBox(height: AppDimensions.tinySpacing),
+                Text(
+                  widget.restaurantName,
+                  style: AppTextStyles.reservationHistoryMeta,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppDimensions.sectionSpacing),
+                Text(
+                  AppStrings.selectReviewRating.toUpperCase(),
+                  style: AppTextStyles.reservationReviewEyebrow,
+                ),
+                const SizedBox(height: AppDimensions.smallSpacing),
+                ReviewStarRating(
+                  rating: _rating,
+                  size: AppDimensions.reservationReviewSheetStarSize,
+                  onChanged: (int value) => setState(() => _rating = value),
+                ),
+                const SizedBox(height: AppDimensions.sectionSpacing),
+                TextField(
+                  controller: _commentController,
+                  maxLines: 4,
+                  maxLength: AppDimensions.reviewCommentMaxLength,
+                  textInputAction: TextInputAction.newline,
+                  // Avoid ensureVisible yanking the sheet when the keyboard opens.
+                  scrollPadding: EdgeInsets.zero,
+                  style: AppTextStyles.reservationReviewComment,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.reviewCommentHint,
+                    hintStyle: AppTextStyles.reservationHistoryMeta,
+                    filled: true,
+                    fillColor: AppColors.surfaceAlt,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.cardRadius,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.cardRadius,
-                        ),
-                        borderSide: const BorderSide(color: AppColors.border),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.cardRadius,
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.cardRadius,
-                        ),
-                        borderSide: const BorderSide(
-                          color: AppColors.primaryDark,
-                        ),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.cardRadius,
                       ),
-                      contentPadding: const EdgeInsets.all(
-                        AppDimensions.regularSpacing,
+                      borderSide: const BorderSide(
+                        color: AppColors.primaryDark,
                       ),
                     ),
+                    contentPadding: const EdgeInsets.all(
+                      AppDimensions.regularSpacing,
+                    ),
                   ),
-                  const SizedBox(height: AppDimensions.regularSpacing),
-                  Text(
-                    AppStrings.reviewPhotoOptional.toUpperCase(),
-                    style: AppTextStyles.reservationReviewEyebrow,
-                  ),
-                  const SizedBox(height: AppDimensions.smallSpacing),
-                  Row(
-                    children: [
-                      if (_imagePath != null) ...[
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.smallSpacing,
-                          ),
-                          child: Image.file(
-                            File(_imagePath!),
-                            width: AppDimensions.reservationReviewPhotoThumbSize,
-                            height:
-                                AppDimensions.reservationReviewPhotoThumbSize,
-                            fit: BoxFit.cover,
-                          ),
+                ),
+                const SizedBox(height: AppDimensions.regularSpacing),
+                Text(
+                  AppStrings.reviewPhotoOptional.toUpperCase(),
+                  style: AppTextStyles.reservationReviewEyebrow,
+                ),
+                const SizedBox(height: AppDimensions.smallSpacing),
+                Row(
+                  children: [
+                    if (_imagePath != null) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.smallSpacing,
                         ),
-                        const SizedBox(width: AppDimensions.smallSpacing),
-                        IconButton(
-                          onPressed: _submitting
-                              ? null
-                              : () => setState(() => _imagePath = null),
-                          icon: const Icon(Symbols.close),
+                        child: Image.file(
+                          File(_imagePath!),
+                          width: AppDimensions.reservationReviewPhotoThumbSize,
+                          height: AppDimensions.reservationReviewPhotoThumbSize,
+                          fit: BoxFit.cover,
                         ),
-                      ],
-                      HoverableButton(
-                        child: OutlinedButton.icon(
-                          onPressed: _submitting
-                              ? null
-                              : () async {
-                                  final String? path =
-                                      await widget.onPickImage();
-                                  if (!mounted || path == null) {
-                                    return;
-                                  }
-                                  setState(() => _imagePath = path);
-                                },
-                          icon: const Icon(Symbols.add_a_photo),
-                          label: Text(AppStrings.addReviewPhoto),
-                          style: AppButtonStyles.outlinedHover(
-                            OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primaryDark,
-                              side: const BorderSide(color: AppColors.border),
+                      ),
+                      const SizedBox(width: AppDimensions.smallSpacing),
+                      IconButton(
+                        onPressed: _submitting
+                            ? null
+                            : () => setState(() => _imagePath = null),
+                        icon: const Icon(Symbols.close),
+                      ),
+                    ],
+                    HoverableButton(
+                      child: OutlinedButton.icon(
+                        onPressed: _submitting
+                            ? null
+                            : () async {
+                                final String? path = await widget.onPickImage();
+                                if (!mounted || path == null) {
+                                  return;
+                                }
+                                setState(() => _imagePath = path);
+                              },
+                        icon: const Icon(Symbols.add_a_photo),
+                        label: Text(AppStrings.addReviewPhoto),
+                        style: AppButtonStyles.outlinedHover(
+                          OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primaryDark,
+                            side: const BorderSide(
+                              color: AppColors.border,
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: AppDimensions.sectionSpacing),
-                  SizedBox(
-                    width: double.infinity,
-                    child: HoverableButton(
-                      child: FilledButton(
-                        onPressed: _submitting ? null : _submit,
-                        style: AppButtonStyles.filledHover(
-                          FilledButton.styleFrom(
-                            backgroundColor: AppColors.primaryDark,
-                            foregroundColor: AppColors.textLight,
-                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.sectionSpacing),
+                SizedBox(
+                  width: double.infinity,
+                  child: HoverableButton(
+                    child: FilledButton(
+                      onPressed: _submitting ? null : _submit,
+                      style: AppButtonStyles.filledHover(
+                        FilledButton.styleFrom(
+                          backgroundColor: AppColors.primaryDark,
+                          foregroundColor: AppColors.textLight,
                         ),
-                        child: _submitting
-                            ? const SizedBox(
-                                width: AppDimensions.smallIconSize,
-                                height: AppDimensions.smallIconSize,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: AppDimensions
-                                      .progressIndicatorStrokeWidth,
-                                  color: AppColors.textLight,
-                                ),
-                              )
-                            : Text(AppStrings.submitReview),
                       ),
+                      child: _submitting
+                          ? const SizedBox(
+                              width: AppDimensions.smallIconSize,
+                              height: AppDimensions.smallIconSize,
+                              child: CircularProgressIndicator(
+                                strokeWidth: AppDimensions
+                                    .progressIndicatorStrokeWidth,
+                                color: AppColors.textLight,
+                              ),
+                            )
+                          : Text(AppStrings.submitReview),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

@@ -40,6 +40,7 @@ class HomeProgressiveInit {
 
   bool _started = false;
   bool _cancelled = false;
+  bool _authenticatedCatchUpStarted = false;
 
   /// Starts the first post-frame band (caller is already past first paint).
   void startAfterFirstFrame() {
@@ -50,9 +51,49 @@ class HomeProgressiveInit {
     _stagePersistSession();
   }
 
+  /// Guest → authenticated (or Logout → Login) on a permanent [HomeController].
+  ///
+  /// Runs only deferred session persist + authenticated bands (profile →
+  /// notifications). Does not re-fetch public cuisine/occasion/restaurants.
+  /// State-driven — no timers.
+  void startAuthenticatedCatchUp() {
+    if (_cancelled || _authenticatedCatchUpStarted || _home.isClosed) {
+      return;
+    }
+    if (_isAnonymousGuestSession) {
+      return;
+    }
+    // Progressive not kicked yet: first start will see authenticated session.
+    if (!_started) {
+      return;
+    }
+    _authenticatedCatchUpStarted = true;
+    _scheduleNextStage(_stageAuthenticatedCatchUpPersist);
+  }
+
+  /// Allows a later Guest→Auth / Logout→Login transition to catch up again.
+  void resetAuthenticatedCatchUpGate() {
+    _authenticatedCatchUpStarted = false;
+  }
+
   /// Cancels any pending stage hop (Hot Restart / test teardown / onClose).
   void cancel() {
     _cancelled = true;
+  }
+
+  void _stageAuthenticatedCatchUpPersist() {
+    if (_cancelled || _home.isClosed || _isAnonymousGuestSession) {
+      return;
+    }
+    final Stopwatch stopwatch = Stopwatch()..start();
+    if (Get.isRegistered<AuthSessionController>()) {
+      unawaited(
+        Get.find<AuthSessionController>().persistDeferredSessionArtifacts(),
+      );
+    }
+    _home.markProgressiveStage(0);
+    _log('catchUp stage0 session disk', stopwatch);
+    _scheduleNextStage(_stageUserProfile);
   }
 
   void _scheduleNextStage(void Function() stage) {
@@ -195,6 +236,10 @@ class HomeProgressiveInit {
     }
     _home.markProgressiveStage(7);
     _log('stage7 notifications', stopwatch);
+    // Authenticated catch-up after Guest already ran location — do not re-init.
+    if (_authenticatedCatchUpStarted && _home.shellLocationReady.value) {
+      return;
+    }
     _scheduleNextStage(_stageLocation);
   }
 

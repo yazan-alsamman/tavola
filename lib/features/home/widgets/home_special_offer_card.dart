@@ -6,13 +6,11 @@ import '../../../common/widgets/hoverable_button.dart';
 import '../../../common/widgets/hoverable_card.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_images.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../../discovery/model/restaurant_offer_model.dart';
 import '../controller/home_controller.dart';
-import '../home_assets.dart';
 import '../model/restaurant_model.dart';
 
 /// Home Special Offer card bound to Discovery nearby + offers APIs.
@@ -39,9 +37,9 @@ class HomeSpecialOfferCard extends StatelessWidget {
       final String description = offer?.description.trim().isNotEmpty == true
           ? offer!.description.trim()
           : (loading ? '' : AppStrings.specialOfferDescription);
-      final String imagePath = restaurant?.imageUrl.trim().isNotEmpty == true
-          ? restaurant!.imageUrl.trim()
-          : AppImages.r5;
+      final String imagePath = offer?.imageUrl.trim().isNotEmpty == true
+          ? offer!.imageUrl.trim()
+          : (restaurant?.imageUrl.trim() ?? '');
 
       return HoverableCard(
         child: SizedBox(
@@ -53,9 +51,6 @@ class HomeSpecialOfferCard extends StatelessWidget {
               children: [
                 AppSafeImage(
                   path: imagePath,
-                  provider: imagePath == AppImages.r5
-                      ? HomeAssets.promoProvider
-                      : null,
                   fit: BoxFit.cover,
                 ),
                 Container(

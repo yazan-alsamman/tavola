@@ -29,6 +29,9 @@ class ProfileScreen extends StatelessWidget {
     final LocaleController localeController = Get.find<LocaleController>();
 
     return Scaffold(
+      // Keep Profile layout stable while the Write Review sheet keyboard is up.
+      // Otherwise the body shrinks and the history list jumps to the top.
+      resizeToAvoidBottomInset: false,
       appBar: const CustomAppBar(),
       body: SafeArea(
         child: Padding(

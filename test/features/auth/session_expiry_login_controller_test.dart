@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tavla/app/routes/app_routes.dart';
 import 'package:tavla/core/localization/app_translations.dart';
@@ -28,6 +29,8 @@ void main() {
       FlutterError.onError = errors.add;
 
       Get.testMode = true;
+      // handleSessionExpired awaits SessionModePreferences.write.
+      SharedPreferences.setMockInitialValues(<String, Object>{});
       final _MemoryTokens tokens = _MemoryTokens(
         accessToken: 'stale-access',
         refreshToken: 'stale-refresh',

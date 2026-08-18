@@ -26,14 +26,12 @@ void main() {
       wrap(
         const DetailsInfoBox(
           openingHours: <OpeningHoursDayModel>[],
-          phone: '+1 312 555 0188',
         ),
       ),
     );
 
     expect(find.text(AppStrings.hours), findsOneWidget);
     expect(find.text(AppStrings.hoursUnavailable), findsOneWidget);
-    expect(find.text(AppStrings.contact), findsOneWidget);
   });
 
   testWidgets('Hours section renders API day rows when present', (tester) async {
@@ -43,7 +41,6 @@ void main() {
           openingHours: <OpeningHoursDayModel>[
             OpeningHoursDayModel(day: 'Monday', hours: '09:00 – 22:00'),
           ],
-          phone: '+1 312 555 0188',
         ),
       ),
     );

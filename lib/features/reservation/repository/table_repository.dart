@@ -1,5 +1,6 @@
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_response.dart';
 import '../../branches/model/branch_model.dart';
@@ -30,7 +31,7 @@ class TableRepository {
   }
 
   String getConfirmationReferenceCode() {
-    return AppStrings.confirmationReferenceCode;
+    return AppStrings.onboardingPreviewReferenceLabel;
   }
 
   Future<String> fetchConfirmationReferenceCode() async {
@@ -91,7 +92,10 @@ class TableRepository {
       throw StateError(AppStrings.invalidTablePayload);
     }
     final ApiResponse<RestaurantTableModel> response = await _apiClient
-        .get<RestaurantTableModel>('/tables/$id', parseData: _parseTable);
+        .get<RestaurantTableModel>(
+          AppUrls.tablePath(id),
+          parseData: _parseTable,
+        );
     return response.data;
   }
 

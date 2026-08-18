@@ -5,6 +5,7 @@ import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tavla/app/routes/app_routes.dart';
+import 'package:tavla/core/constants/app_dimensions.dart';
 import 'package:tavla/core/constants/app_urls.dart';
 import 'package:tavla/core/localization/locale_controller.dart';
 import 'package:tavla/core/network/api_client.dart';
@@ -172,6 +173,9 @@ void main() {
       expect(home.restaurants, isNotEmpty);
       home.updateSearch('Sakura');
       expect(home.filteredRestaurants, isNotEmpty);
+      // Flush Home search debounce so no Timer remains after dispose.
+      await tester.pump(AppDimensions.homeSearchDebounce);
+      await tester.pump();
 
       final DiscoveryRepository discovery = Get.find<DiscoveryRepository>();
       // Dio interceptor completions need a real async zone under WidgetTester.

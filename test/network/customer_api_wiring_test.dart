@@ -89,6 +89,7 @@ void main() {
       await users.fetchMyProfile();
       await users.fetchMyPreferences();
       await users.fetchFavoriteRestaurants();
+      await users.exportMyData();
 
       await notifications.fetchUnreadCount();
       await notifications.fetchNotifications();
@@ -121,6 +122,7 @@ void main() {
       expect(hits, contains('/users/me'));
       expect(hits, contains('/users/me/preferences'));
       expect(hits, contains('/users/me/favorites'));
+      expect(hits, contains('/users/me/export'));
       expect(hits, contains('/notifications/unread-count'));
       expect(hits, contains('/notifications'));
       expect(hits, contains('/reservations/availability'));
@@ -246,6 +248,18 @@ Map<String, dynamic> _bodyFor(String path) {
       'data': <String, dynamic>{
         'notificationOptIn': true,
         'marketingOptIn': false,
+      },
+    };
+  }
+  if (path.endsWith('/users/me/export')) {
+    return <String, dynamic>{
+      'success': true,
+      'message': 'Data export generated successfully.',
+      'data': <String, dynamic>{
+        'exportedAt': '2026-08-01T12:00:00.000Z',
+        'reservations': <String, dynamic>{'items': <dynamic>[], 'total': 2},
+        'reviews': <String, dynamic>{'items': <dynamic>[], 'total': 1},
+        'favorites': <String, dynamic>{'items': <dynamic>[], 'total': 3},
       },
     };
   }

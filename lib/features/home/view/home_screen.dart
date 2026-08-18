@@ -269,21 +269,66 @@ class _HomeScreenState extends State<HomeScreen> {
                         SectionTitle(title: AppStrings.restaurantsNearYou),
                         const SizedBox(height: AppDimensions.smallSpacing),
                         Obx(() {
-                          if (controller.isLoadingRestaurants.value) {
+                          final bool searching =
+                              controller.isSearchingRestaurants.value;
+                          if (controller.isLoadingRestaurants.value &&
+                              !controller.isServerSearchActive.value) {
                             return const SizedBox(
                               height: AppDimensions.imageHeight,
                               child: Center(
                                 child: CircularProgressIndicator(
-                                  strokeWidth:
-                                      AppDimensions.progressIndicatorStrokeWidth,
+                                  strokeWidth: AppDimensions
+                                      .progressIndicatorStrokeWidth,
                                 ),
                               ),
                             );
                           }
 
+                          if (searching) {
+                            return const SizedBox(
+                              height: AppDimensions.imageHeight,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: AppDimensions
+                                      .progressIndicatorStrokeWidth,
+                                ),
+                              ),
+                            );
+                          }
+
+                          final String? searchError =
+                              controller.searchError.value;
+                          if (controller.isServerSearchActive.value &&
+                              searchError != null &&
+                              controller.searchResults.isEmpty) {
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    searchError,
+                                    style: AppTextStyles.label.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: controller.retrySearch,
+                                  style: TextButton.styleFrom(
+                                    textStyle: AppTextStyles.authLinkEmphasis,
+                                  ),
+                                  child: Text(
+                                    AppStrings.retry,
+                                    style: AppTextStyles.authLinkEmphasis,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+
                           final String? restaurantsError =
                               controller.restaurantsError.value;
-                          if (restaurantsError != null) {
+                          if (restaurantsError != null &&
+                              !controller.isServerSearchActive.value) {
                             return Row(
                               children: [
                                 Expanded(
@@ -313,13 +358,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           controller.searchQuery.value;
                           controller.selectedFilterIndex.value;
                           controller.selectedOccasion.value;
+                          controller.isServerSearchActive.value;
+                          controller.searchResults.length;
 
                           final List<RestaurantModel> visibleRestaurants =
                               controller.filteredRestaurants;
 
                           if (visibleRestaurants.isEmpty) {
                             return Text(
-                              AppStrings.restaurantsEmpty,
+                              controller.isServerSearchActive.value
+                                  ? AppStrings.searchRestaurantsEmpty
+                                  : AppStrings.restaurantsEmpty,
                               style: AppTextStyles.label.copyWith(
                                 color: AppColors.textSecondary,
                               ),
@@ -334,10 +383,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               final restaurant = visibleRestaurants[index];
                               return RestaurantCard(
                                 restaurant: restaurant,
-                                isFavorite: controller.isFavorite(restaurant.id),
+                                isFavorite:
+                                    controller.isFavorite(restaurant.id),
                                 onFavoritePressed: () =>
                                     controller.toggleFavorite(restaurant.id),
-                                onTap: () => controller.openDetails(restaurant),
+                                onTap: () =>
+                                    controller.openDetails(restaurant),
                               );
                             },
                           );

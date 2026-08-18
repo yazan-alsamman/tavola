@@ -17,13 +17,13 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
   const OnboardingConfirmationPreviewContent({super.key});
 
   static RestaurantModel get _restaurant => RestaurantModel(
-    id: AppStrings.restaurantIdTwo,
-    name: AppStrings.otakoSushi,
+    id: AppStrings.onboardingPreviewRestaurantId,
+    name: AppStrings.onboardingPreviewRestaurantName,
     cuisine: AppStrings.sushi,
     occasion: AppStrings.dinner,
-    description: AppStrings.otakoDescription,
+    description: AppStrings.onboardingPreviewRestaurantDescription,
     imageUrl: AppImages.r3,
-    location: AppStrings.marinaBay,
+    location: AppStrings.onboardingPreviewLocation,
     availabilityLabel: AppStrings.openNow,
     isAvailable: true,
   );
@@ -70,13 +70,6 @@ class OnboardingConfirmationPreviewContent extends StatelessWidget {
             children: [
               Expanded(
                 child: _QuickActionPill(
-                  label: AppStrings.onboardingCall,
-                  icon: Symbols.call,
-                ),
-              ),
-              SizedBox(width: AppDimensions.compactSpacing),
-              Expanded(
-                child: _QuickActionPill(
                   label: AppStrings.onboardingDirections,
                   icon: Symbols.directions,
                 ),
@@ -120,19 +113,19 @@ class _ConfirmationCodeRow extends StatelessWidget {
               ),
               SizedBox(height: AppDimensions.compactSpacing),
               AppLtrText(
-                AppStrings.confirmationReferenceCode,
+                AppStrings.onboardingPreviewReferenceLabel,
                 style: AppTextStyles.onboardingCodeField,
               ),
               SizedBox(height: AppDimensions.tinySpacing),
               AppLtrText(
-                '${AppStrings.referencePrefix}${AppStrings.confirmationReferenceCode}',
+                '${AppStrings.referencePrefix}${AppStrings.onboardingPreviewReferenceLabel}',
                 style: AppTextStyles.onboardingSectionHint,
               ),
             ],
           ),
         ),
         const SizedBox(width: AppDimensions.compactSpacing),
-        const ReservationQrCode(data: AppStrings.confirmationReferenceCode),
+        ReservationQrCode(data: AppStrings.onboardingPreviewReferenceLabel),
       ],
     );
   }

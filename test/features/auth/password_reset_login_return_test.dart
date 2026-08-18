@@ -1,3 +1,4 @@
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -45,6 +46,14 @@ void main() {
       expect(login.countryDialCode.value, '+963');
       expect(login.phoneController.text, '944123456');
       expect(login.successMessage.value, isNotNull);
+      expect(login.showPasswordResetSuccess.value, isTrue);
+
+      // CountryCodePicker sync / phone listeners must not wipe success copy.
+      login.updateCountryCode(
+        CountryCode(code: 'SY', dialCode: '+963', name: 'Syria'),
+      );
+      expect(login.successMessage.value, isNotNull);
+      expect(login.showPasswordResetSuccess.value, isTrue);
     },
   );
 

@@ -1,3 +1,4 @@
+import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_response.dart';
 import '../model/cuisine_category_model.dart';
@@ -12,8 +13,8 @@ class TaxonomyRepository {
 
   final ApiClient _apiClient;
 
-  static const String cuisineCategoriesPath = '/cuisine-categories';
-  static const String occasionCategoriesPath = '/occasion-categories';
+  static const String cuisineCategoriesPath = AppUrls.cuisineCategoriesPath;
+  static const String occasionCategoriesPath = AppUrls.occasionCategoriesPath;
 
   List<CuisineCategoryModel>? _cuisineCache;
   List<OccasionCategoryModel>? _occasionCache;

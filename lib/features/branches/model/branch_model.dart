@@ -4,7 +4,6 @@ class BranchModel {
     required this.city,
     required this.district,
     required this.address,
-    required this.phone,
     this.latitude,
     this.longitude,
   });
@@ -13,7 +12,6 @@ class BranchModel {
   final String city;
   final String district;
   final String address;
-  final String phone;
   final double? latitude;
   final double? longitude;
 
@@ -35,7 +33,6 @@ class BranchModel {
       city: (json['city'] as String?)?.trim() ?? '',
       district: (json['district'] as String?)?.trim() ?? '',
       address: (json['address'] as String?)?.trim() ?? '',
-      phone: (json['phone'] as String?)?.trim() ?? '',
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
     );

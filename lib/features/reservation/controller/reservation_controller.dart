@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 
 import '../../../app/routes/app_routes.dart';
@@ -9,6 +11,7 @@ import '../../auth/controller/auth_session_controller.dart';
 import '../../branches/model/branch_model.dart';
 import '../../branches/repository/branch_repository.dart';
 import '../../home/model/restaurant_model.dart';
+import '../model/reservation_availability_slot_model.dart';
 import '../model/reservation_route_args.dart';
 import '../model/reservation_time_window.dart';
 import '../repository/reservation_availability_repository.dart';
@@ -34,11 +37,20 @@ class ReservationController extends GetxController {
   final RxString restaurantName = ''.obs;
   final RxString branchId = ''.obs;
   final RxnString rescheduleReservationId = RxnString();
+  final RxList<ReservationAvailabilitySlotModel> availabilitySlots =
+      <ReservationAvailabilitySlotModel>[].obs;
   final RxList<String> timeSlots = <String>[].obs;
   final RxList<String> durationOptions = <String>[].obs;
   final RxBool isResolvingBranch = false.obs;
   final RxBool isSearchingAvailability = false.obs;
+  final RxBool isLoadingSlots = false.obs;
   final RxnString branchError = RxnString();
+  final RxnString slotsError = RxnString();
+
+  Worker? _dayWorker;
+  Worker? _dinerWorker;
+  Worker? _durationWorker;
+  int _slotsRequestId = 0;
 
   @override
   void onInit() {
@@ -57,24 +69,46 @@ class ReservationController extends GetxController {
       restaurantName.value = args.name;
     } else if (args is String && args.isNotEmpty) {
       restaurantName.value = args;
-    } else {
+    } else if (restaurantName.value.isEmpty) {
       restaurantName.value = _availabilityRepository.getDefaultRestaurantName();
     }
-    reloadLocalizedData();
+    durationOptions.assignAll(_availabilityRepository.getDurationOptions());
+    _dayWorker = ever<DateTime>(selectedDay, (_) {
+      unawaited(loadAvailabilitySlots());
+    });
+    _dinerWorker = ever<int>(dinerCount, (_) {
+      unawaited(loadAvailabilitySlots());
+    });
+    _durationWorker = ever<int>(selectedDurationIndex, (_) {
+      unawaited(loadAvailabilitySlots());
+    });
     if (restaurantId.value.isNotEmpty) {
-      ensureBranchResolved();
+      unawaited(_resolveBranchAndLoadSlots());
     }
+  }
+
+  @override
+  void onClose() {
+    _dayWorker?.dispose();
+    _dinerWorker?.dispose();
+    _durationWorker?.dispose();
+    super.onClose();
   }
 
   void reloadLocalizedData() {
     if (isClosed) {
       return;
     }
-    timeSlots.assignAll(_availabilityRepository.getTimeSlots());
     durationOptions.assignAll(_availabilityRepository.getDurationOptions());
     if (restaurantName.value.isEmpty) {
       restaurantName.value = _availabilityRepository.getDefaultRestaurantName();
     }
+    _syncTimeSlotLabels();
+  }
+
+  Future<void> _resolveBranchAndLoadSlots() async {
+    await ensureBranchResolved();
+    await loadAvailabilitySlots();
   }
 
   Future<void> ensureBranchResolved() async {
@@ -102,9 +136,88 @@ class ReservationController extends GetxController {
     }
   }
 
+  Future<void> loadAvailabilitySlots() async {
+    final String bid = branchId.value.trim();
+    if (bid.isEmpty) {
+      availabilitySlots.clear();
+      timeSlots.clear();
+      slotsError.value = null;
+      isLoadingSlots.value = false;
+      return;
+    }
+
+    final int requestId = ++_slotsRequestId;
+    isLoadingSlots.value = true;
+    slotsError.value = null;
+    try {
+      final List<ReservationAvailabilitySlotModel> slots =
+          await _reservationRepository.fetchAvailabilitySlots(
+            branchId: bid,
+            date: selectedDay.value,
+            partySize: dinerCount.value,
+            experienceDuration: _selectedDuration(),
+            labelBuilder: formatSlotLabel,
+          );
+      if (isClosed || requestId != _slotsRequestId) {
+        return;
+      }
+      availabilitySlots.assignAll(slots);
+      _syncTimeSlotLabels();
+      if (selectedTimeSlotIndex.value >= timeSlots.length) {
+        selectedTimeSlotIndex.value = 0;
+      }
+    } on ApiException catch (error) {
+      if (isClosed || requestId != _slotsRequestId) {
+        return;
+      }
+      availabilitySlots.clear();
+      timeSlots.clear();
+      slotsError.value = error.message.isNotEmpty
+          ? error.message
+          : AppStrings.reservationSlotsLoadError;
+    } catch (_) {
+      if (isClosed || requestId != _slotsRequestId) {
+        return;
+      }
+      availabilitySlots.clear();
+      timeSlots.clear();
+      slotsError.value = AppStrings.reservationSlotsLoadError;
+    } finally {
+      if (!isClosed && requestId == _slotsRequestId) {
+        isLoadingSlots.value = false;
+      }
+    }
+  }
+
+  void _syncTimeSlotLabels() {
+    timeSlots.assignAll(
+      availabilitySlots
+          .map(
+            (ReservationAvailabilitySlotModel slot) =>
+                slot.label.trim().isNotEmpty
+                ? slot.label
+                : formatSlotLabel(slot.startTime),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  static String formatSlotLabel(DateTime value) {
+    final DateTime local = value.toLocal();
+    final int hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
+    final String minute = local.minute.toString().padLeft(2, '0');
+    final String period = local.hour >= 12
+        ? AppStrings.timePeriodPm
+        : AppStrings.timePeriodAm;
+    return '$hour:$minute $period';
+  }
+
   ReservationTimeWindow? buildTimeWindow() {
     final String resolvedBranchId = branchId.value.trim();
     if (resolvedBranchId.isEmpty) {
+      return null;
+    }
+    if (availabilitySlots.isEmpty) {
       return null;
     }
 
@@ -119,18 +232,11 @@ class ReservationController extends GetxController {
   }
 
   DateTime _selectedStartTime() {
-    final DateTime day = selectedDay.value;
     final int index = selectedTimeSlotIndex.value.clamp(
       0,
-      AppDimensions.reservationSlotHours.length - 1,
+      availabilitySlots.length - 1,
     );
-    return DateTime(
-      day.year,
-      day.month,
-      day.day,
-      AppDimensions.reservationSlotHours[index],
-      AppDimensions.reservationSlotMinutes[index],
-    );
+    return availabilitySlots[index].startTime;
   }
 
   Duration _selectedDuration() {
@@ -156,6 +262,9 @@ class ReservationController extends GetxController {
   }
 
   void selectTimeSlot(int index) {
+    if (index < 0 || index >= timeSlots.length) {
+      return;
+    }
     selectedTimeSlotIndex.value = index;
   }
 
@@ -180,6 +289,17 @@ class ReservationController extends GetxController {
     }
 
     await ensureBranchResolved();
+    if (availabilitySlots.isEmpty && slotsError.value == null) {
+      await loadAvailabilitySlots();
+    }
+    if (availabilitySlots.isEmpty) {
+      Get.snackbar(
+        AppStrings.nextSelectTable,
+        slotsError.value ?? AppStrings.reservationSlotsEmpty,
+      );
+      return;
+    }
+
     final ReservationTimeWindow? window = buildTimeWindow();
     if (window == null) {
       Get.snackbar(

@@ -11,6 +11,7 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/network/api_response.dart';
 import '../../../core/network/auth_token_reader.dart';
 import '../model/customer_reservation_model.dart';
+import '../model/reservation_availability_slot_model.dart';
 import '../model/restaurant_table_model.dart';
 import '../model/reservation_time_window.dart';
 
@@ -27,6 +28,9 @@ class ReservationRepository {
   ReservationRepository(this._apiClient);
 
   final ApiClient _apiClient;
+  static const String _pageQueryKey = AppUrls.reservationsPageQueryKey;
+  static const String _pageSizeQueryKey = AppUrls.reservationsPageSizeQueryKey;
+  static const String _limitQueryKey = AppUrls.reservationsLimitQueryKey;
 
   /// Combined in-session cache (create/cancel + last API sync).
   final RxList<CustomerReservationModel> myReservations =
@@ -90,6 +94,116 @@ class ReservationRepository {
     return response.data;
   }
 
+  /// Builds bookable start times for [date] by probing
+  /// `GET /reservations/availability` with live `SearchAvailabilityQueryDto`:
+  /// `branchId`, `reservationStartTime`, `reservationEndTime`, `partySize`.
+  ///
+  /// Candidate clock times come from [AppDimensions.reservationSlotHours] /
+  /// [AppDimensions.reservationSlotMinutes]. A candidate is kept when at least
+  /// one selectable table is returned for that window.
+  Future<List<ReservationAvailabilitySlotModel>> fetchAvailabilitySlots({
+    required String branchId,
+    required DateTime date,
+    required int partySize,
+    required Duration experienceDuration,
+    String Function(DateTime start)? labelBuilder,
+  }) async {
+    await _ensureAuthenticated();
+    final String bid = branchId.trim();
+    if (bid.isEmpty) {
+      throw ApiException(message: AppStrings.reservationWindowIncomplete);
+    }
+    if (experienceDuration.inMinutes <= 0) {
+      throw ApiException(message: AppStrings.reservationWindowIncomplete);
+    }
+
+    final DateTime now = DateTime.now();
+    final List<DateTime> candidates = _candidateSlotStarts(date)
+        .where((DateTime start) => start.isAfter(now))
+        .toList(growable: false);
+    if (candidates.isEmpty) {
+      return const <ReservationAvailabilitySlotModel>[];
+    }
+
+    final List<({ReservationAvailabilitySlotModel? slot, ApiException? error})>
+    probes = await Future.wait(
+      candidates.map((DateTime start) async {
+        final ReservationTimeWindow window = ReservationTimeWindow(
+          branchId: bid,
+          startTime: start,
+          endTime: start.add(experienceDuration),
+          partySize: partySize,
+        );
+        try {
+          final List<RestaurantTableModel> tables = await searchAvailability(
+            window,
+          );
+          final bool hasOpenTable = tables.any(
+            (RestaurantTableModel table) => table.isSelectable,
+          );
+          if (!hasOpenTable) {
+            return (slot: null, error: null);
+          }
+          final String label =
+              labelBuilder?.call(start) ?? start.toLocal().toIso8601String();
+          return (
+            slot: ReservationAvailabilitySlotModel(
+              startTime: start,
+              endTime: window.endTime,
+              label: label,
+            ),
+            error: null,
+          );
+        } on ApiException catch (error) {
+          return (slot: null, error: error);
+        }
+      }),
+    );
+
+    final List<ReservationAvailabilitySlotModel> slots =
+        <ReservationAvailabilitySlotModel>[];
+    ApiException? lastError;
+    int failedProbes = 0;
+    for (final ({ReservationAvailabilitySlotModel? slot, ApiException? error})
+        probe in probes) {
+      if (probe.slot != null) {
+        slots.add(probe.slot!);
+      } else if (probe.error != null) {
+        failedProbes += 1;
+        lastError = probe.error;
+      }
+    }
+    final ApiException? probeFailure = lastError;
+    if (slots.isEmpty &&
+        failedProbes == candidates.length &&
+        probeFailure != null) {
+      throw probeFailure;
+    }
+    slots.sort(
+      (ReservationAvailabilitySlotModel a, ReservationAvailabilitySlotModel b) =>
+          a.startTime.compareTo(b.startTime),
+    );
+    return slots;
+  }
+
+  static List<DateTime> _candidateSlotStarts(DateTime date) {
+    final DateTime day = DateTime(date.year, date.month, date.day);
+    final List<DateTime> starts = <DateTime>[];
+    final int count = AppDimensions.reservationSlotHours.length;
+    for (int i = 0; i < count; i++) {
+      starts.add(
+        DateTime(
+          day.year,
+          day.month,
+          day.day,
+          AppDimensions.reservationSlotHours[i],
+          AppDimensions.reservationSlotMinutes[i],
+        ),
+      );
+    }
+    return starts;
+  }
+
   /// `GET /reservations/my`
   Future<List<CustomerReservationModel>> fetchMyReservations({
     int page = AppDimensions.apiDefaultPage,
@@ -99,7 +213,10 @@ class ReservationRepository {
     final ApiResponse<List<CustomerReservationModel>> response =
         await _apiClient.get<List<CustomerReservationModel>>(
           AppUrls.reservationsMyPath,
-          queryParameters: <String, dynamic>{'page': page, 'limit': limit},
+          queryParameters: <String, dynamic>{
+            _pageQueryKey: page,
+            _limitQueryKey: limit,
+          },
           parseData: _parseReservationItems,
         );
     return response.data;
@@ -114,7 +231,10 @@ class ReservationRepository {
     final ApiResponse<List<CustomerReservationModel>> response =
         await _apiClient.get<List<CustomerReservationModel>>(
           AppUrls.reservationsMyUpcomingPath,
-          queryParameters: <String, dynamic>{'page': page, 'limit': limit},
+          queryParameters: <String, dynamic>{
+            _pageQueryKey: page,
+            _limitQueryKey: limit,
+          },
           parseData: _parseReservationItems,
         );
     upcomingReservations.assignAll(response.data);
@@ -131,7 +251,10 @@ class ReservationRepository {
     final ApiResponse<List<CustomerReservationModel>> response =
         await _apiClient.get<List<CustomerReservationModel>>(
           AppUrls.reservationsMyHistoryPath,
-          queryParameters: <String, dynamic>{'page': page, 'limit': limit},
+          queryParameters: <String, dynamic>{
+            _pageQueryKey: page,
+            _limitQueryKey: limit,
+          },
           parseData: _parseReservationItems,
         );
     historyReservationsList.assignAll(response.data);
@@ -149,6 +272,24 @@ class ReservationRepository {
     _serverListsHydrated = true;
   }
 
+  /// `GET /reservations?page=&pageSize=` (customer list alias).
+  Future<List<CustomerReservationModel>> fetchReservations({
+    int page = AppDimensions.apiDefaultPage,
+    int pageSize = AppDimensions.apiDefaultLimit,
+  }) async {
+    await _ensureAuthenticated();
+    final ApiResponse<List<CustomerReservationModel>> response =
+        await _apiClient.get<List<CustomerReservationModel>>(
+          AppUrls.reservationsPath,
+          queryParameters: <String, dynamic>{
+            _pageQueryKey: page,
+            _pageSizeQueryKey: pageSize,
+          },
+          parseData: _parseReservationItems,
+        );
+    return response.data;
+  }
+
   /// `GET /reservations/my/:reservationId`
   Future<CustomerReservationModel> fetchMyReservationById(
     String reservationId,
@@ -161,6 +302,28 @@ class ReservationRepository {
     final ApiResponse<CustomerReservationModel> response = await _apiClient
         .get<CustomerReservationModel>(
           AppUrls.reservationsMyDetailPath(id),
+          parseData: (Object? raw) => _parseReservation(
+            raw,
+            restaurantName: _cachedName(id),
+            imageUrl: _cachedImage(id),
+          ),
+        );
+    _upsert(response.data);
+    return response.data;
+  }
+
+  /// `GET /reservations/:reservationId` (customer detail alias).
+  Future<CustomerReservationModel> fetchReservationById(
+    String reservationId,
+  ) async {
+    await _ensureAuthenticated();
+    final String id = reservationId.trim();
+    if (id.isEmpty) {
+      throw ApiException(message: AppStrings.invalidReservationPayload);
+    }
+    final ApiResponse<CustomerReservationModel> response = await _apiClient
+        .get<CustomerReservationModel>(
+          AppUrls.reservationsDetailPath(id),
           parseData: (Object? raw) => _parseReservation(
             raw,
             restaurantName: _cachedName(id),

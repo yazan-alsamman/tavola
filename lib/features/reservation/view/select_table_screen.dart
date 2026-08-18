@@ -7,6 +7,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
+import '../../waitlist/widgets/waitlist_full_tables_card.dart';
 import '../controller/select_table_controller.dart';
 import '../widgets/restaurant_floor_map.dart';
 import '../widgets/reservation_confirmation_overlay.dart';
@@ -185,41 +186,11 @@ class SelectTableScreen extends StatelessWidget {
                                               padding: const EdgeInsets.all(
                                                 AppDimensions.contentPadding,
                                               ),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    AppStrings.tablesEmpty,
-                                                    textAlign: TextAlign.center,
-                                                    style: AppTextStyles
-                                                        .selectTableSubtitle,
-                                                  ),
-                                                  if (controller
-                                                      .canJoinWaitlist) ...[
-                                                    const SizedBox(
-                                                      height: AppDimensions
-                                                          .regularSpacing,
-                                                    ),
-                                                    TextButton(
-                                                      onPressed:
-                                                          controller
-                                                              .isJoiningWaitlist
-                                                              .value
-                                                          ? null
-                                                          : controller
-                                                                .joinWaitlist,
-                                                      style: TextButton.styleFrom(
-                                                        textStyle: AppTextStyles
-                                                            .authLinkEmphasis,
-                                                      ),
-                                                      child: Text(
-                                                        AppStrings.waitlistJoin,
-                                                        style: AppTextStyles
-                                                            .authLinkEmphasis,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ],
+                                              child: Text(
+                                                AppStrings.tablesEmpty,
+                                                textAlign: TextAlign.center,
+                                                style: AppTextStyles
+                                                    .selectTableSubtitle,
                                               ),
                                             ),
                                           );
@@ -254,101 +225,69 @@ class SelectTableScreen extends StatelessWidget {
                       final bool busy = controller.isCreatingReservation.value;
                       final bool waitlistBusy =
                           controller.isJoiningWaitlist.value;
+                      // Touch Rx used by waitlist getters so Obx rebuilds.
+                      controller.floorPlanTables.length;
+                      controller.waitlistEntryId.value;
+                      controller.isLoadingTables.value;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (controller.canJoinWaitlist ||
-                              controller.canCancelWaitlist) ...[
-                            HoverableButton(
-                              child: OutlinedButton(
-                                onPressed: waitlistBusy
-                                    ? null
-                                    : (controller.canCancelWaitlist
-                                          ? controller.cancelWaitlist
-                                          : controller.joinWaitlist),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.primaryDark,
-                                  side: const BorderSide(
-                                    color: AppColors.border,
-                                    width: AppDimensions.cardBorderWidth,
-                                  ),
-                                  textStyle:
-                                      AppTextStyles.confirmReservationButton,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical:
-                                        AppDimensions.buttonVerticalPadding,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppDimensions.cardRadius,
-                                    ),
-                                  ),
-                                ),
-                                child: waitlistBusy
-                                    ? const SizedBox(
-                                        width: AppDimensions.mediumIconSize,
-                                        height: AppDimensions.mediumIconSize,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: AppDimensions
-                                              .progressIndicatorStrokeWidth,
-                                        ),
-                                      )
-                                    : Text(
-                                        controller.canCancelWaitlist
-                                            ? AppStrings.waitlistCancel
-                                            : AppStrings.waitlistJoin,
-                                        style: AppTextStyles
-                                            .confirmReservationButton,
-                                      ),
-                              ),
+                          if (controller.showWaitlistCard) ...[
+                            WaitlistFullTablesCard(
+                              isJoined: controller.canCancelWaitlist,
+                              isBusy: waitlistBusy,
+                              onJoin: controller.joinWaitlist,
+                              onCancel: controller.cancelWaitlist,
                             ),
                             const SizedBox(
                               height: AppDimensions.regularSpacing,
                             ),
                           ],
-                          SizedBox(
-                            width: double.infinity,
-                            child: HoverableButton(
-                              child: ElevatedButton(
-                                onPressed: busy
-                                    ? null
-                                    : controller.confirmReservation,
-                                style: AppButtonStyles.filledHover(
-                                  ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primaryDark,
-                                    foregroundColor: AppColors.textLight,
-                                    textStyle:
-                                        AppTextStyles.confirmReservationButton,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical:
-                                          AppDimensions.buttonVerticalPadding,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        AppDimensions.cardRadius,
+                          if (!controller.showWaitlistCard)
+                            SizedBox(
+                              width: double.infinity,
+                              child: HoverableButton(
+                                child: ElevatedButton(
+                                  onPressed: busy
+                                      ? null
+                                      : controller.confirmReservation,
+                                  style: AppButtonStyles.filledHover(
+                                    ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primaryDark,
+                                      foregroundColor: AppColors.textLight,
+                                      textStyle: AppTextStyles
+                                          .confirmReservationButton,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: AppDimensions
+                                            .buttonVerticalPadding,
                                       ),
-                                    ),
-                                  ),
-                                  idleBackground: AppColors.primaryDark,
-                                ),
-                                child: busy
-                                    ? const SizedBox(
-                                        width: AppDimensions.mediumIconSize,
-                                        height: AppDimensions.mediumIconSize,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: AppDimensions
-                                              .progressIndicatorStrokeWidth,
-                                          color: AppColors.textLight,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          AppDimensions.cardRadius,
                                         ),
-                                      )
-                                    : Text(
-                                        AppStrings.confirmReservation,
-                                        style: AppTextStyles
-                                            .confirmReservationButton,
                                       ),
+                                    ),
+                                    idleBackground: AppColors.primaryDark,
+                                    idleForeground: AppColors.textLight,
+                                  ),
+                                  child: busy
+                                      ? const SizedBox(
+                                          width: AppDimensions.mediumIconSize,
+                                          height: AppDimensions.mediumIconSize,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: AppDimensions
+                                                .progressIndicatorStrokeWidth,
+                                            color: AppColors.textLight,
+                                          ),
+                                        )
+                                      : Text(
+                                          AppStrings.confirmReservation,
+                                          style: AppTextStyles
+                                              .confirmReservationButton,
+                                        ),
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       );
                     }),

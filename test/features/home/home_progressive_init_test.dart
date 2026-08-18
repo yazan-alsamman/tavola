@@ -239,6 +239,7 @@ class _UnusedApiClient extends ApiClient {
     Map<String, dynamic>? queryParameters,
     required T Function(Object? raw) parseData,
     Options? options,
+    CancelToken? cancelToken,
   }) async {
     return ApiResponse<T>(
       success: true,

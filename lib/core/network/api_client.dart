@@ -294,12 +294,14 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     required T Function(Object? raw) parseData,
     Options? options,
+    CancelToken? cancelToken,
   }) {
     return _request(
       () => _dio.get<dynamic>(
         path,
         queryParameters: queryParameters,
         options: options,
+        cancelToken: cancelToken,
       ),
       parseData: parseData,
     );

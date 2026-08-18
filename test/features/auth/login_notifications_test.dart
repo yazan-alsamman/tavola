@@ -126,6 +126,8 @@ void main() {
 
       expect(find.byKey(const Key('home-stub')), findsOneWidget);
       expect(await harness.tokenStore.readAccessToken(), 'access-ok');
+      // Login POST only on the critical path — GET /users/me is owned by Home
+      // progressive / authenticated catch-up after navigation.
       expect(harness.adapter.requestCount, requestsBeforeSuccess + 1);
     },
   );

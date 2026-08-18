@@ -12,6 +12,7 @@ import 'package:tavla/features/favorites/repository/favorites_repository.dart';
 import 'package:tavla/features/profile/controller/profile_controller.dart';
 import 'package:tavla/features/profile/repository/profile_repository.dart';
 import 'package:tavla/features/reservation/repository/reservation_repository.dart';
+import 'package:tavla/features/reviews/repository/reviews_repository.dart';
 import 'package:tavla/features/users/model/user_preferences_model.dart';
 import 'package:tavla/features/users/repository/users_repository.dart';
 
@@ -94,6 +95,7 @@ _RecordingUsersRepository _putProfileStack({
   Get.put<UsersRepository>(users, permanent: true);
   Get.put(FavoritesRepository(), permanent: true);
   Get.put(ReservationRepository(apiClient), permanent: true);
+  Get.put(ReviewsRepository(apiClient), permanent: true);
   Get.put(ProfileController(), permanent: true);
   return users;
 }

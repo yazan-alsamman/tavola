@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_response.dart';
 import '../../../core/network/auth_token_reader.dart';
@@ -14,10 +15,11 @@ class NotificationsRepository {
 
   final ApiClient _apiClient;
 
-  static const String notificationsPath = '/notifications';
-  static const String unreadCountPath = '/notifications/unread-count';
-  static const String readAllPath = '/notifications/read-all';
-  static const String identityTokenPath = '/notifications/identity-token';
+  static const String notificationsPath = AppUrls.notificationsPath;
+  static const String unreadCountPath = AppUrls.notificationsUnreadCountPath;
+  static const String readAllPath = AppUrls.notificationsReadAllPath;
+  static const String identityTokenPath =
+      AppUrls.notificationsIdentityTokenPath;
 
   /// Last successful unread badge count (shared with app-bar badge).
   final RxInt unreadCount = 0.obs;
@@ -32,9 +34,9 @@ class NotificationsRepository {
         .get<List<NotificationItemModel>>(
           notificationsPath,
           queryParameters: <String, dynamic>{
-            'page': page,
-            'limit': limit,
-            'unread': ?unread,
+            AppUrls.notificationsPageQueryKey: page,
+            AppUrls.notificationsPageSizeQueryKey: limit,
+            AppUrls.notificationsUnreadQueryKey: ?unread,
           },
           parseData: NotificationsPageModel.parseItems,
         );
@@ -66,7 +68,7 @@ class NotificationsRepository {
       throw StateError(AppStrings.invalidNotificationPayload);
     }
     await _apiClient.patch<Object?>(
-      '$notificationsPath/$id/read',
+      AppUrls.notificationReadPath(id),
       parseData: (Object? raw) => raw,
     );
     if (unreadCount.value > 0) {
@@ -83,7 +85,8 @@ class NotificationsRepository {
     unreadCount.value = 0;
   }
 
-  /// OneSignal identity token for future SDK wiring (repo-only in v1).
+  /// OneSignal identity token (`GET /notifications/identity-token`).
+  /// Consumed by [PushIdentityService] after authenticated session restore.
   Future<String> fetchIdentityToken() async {
     await _ensureAuthenticated();
     final ApiResponse<String> response = await _apiClient.get<String>(

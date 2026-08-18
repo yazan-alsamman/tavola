@@ -48,17 +48,19 @@ Owner/Organization, Employee/Staff, or health/ops endpoints.
   - Auth: `/auth/customer/*`, `/auth/refresh`, `/auth/logout`, `/auth/logout-all`, `/auth/sessions`, `/auth/change-password`
   - Users: `GET/PATCH /users/me`, preferences, avatar, favorites
   - Taxonomy: `GET /cuisine-categories`, `GET /occasion-categories`
-  - Discovery: `/discovery/restaurants`, `nearby` (`lat`/`lng`/`radiusKm`), `:id`, branches, floor-plan, offers (Home Special Offer card)
+  - Discovery: `/discovery/restaurants` (`q`, `page`/`limit`, optional `lat`/`lng`), `nearby`, `:id`, branches, floor-plan, offers (Home Special Offer card); media IDs resolve via `MediaUrlResolver` (`/files/:id` or `MEDIA_BASE_URL`)
   - Menus (public): `GET /restaurants/:id/menus`, `/menus/default`, `/menus/:menuId`
   - Working hours: `GET /restaurants/:restaurantId/branches/:branchId/working-hours` (primary branch — Details Hours card + restaurant card hours)
   - Tables: `GET /tables/:tableId`
   - Reservations: availability, create, cancel, reschedule, `GET /reservations/my`, `/my/upcoming`, `/my/history`, `/my/:id`
-  - Notifications: `GET /notifications`, unread-count, mark read / read-all, identity-token
+  - Notifications: `GET /notifications`, unread-count, mark read / read-all, identity-token (`PushIdentityService` after sign-in; OneSignal SDK not bundled)
   - Messaging (Chat tab): `GET/POST /conversations`, `GET /conversations/:id`, messages, read, close
-  - Waitlist: `POST /waitlist`, `POST /waitlist/:entryId/cancel`
+  - Waitlist (customer): `POST /waitlist` (join), `POST /waitlist/:entryId/cancel` — shown on Select Table when no tables are available. `POST /waitlist/:id/promote` is Employee-only and not wired.
   - Reviews: `POST /reviews`, `GET /users/me/reviews`, `GET /restaurants/:id/reviews`, `GET /reviews/:id`, `POST /reviews/:id/images`, `DELETE /reviews/:id/images/:imageId`, `DELETE /reviews/:id` (customer-only; owner reply / analytics omitted)
+  - Compare Restaurants: `POST /discovery/restaurants/compare` (side-by-side) + Discovery list for picker; optional Details enrichment for hours/phone
 - Auth via `SecureAuthTokenStore` + `ApiClient` Bearer interceptor
 - Auto refresh via `POST /auth/refresh` before JWT expiry and on `401`
 - **Continue as Guest:** anonymous session — no Bearer, no `/auth/refresh`, no authenticated APIs until login
 - **Startup session mode:** `SessionMode` (`none` / `guest` / `authenticated`) persisted via auth-feature `SessionModePreferences` (SharedPreferences). Login awaits mode persist and schedules Keychain token persist immediately (non-blocking). `SplashController.resolveDestination()` hydrates the token store before routing and restores Home for guest or authenticated sessions; Welcome only on first launch or after Logout
 - **Profile Log out:** best-effort `POST /auth/logout` (Bearer) via `AuthRepository`, then local token/SessionMode clear → Welcome. Remote failure never blocks local logout
+- **Profile account security (signed-in):** Change password (`POST /auth/change-password`, rotates tokens when returned) and Manage devices (`GET/DELETE /auth/sessions`, logout-all) via Profile settings

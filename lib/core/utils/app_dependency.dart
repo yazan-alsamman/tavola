@@ -15,6 +15,7 @@ import '../../features/location/controller/user_location_controller.dart';
 import '../../features/map/repository/restaurant_map_repository.dart';
 import '../../features/notifications/controller/notifications_badge_controller.dart';
 import '../../features/notifications/repository/notifications_repository.dart';
+import '../../features/notifications/service/push_identity_service.dart';
 import '../../features/profile/repository/profile_repository.dart';
 import '../../features/reservation/repository/reservation_availability_repository.dart';
 import '../../features/reservation/repository/reservation_repository.dart';
@@ -110,6 +111,13 @@ class AppDependency {
 
   static void ensureNotificationsRepository() {
     putPermanentIfAbsent(() => NotificationsRepository(Get.find<ApiClient>()));
+  }
+
+  static void ensurePushIdentityService() {
+    ensureNotificationsRepository();
+    putPermanentIfAbsent(
+      () => PushIdentityService(Get.find<NotificationsRepository>()),
+    );
   }
 
   static void ensureReviewsRepository() {
@@ -273,6 +281,13 @@ class AppDependency {
     ensureRestaurantDetailsRepository();
     ensureMenuRepository();
     ensureFavoritesRepository();
+    ensureReviewsRepository();
+  }
+
+  /// Compare Restaurants — Discovery catalog + details enrichment.
+  static void ensureCompareDependencies() {
+    ensureDiscoveryRepository();
+    ensureRestaurantDetailsRepository();
   }
 
   /// Reservation booking flow + onboarding previews.

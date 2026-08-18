@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../localization/app_translations.dart';
+import 'app_dimensions.dart';
 
 class AppStrings {
   static const String appName = 'TAVOLA';
@@ -134,6 +135,12 @@ class AppStrings {
   static String get waitlistCancelFailed =>
       'Could not leave the waitlist. Please try again.'.tr;
   static String get invalidWaitlistPayload => 'Invalid waitlist payload.'.tr;
+  static String get waitlistTablesFullTitle => 'All tables are full'.tr;
+  static String get waitlistTablesFullBody =>
+      'Join the waitlist for this time and we will notify you when a table opens.'
+          .tr;
+  static String get waitlistJoinedBody =>
+      'You are on the waitlist. Leave anytime if your plans change.'.tr;
 
   /// Splash wordmark matching the branded Tavola lockup.
   static const String splashBrandMark = 'Tavola';
@@ -209,13 +216,17 @@ class AppStrings {
       'Early access to peak tables'.tr;
   static String get onboardingLoyaltyBenefitTwo => 'Birthday tasting gift'.tr;
   static String get onboardingConfirmedMessage =>
-      'Your table is reserved at Otako Sushi. Share the code with your guests and arrive ready to unwind.'
+      'This is a preview of your booking confirmation. Share the code with your guests when you reserve for real.'
           .tr;
+  static const String onboardingPreviewRestaurantId = 'onboarding-preview';
+  static String get onboardingPreviewRestaurantName => 'Sample Restaurant'.tr;
+  static String get onboardingPreviewRestaurantDescription =>
+      'A sample venue used only in the first-launch tour.'.tr;
+  static String get onboardingPreviewLocation => 'Sample City'.tr;
   static String get onboardingBookingInformations => 'Reservation summary'.tr;
   static String get onboardingConfirmationCode => 'Confirmation Code'.tr;
   static String get onboardingQrCodeLabel => 'QR CODE'.tr;
   static String get onboardingContactRestaurant => 'Quick actions'.tr;
-  static String get onboardingCall => 'Call'.tr;
   static String get onboardingChangeDate => 'Change date'.tr;
   static String get onboardingDirections => 'Directions'.tr;
   static String get onboardingCancel => 'Cancel'.tr;
@@ -338,6 +349,69 @@ class AppStrings {
   static String get enterNewPassword => 'Enter new password'.tr;
   static String get forgotPassword => 'Forgot password?'.tr;
   static String get logOut => 'Log out'.tr;
+  static String get logOutAllDevices => 'Log out all devices'.tr;
+  static String get changePassword => 'Change password'.tr;
+  static String get changePasswordInstruction =>
+      'Enter your current password and choose a new one.'.tr;
+  static String get enterCurrentPassword => 'Current password'.tr;
+  static String get changePasswordSuccess =>
+      'Password updated successfully.'.tr;
+  static String get manageDevices => 'Manage devices'.tr;
+  static String get manageDevicesDescription =>
+      'Active sessions signed in to your account.'.tr;
+  static String get deleteAccount => 'Delete account'.tr;
+  static String get deleteAccountInstruction =>
+      'Enter your password to request account deletion. You can cancel during the grace period by signing in again.'.tr;
+  static String get deleteAccountConfirmMessage =>
+      'Your account will be scheduled for deletion. All sessions will end immediately. Continue?'.tr;
+  static String get deleteAccountSuccess =>
+      'Account deletion requested. You can cancel by signing in again during the grace period.'.tr;
+  static String get deleteAccountOpenReservations =>
+      'Cancel your open reservations before deleting your account.'.tr;
+  static String get cancelAccountDeletion => 'Cancel account deletion'.tr;
+  static String get cancelAccountDeletionDescription =>
+      'Stop the pending account deletion request.'.tr;
+  static String get cancelAccountDeletionSuccess =>
+      'Account deletion cancelled.'.tr;
+  static String get cancelAccountDeletionConfirmMessage =>
+      'Cancel the pending account deletion request?'.tr;
+  static String get exportMyData => 'Export my data'.tr;
+  static String get exportMyDataDescription =>
+      'Download a copy of your profile, preferences, reservations, reviews, and favorites.'.tr;
+  static String get exportMyDataSuccess =>
+      'Data export generated successfully.'.tr;
+  static String exportMyDataSummary({
+    required int reservations,
+    required int reviews,
+    required int favorites,
+  }) {
+    return 'Reservations: @reservations • Reviews: @reviews • Favorites: @favorites'
+        .trParams(<String, String>{
+          'reservations': '$reservations',
+          'reviews': '$reviews',
+          'favorites': '$favorites',
+        });
+  }
+  static String get revokeSession => 'Revoke'.tr;
+  static String get revokeSessionConfirm =>
+      'Revoke this device session?'.tr;
+  static String get currentSessionLabel => 'This device'.tr;
+  static String get sessionsEmpty => 'No active sessions found.'.tr;
+  static String get sessionsLoadError =>
+      'Could not load device sessions.'.tr;
+  static String get unknownDevice => 'Unknown device'.tr;
+  static String get restaurantReviews => 'Reviews'.tr;
+  static String get restaurantReviewsEmpty => 'No reviews yet.'.tr;
+  static String get restaurantReviewsLoadError =>
+      'Could not load reviews.'.tr;
+  static String get restaurantReviewsLoadMore => 'Load more reviews'.tr;
+  static String get viewReviewDetails => 'View review'.tr;
+  static String get reservationSlotsEmpty =>
+      'No available times for this date.'.tr;
+  static String get reservationSlotsLoadError =>
+      'Could not load available times.'.tr;
+  static String get searchRestaurantsEmpty =>
+      'No restaurants match your search.'.tr;
   static String get checkYourWhatsapp => 'CHECK YOUR WHATSAPP'.tr;
   static String get otpInstruction =>
       'Enter the verification code we sent you.'.tr;
@@ -502,26 +576,33 @@ class AppStrings {
   static String get asian => 'Asian'.tr;
   static String get contemporary => 'Contemporary'.tr;
   static String get steakhouse => 'Steakhouse'.tr;
-  static List<String> get favoriteCuisineOptions => [
-    cuisineAmerican,
-    cuisineCafe,
-    cuisineChinese,
-    cuisineFrench,
-    cuisineGreek,
-    indian,
-    asian,
-    italian,
-    japanese,
-    cuisineLebanese,
-    mediterranean,
-    barbecue,
-    cuisineMexican,
-    seafood,
-    cuisineSpanish,
-    cuisineThai,
-    cuisineEmirati,
-    sushi,
+
+  /// Canonical English keys for the Favorite Cuisines onboarding screen.
+  /// Used as stable selection ids + [localizeUiLabel] lookup keys.
+  static const List<String> favoriteCuisineOptionKeys = <String>[
+    'American',
+    'Cafe',
+    'Chinese',
+    'French',
+    'Greek',
+    'Indian',
+    'Asian',
+    'Italian',
+    'Japanese',
+    'Lebanese',
+    'Mediterranean',
+    'BBQ',
+    'Mexican',
+    'Seafood',
+    'Spanish',
+    'Thai',
+    'Emirati',
+    'Sushi',
   ];
+
+  static List<String> get favoriteCuisineOptions => favoriteCuisineOptionKeys
+      .map((String key) => key.tr)
+      .toList(growable: false);
   static String get lunch => 'Lunch'.tr;
   static String get dinner => 'Dinner'.tr;
   static String get brunch => 'Brunch'.tr;
@@ -620,6 +701,24 @@ class AppStrings {
   static const String apiAvatarUploadFieldAvatar = 'avatar';
   static const String apiAvatarUploadFieldImage = 'image';
   static const String apiAvatarUploadFieldProfileImage = 'profileImage';
+
+  /// Shared media DTO field names (Discovery covers, logos, gallery, files).
+  static const String apiMediaFieldUrl = 'url';
+  static const String apiMediaFieldPublicUrl = 'publicUrl';
+  static const String apiMediaFieldSecureUrl = 'secure_url';
+  static const String apiMediaFieldImageUrl = 'imageUrl';
+  static const String apiMediaFieldSrc = 'src';
+  static const String apiMediaFieldPath = 'path';
+  static const String apiMediaFieldFileId = 'fileId';
+  static const String apiMediaCoverImageIdField = 'coverImageId';
+  static const String apiMediaLogoIdField = 'logoId';
+  static const String apiMediaCoverImageField = 'coverImage';
+  static const String apiMediaLogoField = 'logo';
+  static const String apiMediaCoverImageUrlField = 'coverImageUrl';
+  static const String apiMediaLogoUrlField = 'logoUrl';
+  static const String apiMediaThumbnailUrlField = 'thumbnailUrl';
+  static const String apiMediaImageUrlField = 'imageUrl';
+
   static const String apiReviewReservationIdField = 'reservationId';
   static const String apiReviewRatingField = 'rating';
   static const String apiReviewCommentField = 'comment';
@@ -675,7 +774,10 @@ class AppStrings {
       'Your table has been reserved successfully.'.tr;
   static String get confirmed => 'Confirmed'.tr;
   static String get referencePrefix => 'REFERENCE : '.tr;
-  static const String confirmationReferenceCode = 'TAV-8492';
+
+  /// Onboarding tutorial only — never used for live reservation confirmation.
+  static String get onboardingPreviewReferenceLabel => 'PREVIEW'.tr;
+
   static String get dismiss => 'DISMISS'.tr;
   static String get confirmationRestaurant => 'RESTAURANT'.tr;
   static String get confirmationGuests => 'GUESTS'.tr;
@@ -785,6 +887,7 @@ class AppStrings {
       'Could not load map restaurants. Showing available pins.'.tr;
   static String get reserveTable => 'Reserve Table'.tr;
   static String get viewDetails => 'View Details'.tr;
+  static String get viewDetailsViewLine => 'View'.tr;
   static String get menu => 'Menu'.tr;
   static String get save => 'Save'.tr;
   static String get saved => 'Saved'.tr;
@@ -838,10 +941,61 @@ class AppStrings {
   static String get social => 'Social'.tr;
 
   static String get hours => 'HOURS'.tr;
-  static String get contact => 'CONTACT'.tr;
   static String get leMenu => 'Le Menu'.tr;
   static String get aboutRestaurant => 'ABOUT'.tr;
   static String get amenities => 'AMENITIES'.tr;
+  static String get compareWithAnotherRestaurant =>
+      'Compare with another restaurant'.tr;
+  static String get compareRestaurants => 'Compare Restaurants'.tr;
+  static String get compareRestaurantsSubtitle =>
+      'Select two restaurants to compare side by side.'.tr;
+  static String get compareSideA => 'Restaurant A'.tr;
+  static String get compareSideB => 'Restaurant B'.tr;
+  static String get compareSideAShort => 'Side A'.tr;
+  static String get compareSideBShort => 'Side B'.tr;
+  static String get compareSelectRestaurant => 'Select restaurant'.tr;
+  static String get compareChooseRestaurant => 'Choose a restaurant'.tr;
+  static String get compareChooseRestaurantHint =>
+      'Pick a restaurant from the discovery catalog.'.tr;
+  static String get compareSelectBothPrompt =>
+      'Select Restaurant A and Restaurant B to begin comparing.'.tr;
+  static String get compareWaitingSelection => 'Waiting for selection'.tr;
+  static String get compareFieldLabel => 'Field'.tr;
+  static String get compareFieldRating => 'Rating'.tr;
+  static String get compareFieldCuisine => 'Cuisine'.tr;
+  static String get compareFieldOccasion => 'Occasion'.tr;
+  static String get compareFieldLocation => 'Location'.tr;
+  static String get compareFieldStatus => 'Status'.tr;
+  static String get compareFieldHours => 'Hours today'.tr;
+  static String get compareFieldAmenities => 'Amenities'.tr;
+  static String get compareFieldActiveOffer => 'Active offer'.tr;
+  static String get compareFieldPriceLevel => 'Price level'.tr;
+  static String get compareFieldHasMenu => 'Has menu'.tr;
+  static String get compareFieldAbout => 'About'.tr;
+  static String get compareNoComparableFields =>
+      'No comparable fields are available for these restaurants yet.'.tr;
+  static String get compareCatalogLoadFailed =>
+      'Could not load restaurants for comparison.'.tr;
+  static String get compareDetailsLoadFailed =>
+      'Could not load restaurant details for comparison.'.tr;
+  static String get compareApiLoadFailed =>
+      'Could not compare restaurants. Please try again.'.tr;
+  static String get compareCatalogEmpty =>
+      'No restaurants available to compare right now.'.tr;
+  static String get compareSelectDifferentRestaurant =>
+      'Choose two different restaurants.'.tr;
+  static const String apiCompareRestaurantIdsField = 'restaurantIds';
+  static const String priceLevelSymbol = '\$';
+
+  /// Discovery `priceLevel` (1–5) as `$` / `$$` / …
+  static String priceLevelSymbols(int level) {
+    final int clamped = level.clamp(
+      AppDimensions.comparePriceLevelMin,
+      AppDimensions.comparePriceLevelMax,
+    );
+    return List<String>.filled(clamped, priceLevelSymbol).join();
+  }
+
   static const String ratingSuffix = ' · ';
   static const String starSymbol = '★';
 
@@ -942,13 +1096,6 @@ class AppStrings {
   static String get amenityPetFriendly => 'Pet-friendly patio'.tr;
   static String get amenityRooftop => 'Rooftop lounge access'.tr;
   static String get amenityKidsFriendly => 'Family-friendly seating'.tr;
-
-  static const String phoneSaffron = '+971 4 528 0194';
-  static const String phoneOtako = '+971 4 391 7742';
-  static const String phoneOlive = '+971 4 266 8831';
-  static const String phoneGolden = '+971 4 745 2290';
-  static const String phoneCedar = '+971 4 612 4478';
-  static const String phoneAmber = '+971 4 903 1566';
 
   static String get locationNoteSaffron =>
       'Nestled along Old Town’s quiet lanes, a short stroll from the heritage square and evening markets.'

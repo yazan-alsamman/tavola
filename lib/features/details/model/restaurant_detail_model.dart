@@ -9,7 +9,6 @@ class RestaurantDetailModel {
     required this.about,
     required this.amenities,
     required this.openingHours,
-    required this.phone,
     required this.menuItems,
     required this.locationNote,
     this.galleryImageUrls = const <String>[],
@@ -24,7 +23,6 @@ class RestaurantDetailModel {
   final String about;
   final List<String> amenities;
   final List<OpeningHoursDayModel> openingHours;
-  final String phone;
   final List<MenuItemModel> menuItems;
   final String locationNote;
   final List<String> galleryImageUrls;
@@ -45,7 +43,6 @@ class RestaurantDetailModel {
     String? about,
     List<String>? amenities,
     List<OpeningHoursDayModel>? openingHours,
-    String? phone,
     List<MenuItemModel>? menuItems,
     String? locationNote,
     List<String>? galleryImageUrls,
@@ -60,7 +57,6 @@ class RestaurantDetailModel {
       about: about ?? this.about,
       amenities: amenities ?? this.amenities,
       openingHours: openingHours ?? this.openingHours,
-      phone: phone ?? this.phone,
       menuItems: menuItems ?? this.menuItems,
       locationNote: locationNote ?? this.locationNote,
       galleryImageUrls: galleryImageUrls ?? this.galleryImageUrls,

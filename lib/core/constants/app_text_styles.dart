@@ -264,6 +264,113 @@ class AppTextStyles {
     height: 1.2,
   );
 
+  static TextStyle get compareTitle => AppFonts.heading(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    color: AppColors.primaryDark,
+    letterSpacing: 0.2,
+    height: 1.2,
+  );
+
+  static TextStyle get compareSectionTitle => AppFonts.heading(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: AppColors.primaryDark,
+    letterSpacing: 0.2,
+    height: 1.2,
+  );
+
+  static TextStyle get compareSubtitle => AppFonts.ui(
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+    height: 1.4,
+    letterSpacing: 0.1,
+  );
+
+  static TextStyle get compareEyebrow => AppFonts.ui(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+    letterSpacing: 1.0,
+    height: 1.2,
+  );
+
+  static TextStyle get compareCardTitle => AppFonts.ui(
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    color: AppColors.primaryDark,
+    height: 1.25,
+    letterSpacing: 0.1,
+  );
+
+  static TextStyle get compareCardMeta => AppFonts.ui(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: AppColors.primaryDark,
+    height: 1.2,
+  );
+
+  static TextStyle get compareFeatureLabel => AppFonts.ui(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+    letterSpacing: 0.45,
+    height: 1.2,
+  );
+
+  static TextStyle get compareFeatureValue => AppFonts.ui(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: AppColors.primaryDark,
+    height: 1.3,
+  );
+
+  static TextStyle get compareStatusChip => AppFonts.ui(
+    fontSize: 10,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textLight,
+    letterSpacing: 0.5,
+    height: 1.1,
+  );
+
+  static TextStyle get compareViewDetailsAction => AppFonts.ui(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textLight,
+    letterSpacing: 0.45,
+    height: 1.2,
+  );
+
+  static TextStyle get compareTableHeader => AppFonts.ui(
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textSecondary,
+    letterSpacing: 0.6,
+    height: 1.2,
+  );
+
+  static TextStyle get compareTableLabel => AppFonts.ui(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+    height: 1.3,
+  );
+
+  static TextStyle get compareTableValue => AppFonts.ui(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textPrimary,
+    height: 1.35,
+  );
+
+  static TextStyle get compareError => AppFonts.ui(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: AppColors.warning,
+    height: 1.3,
+  );
+
   static TextStyle get exploreBannerBody => AppFonts.ui(
     fontSize: 13,
     fontWeight: FontWeight.w400,
@@ -652,13 +759,6 @@ class AppTextStyles {
     fontSize: 13,
     fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
-  );
-
-  static TextStyle get detailsContactPhone => AppFonts.ui(
-    fontSize: 15,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-    letterSpacing: 0.3,
   );
 
   static TextStyle get detailsMenuTitle => AppFonts.heading(

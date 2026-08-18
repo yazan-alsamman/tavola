@@ -140,7 +140,6 @@ class AppTranslations extends Translations {
     'Business': 'Business',
     'Butter-Poached Lobster': 'Butter-Poached Lobster',
     'Cafe': 'Cafe',
-    'Call': 'Call',
     'Cancel': 'Cancel',
     'Caramelized figs, almond cream, and wild honey.':
         'Caramelized figs, almond cream, and wild honey.',
@@ -213,7 +212,6 @@ class AppTranslations extends Translations {
     'Confirm your password': 'Confirm your password',
     'Confirmation Code': 'Confirmation Code',
     'Confirmed': 'Confirmed',
-    'CONTACT': 'CONTACT',
     'Contemporary': 'Contemporary',
     'Corporate': 'Corporate',
     'CONTINUE AS GUEST': 'CONTINUE AS GUEST',
@@ -388,6 +386,95 @@ class AppTranslations extends Translations {
     'Enter your email': 'Enter your email',
     'Enter a valid email address.': 'Enter a valid email address.',
     'Log out': 'Log out',
+    'Log out all devices': 'Log out all devices',
+    'Change password': 'Change password',
+    'Enter your current password and choose a new one.':
+        'Enter your current password and choose a new one.',
+    'Current password': 'Current password',
+    'Password updated successfully.': 'Password updated successfully.',
+    'Manage devices': 'Manage devices',
+    'Active sessions signed in to your account.':
+        'Active sessions signed in to your account.',
+    'Delete account': 'Delete account',
+    'Enter your password to request account deletion. You can cancel during the grace period by signing in again.':
+        'Enter your password to request account deletion. You can cancel during the grace period by signing in again.',
+    'Your account will be scheduled for deletion. All sessions will end immediately. Continue?':
+        'Your account will be scheduled for deletion. All sessions will end immediately. Continue?',
+    'Account deletion requested. You can cancel by signing in again during the grace period.':
+        'Account deletion requested. You can cancel by signing in again during the grace period.',
+    'Cancel your open reservations before deleting your account.':
+        'Cancel your open reservations before deleting your account.',
+    'Cancel account deletion': 'Cancel account deletion',
+    'Stop the pending account deletion request.':
+        'Stop the pending account deletion request.',
+    'Account deletion cancelled.': 'Account deletion cancelled.',
+    'Cancel the pending account deletion request?':
+        'Cancel the pending account deletion request?',
+    'Export my data': 'Export my data',
+    'Download a copy of your profile, preferences, reservations, reviews, and favorites.':
+        'Download a copy of your profile, preferences, reservations, reviews, and favorites.',
+    'Data export generated successfully.': 'Data export generated successfully.',
+    'Reservations: @reservations • Reviews: @reviews • Favorites: @favorites':
+        'Reservations: @reservations • Reviews: @reviews • Favorites: @favorites',
+    'This is a preview of your booking confirmation. Share the code with your guests when you reserve for real.':
+        'This is a preview of your booking confirmation. Share the code with your guests when you reserve for real.',
+    'Sample Restaurant': 'Sample Restaurant',
+    'A sample venue used only in the first-launch tour.':
+        'A sample venue used only in the first-launch tour.',
+    'Sample City': 'Sample City',
+    'PREVIEW': 'PREVIEW',
+    'View': 'View',
+    'Compare with another restaurant': 'Compare with another restaurant',
+    'Compare Restaurants': 'Compare Restaurants',
+    'Select two restaurants to compare side by side.':
+        'Select two restaurants to compare side by side.',
+    'Restaurant A': 'Restaurant A',
+    'Restaurant B': 'Restaurant B',
+    'Side A': 'Side A',
+    'Side B': 'Side B',
+    'Select restaurant': 'Select restaurant',
+    'Pick a restaurant from the discovery catalog.':
+        'Pick a restaurant from the discovery catalog.',
+    'Select Restaurant A and Restaurant B to begin comparing.':
+        'Select Restaurant A and Restaurant B to begin comparing.',
+    'Waiting for selection': 'Waiting for selection',
+    'Field': 'Field',
+    'Rating': 'Rating',
+    'Cuisine': 'Cuisine',
+    'Occasion': 'Occasion',
+    'Location': 'Location',
+    'Status': 'Status',
+    'Hours today': 'Hours today',
+    'Amenities': 'Amenities',
+    'Active offer': 'Active offer',
+    'Price level': 'Price level',
+    'Has menu': 'Has menu',
+    'About': 'About',
+    'No comparable fields are available for these restaurants yet.':
+        'No comparable fields are available for these restaurants yet.',
+    'Could not load restaurants for comparison.':
+        'Could not load restaurants for comparison.',
+    'Could not load restaurant details for comparison.':
+        'Could not load restaurant details for comparison.',
+    'Could not compare restaurants. Please try again.':
+        'Could not compare restaurants. Please try again.',
+    'No restaurants available to compare right now.':
+        'No restaurants available to compare right now.',
+    'Choose two different restaurants.': 'Choose two different restaurants.',
+    'Revoke': 'Revoke',
+    'Revoke this device session?': 'Revoke this device session?',
+    'This device': 'This device',
+    'No active sessions found.': 'No active sessions found.',
+    'Could not load device sessions.': 'Could not load device sessions.',
+    'Unknown device': 'Unknown device',
+    'Reviews': 'Reviews',
+    'No reviews yet.': 'No reviews yet.',
+    'Could not load reviews.': 'Could not load reviews.',
+    'Load more reviews': 'Load more reviews',
+    'View review': 'View review',
+    'No available times for this date.': 'No available times for this date.',
+    'Could not load available times.': 'Could not load available times.',
+    'No restaurants match your search.': 'No restaurants match your search.',
     'Lunch': 'Lunch',
     'Make it a group experience! (Optional)':
         'Make it a group experience! (Optional)',
@@ -499,6 +586,11 @@ class AppTranslations extends Translations {
     'Could not leave the waitlist. Please try again.':
         'Could not leave the waitlist. Please try again.',
     'Invalid waitlist payload.': 'Invalid waitlist payload.',
+    'All tables are full': 'All tables are full',
+    'Join the waitlist for this time and we will notify you when a table opens.':
+        'Join the waitlist for this time and we will notify you when a table opens.',
+    'You are on the waitlist. Leave anytime if your plans change.':
+        'You are on the waitlist. Leave anytime if your plans change.',
     'Invalid restaurant payload.': 'Invalid restaurant payload.',
     'Invalid branch payload.': 'Invalid branch payload.',
     'Invalid table payload.': 'Invalid table payload.',
@@ -866,7 +958,6 @@ class AppTranslations extends Translations {
     'Business': 'عمل',
     'Butter-Poached Lobster': 'لوبستر مسلوق بالزبدة',
     'Cafe': 'مقهى',
-    'Call': 'اتصال',
     'Cancel': 'إلغاء',
     'Caramelized figs, almond cream, and wild honey.':
         'تين مكرمل، كريمة لوز، وعسل بري.',
@@ -936,7 +1027,6 @@ class AppTranslations extends Translations {
     'Confirm your password': 'أكّد كلمة المرور',
     'Confirmation Code': 'رمز التأكيد',
     'Confirmed': 'مؤكد',
-    'CONTACT': 'التواصل',
     'Contemporary': 'معاصر',
     'CONTINUE AS GUEST': 'المتابعة كزائر',
     'Corner booth reserved for a birthday celebration — unavailable for new bookings.':
@@ -1106,6 +1196,95 @@ class AppTranslations extends Translations {
     'Enter your email': 'أدخل بريدك الإلكتروني',
     'Enter a valid email address.': 'أدخل بريداً إلكترونياً صالحاً.',
     'Log out': 'تسجيل الخروج',
+    'Log out all devices': 'تسجيل الخروج من جميع الأجهزة',
+    'Change password': 'تغيير كلمة المرور',
+    'Enter your current password and choose a new one.':
+        'أدخل كلمة المرور الحالية واختر كلمة مرور جديدة.',
+    'Current password': 'كلمة المرور الحالية',
+    'Password updated successfully.': 'تم تحديث كلمة المرور بنجاح.',
+    'Manage devices': 'إدارة الأجهزة',
+    'Active sessions signed in to your account.':
+        'الجلسات النشطة المسجّلة في حسابك.',
+    'Delete account': 'حذف الحساب',
+    'Enter your password to request account deletion. You can cancel during the grace period by signing in again.':
+        'أدخل كلمة المرور لطلب حذف الحساب. يمكنك الإلغاء خلال فترة السماح بتسجيل الدخول مجدداً.',
+    'Your account will be scheduled for deletion. All sessions will end immediately. Continue?':
+        'سيتم جدولة حذف حسابك. ستنتهي جميع الجلسات فوراً. هل تريد المتابعة؟',
+    'Account deletion requested. You can cancel by signing in again during the grace period.':
+        'تم طلب حذف الحساب. يمكنك الإلغاء بتسجيل الدخول مجدداً خلال فترة السماح.',
+    'Cancel your open reservations before deleting your account.':
+        'ألغِ حجوزاتك المفتوحة قبل حذف حسابك.',
+    'Cancel account deletion': 'إلغاء حذف الحساب',
+    'Stop the pending account deletion request.':
+        'إيقاف طلب حذف الحساب المعلّق.',
+    'Account deletion cancelled.': 'تم إلغاء حذف الحساب.',
+    'Cancel the pending account deletion request?':
+        'هل تريد إلغاء طلب حذف الحساب المعلّق؟',
+    'Export my data': 'تصدير بياناتي',
+    'Download a copy of your profile, preferences, reservations, reviews, and favorites.':
+        'حمّل نسخة من ملفك الشخصي وتفضيلاتك وحجوزاتك وتقييماتك ومفضلاتك.',
+    'Data export generated successfully.': 'تم إنشاء تصدير البيانات بنجاح.',
+    'Reservations: @reservations • Reviews: @reviews • Favorites: @favorites':
+        'الحجوزات: @reservations • التقييمات: @reviews • المفضلة: @favorites',
+    'This is a preview of your booking confirmation. Share the code with your guests when you reserve for real.':
+        'هذه معاينة لتأكيد حجزك. شارك الرمز مع ضيوفك عندما تحجز فعلياً.',
+    'Sample Restaurant': 'مطعم تجريبي',
+    'A sample venue used only in the first-launch tour.':
+        'مكان تجريبي يُستخدم فقط في جولة الإطلاق الأولى.',
+    'Sample City': 'مدينة تجريبية',
+    'PREVIEW': 'معاينة',
+    'View': 'عرض',
+    'Compare with another restaurant': 'قارن مع مطعم آخر',
+    'Compare Restaurants': 'مقارنة المطاعم',
+    'Select two restaurants to compare side by side.':
+        'اختر مطعمين للمقارنة جنباً إلى جنب.',
+    'Restaurant A': 'المطعم أ',
+    'Restaurant B': 'المطعم ب',
+    'Side A': 'الجانب أ',
+    'Side B': 'الجانب ب',
+    'Select restaurant': 'اختر مطعماً',
+    'Pick a restaurant from the discovery catalog.':
+        'اختر مطعماً من كتالوج الاستكشاف.',
+    'Select Restaurant A and Restaurant B to begin comparing.':
+        'اختر المطعم أ والمطعم ب لبدء المقارنة.',
+    'Waiting for selection': 'بانتظار الاختيار',
+    'Field': 'الحقل',
+    'Rating': 'التقييم',
+    'Cuisine': 'المطبخ',
+    'Occasion': 'المناسبة',
+    'Location': 'الموقع',
+    'Status': 'الحالة',
+    'Hours today': 'ساعات اليوم',
+    'Amenities': 'المرافق',
+    'Active offer': 'عرض نشط',
+    'Price level': 'مستوى السعر',
+    'Has menu': 'قائمة متوفرة',
+    'About': 'نبذة',
+    'No comparable fields are available for these restaurants yet.':
+        'لا تتوفر حقول قابلة للمقارنة لهذه المطاعم بعد.',
+    'Could not load restaurants for comparison.':
+        'تعذر تحميل المطاعم للمقارنة.',
+    'Could not load restaurant details for comparison.':
+        'تعذر تحميل تفاصيل المطعم للمقارنة.',
+    'Could not compare restaurants. Please try again.':
+        'تعذر مقارنة المطاعم. يرجى المحاولة مرة أخرى.',
+    'No restaurants available to compare right now.':
+        'لا تتوفر مطاعم للمقارنة حالياً.',
+    'Choose two different restaurants.': 'اختر مطعمين مختلفين.',
+    'Revoke': 'إلغاء',
+    'Revoke this device session?': 'إلغاء جلسة هذا الجهاز؟',
+    'This device': 'هذا الجهاز',
+    'No active sessions found.': 'لا توجد جلسات نشطة.',
+    'Could not load device sessions.': 'تعذر تحميل جلسات الأجهزة.',
+    'Unknown device': 'جهاز غير معروف',
+    'Reviews': 'التقييمات',
+    'No reviews yet.': 'لا توجد تقييمات بعد.',
+    'Could not load reviews.': 'تعذر تحميل التقييمات.',
+    'Load more reviews': 'تحميل المزيد من التقييمات',
+    'View review': 'عرض التقييم',
+    'No available times for this date.': 'لا تتوفر أوقات لهذا التاريخ.',
+    'Could not load available times.': 'تعذر تحميل الأوقات المتاحة.',
+    'No restaurants match your search.': 'لا مطاعم تطابق بحثك.',
     'Lunch': 'غداء',
     'Make it a group experience! (Optional)': 'اجعلها تجربة جماعية! (اختياري)',
     'Manage details, share your code, and reach your host in one place.':
@@ -1214,6 +1393,11 @@ class AppTranslations extends Translations {
     'Could not leave the waitlist. Please try again.':
         'تعذر مغادرة قائمة الانتظار. حاول مرة أخرى.',
     'Invalid waitlist payload.': 'بيانات قائمة الانتظار غير صالحة.',
+    'All tables are full': 'جميع الطاولات ممتلئة',
+    'Join the waitlist for this time and we will notify you when a table opens.':
+        'انضم لقائمة الانتظار لهذا الوقت وسنُعلمك عند توفر طاولة.',
+    'You are on the waitlist. Leave anytime if your plans change.':
+        'أنت على قائمة الانتظار. يمكنك المغادرة في أي وقت إذا تغيرت خططك.',
     'Invalid restaurant payload.': 'بيانات المطعم غير صالحة.',
     'Invalid branch payload.': 'بيانات الفرع غير صالحة.',
     'Invalid table payload.': 'بيانات الطاولة غير صالحة.',

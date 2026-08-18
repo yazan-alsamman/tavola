@@ -101,15 +101,17 @@ class PasswordResetController extends GetxController {
       // post-reset login sent the wrong countryCode with the new password.
       final LoginController loginController =
           AppDependency.putPermanentIfAbsent(LoginController.new);
+      // Navigate first so LoginScreen mounts, then stamp success onto the
+      // permanent controller (banner + toast are owned by LoginScreen).
+      AppNavigation.goShell(
+        AppRoutes.login,
+        arguments: AppStrings.authPasswordResetComplete,
+      );
       loginController.prepareForPasswordResetReturn(
         AppStrings.authPasswordResetComplete,
         countryCode: resetArgs.countryCode,
         dialCode: resetArgs.dialCode,
         phoneNumber: resetArgs.phoneNumber,
-      );
-      AppNavigation.goShell(
-        AppRoutes.login,
-        arguments: AppStrings.authPasswordResetComplete,
       );
     }
   }

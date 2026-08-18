@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../app/routes/app_routes.dart';
+import '../../../common/widgets/app_confirm_dialog.dart';
+import '../../../common/widgets/app_success_toast.dart';
 import '../../../common/widgets/hoverable_button.dart';
 import '../../../common/widgets/hoverable_card.dart';
 import '../../../core/constants/app_colors.dart';
@@ -9,8 +12,11 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/localization/locale_controller.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../core/theme/app_button_styles.dart';
+import '../../../core/utils/app_dependency.dart';
 import '../../auth/controller/auth_session_controller.dart';
+import '../../users/repository/users_repository.dart';
 import '../controller/profile_controller.dart';
 
 class ProfileSettingsPanel extends StatelessWidget {
@@ -239,6 +245,88 @@ class ProfileSettingsPanel extends StatelessWidget {
           ),
           if (isSignedIn) ...[
             const SizedBox(height: AppDimensions.sectionSpacing),
+            Row(
+              children: [
+                Icon(
+                  Symbols.lock,
+                  color: AppColors.primary,
+                  size: AppDimensions.settingsIconSize,
+                ),
+                const SizedBox(width: AppDimensions.smallSpacing),
+                Expanded(
+                  child: Text(
+                    AppStrings.profileAccountDetails,
+                    style: AppTextStyles.settingsHeader,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.smallSpacing),
+            HoverableCard(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+                  border: Border.all(
+                    color: AppColors.border,
+                    width: AppDimensions.cardBorderWidth,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    _SettingsNavRow(
+                      title: AppStrings.changePassword,
+                      body: AppStrings.changePasswordInstruction,
+                      onTap: () => Get.toNamed(AppRoutes.changePassword),
+                    ),
+                    const Divider(
+                      height: AppDimensions.cardBorderWidth,
+                      color: AppColors.border,
+                    ),
+                    _SettingsNavRow(
+                      title: AppStrings.manageDevices,
+                      body: AppStrings.manageDevicesDescription,
+                      onTap: () => Get.toNamed(AppRoutes.activeSessions),
+                    ),
+                    const Divider(
+                      height: AppDimensions.cardBorderWidth,
+                      color: AppColors.border,
+                    ),
+                    _SettingsNavRow(
+                      title: AppStrings.deleteAccount,
+                      body: AppStrings.deleteAccountInstruction,
+                      onTap: () => Get.toNamed(AppRoutes.deleteAccount),
+                    ),
+                    const Divider(
+                      height: AppDimensions.cardBorderWidth,
+                      color: AppColors.border,
+                    ),
+                    _SettingsNavRow(
+                      title: AppStrings.exportMyData,
+                      body: AppStrings.exportMyDataDescription,
+                      onTap: () => _exportMyData(),
+                    ),
+                    if (Get.isRegistered<UsersRepository>() &&
+                        Get.find<UsersRepository>()
+                            .hasPendingAccountDeletion
+                            .value) ...[
+                      const Divider(
+                        height: AppDimensions.cardBorderWidth,
+                        color: AppColors.border,
+                      ),
+                      _SettingsNavRow(
+                        title: AppStrings.cancelAccountDeletion,
+                        body: AppStrings.cancelAccountDeletionDescription,
+                        onTap: () => _cancelPendingAccountDeletion(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppDimensions.sectionSpacing),
             SizedBox(
               width: double.infinity,
               child: HoverableButton(
@@ -288,6 +376,118 @@ class ProfileSettingsPanel extends StatelessWidget {
         ],
       );
     });
+  }
+}
+
+class _SettingsNavRow extends StatelessWidget {
+  const _SettingsNavRow({
+    required this.title,
+    required this.body,
+    required this.onTap,
+  });
+
+  final String title;
+  final String body;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.contentPadding,
+            vertical: AppDimensions.buttonVerticalPadding,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyles.settingsItemTitle,
+                    ),
+                    const SizedBox(height: AppDimensions.tinySpacing),
+                    Text(
+                      body,
+                      style: AppTextStyles.settingsItemBody,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppDimensions.smallSpacing),
+              Icon(
+                Symbols.chevron_right,
+                color: AppColors.textSecondary,
+                size: AppDimensions.settingsIconSize,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+Future<void> _exportMyData() async {
+  AppDependency.ensureUsersRepository();
+  if (!Get.isRegistered<UsersRepository>()) {
+    return;
+  }
+  try {
+    final result = await Get.find<UsersRepository>().exportMyData();
+    final String summary = AppStrings.exportMyDataSummary(
+      reservations: result.reservationsTotal,
+      reviews: result.reviewsTotal,
+      favorites: result.favoritesTotal,
+    );
+    final String message = result.message.trim().isNotEmpty
+        ? result.message.trim()
+        : AppStrings.exportMyDataSuccess;
+    AppSuccessToast.show(
+      title: AppStrings.exportMyData,
+      message: '$message\n$summary',
+    );
+  } on ApiException catch (error) {
+    Get.snackbar(AppStrings.exportMyData, error.message);
+  } catch (_) {
+    Get.snackbar(AppStrings.exportMyData, AppStrings.networkUnexpectedError);
+  }
+}
+
+
+Future<void> _cancelPendingAccountDeletion() async {
+  final bool confirmed = await AppConfirmDialog.show(
+    title: AppStrings.areYouSure,
+    message: AppStrings.cancelAccountDeletionConfirmMessage,
+    icon: Symbols.undo,
+  );
+  if (!confirmed) {
+    return;
+  }
+  AppDependency.ensureUsersRepository();
+  if (!Get.isRegistered<UsersRepository>()) {
+    return;
+  }
+  try {
+    await Get.find<UsersRepository>().cancelAccountDeletion();
+    AppSuccessToast.show(
+      title: AppStrings.cancelAccountDeletion,
+      message: AppStrings.cancelAccountDeletionSuccess,
+    );
+  } on ApiException catch (error) {
+    Get.snackbar(AppStrings.cancelAccountDeletion, error.message);
+  } catch (_) {
+    Get.snackbar(
+      AppStrings.cancelAccountDeletion,
+      AppStrings.networkUnexpectedError,
+    );
   }
 }
 

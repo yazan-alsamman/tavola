@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../common/widgets/app_success_toast.dart';
 import '../../../common/widgets/auth_field_hint.dart';
 import '../../../common/widgets/auth_password_field.dart';
 import '../../../common/widgets/auth_phone_field.dart';
@@ -14,8 +16,64 @@ import '../../../core/theme/app_button_styles.dart';
 import '../controller/login_controller.dart';
 import '../widgets/auth_page_header.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _didAnnounceSuccess = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _announcePasswordResetSuccessIfNeeded();
+    });
+  }
+
+  void _announcePasswordResetSuccessIfNeeded() {
+    if (_didAnnounceSuccess || !mounted) {
+      return;
+    }
+    if (!Get.isRegistered<LoginController>()) {
+      return;
+    }
+    final LoginController controller = Get.find<LoginController>();
+
+    // Route arguments backup when permanent controller lost the one-shot flag.
+    final Object? args = Get.arguments;
+    if (!controller.showPasswordResetSuccess.value &&
+        args is String &&
+        args.trim().isNotEmpty) {
+      controller.showSuccessMessage(args.trim());
+      controller.showPasswordResetSuccess.value = true;
+    }
+
+    if (!controller.showPasswordResetSuccess.value &&
+        (controller.successMessage.value == null ||
+            controller.successMessage.value!.trim().isEmpty)) {
+      return;
+    }
+
+    _didAnnounceSuccess = true;
+    // Banner in the form is the durable signal; toast is best-effort UX.
+    // Skip snackbar timers under widget tests.
+    final String bindingType = WidgetsBinding.instance.runtimeType.toString();
+    if (Get.testMode || bindingType.contains('TestWidgetsFlutterBinding')) {
+      return;
+    }
+    final String message =
+        controller.successMessage.value?.trim().isNotEmpty == true
+        ? controller.successMessage.value!.trim()
+        : AppStrings.authPasswordResetComplete;
+    AppSuccessToast.show(
+      title: AppStrings.resetPassword,
+      message: message,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +96,21 @@ class LoginScreen extends StatelessWidget {
                 title: AppStrings.login,
                 instruction: AppStrings.loginInstruction,
               ),
+              Obx(() {
+                if (!controller.showPasswordResetSuccess.value) {
+                  return const SizedBox.shrink();
+                }
+                final String message =
+                    controller.successMessage.value?.trim().isNotEmpty == true
+                    ? controller.successMessage.value!.trim()
+                    : AppStrings.authPasswordResetComplete;
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    top: AppDimensions.sectionSpacing,
+                  ),
+                  child: _LoginSuccessBanner(message: message),
+                );
+              }),
               const SizedBox(height: AppDimensions.sectionSpacing),
               DefaultTextStyle(
                 style: AppTextStyles.authInput,
@@ -78,21 +151,6 @@ class LoginScreen extends StatelessWidget {
                           ? const SizedBox.shrink()
                           : AuthFieldHint(
                               message: controller.errorMessage.value!,
-                            ),
-                    ),
-                    Obx(
-                      () => controller.successMessage.value == null
-                          ? const SizedBox.shrink()
-                          : Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                top: AppDimensions.compactSpacing,
-                                start: AppDimensions.tinySpacing,
-                              ),
-                              child: Text(
-                                controller.successMessage.value!,
-                                style: AppTextStyles.authFieldErrorHint
-                                    .copyWith(color: AppColors.online),
-                              ),
                             ),
                     ),
                     const SizedBox(height: AppDimensions.regularSpacing),
@@ -183,6 +241,63 @@ class LoginScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginSuccessBanner extends StatelessWidget {
+  const _LoginSuccessBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.online.withValues(
+          alpha: AppDimensions.loginSuccessBannerFillAlpha,
+        ),
+        borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+        border: Border.all(
+          color: AppColors.online,
+          width: AppDimensions.cardBorderWidth,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.contentPadding),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Symbols.check_circle,
+              color: AppColors.online,
+              size: AppDimensions.mediumIconSize,
+              fill: 1,
+            ),
+            const SizedBox(width: AppDimensions.regularSpacing),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.resetPassword,
+                    style: AppTextStyles.settingsItemTitle.copyWith(
+                      color: AppColors.online,
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.tinySpacing),
+                  Text(
+                    message,
+                    style: AppTextStyles.settingsItemBody.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

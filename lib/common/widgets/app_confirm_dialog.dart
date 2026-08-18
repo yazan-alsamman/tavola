@@ -16,20 +16,30 @@ class AppConfirmDialog extends StatelessWidget {
     required this.title,
     this.message,
     this.icon = Symbols.help,
+    this.destructiveMessage = false,
   });
 
   final String title;
   final String? message;
   final IconData icon;
 
+  /// When true, the message text uses a soft professional red accent.
+  final bool destructiveMessage;
+
   /// Returns `true` only when the user taps Yes.
   static Future<bool> show({
     required String title,
     String? message,
     IconData icon = Symbols.help,
+    bool destructiveMessage = false,
   }) async {
     final bool? confirmed = await Get.dialog<bool>(
-      AppConfirmDialog(title: title, message: message, icon: icon),
+      AppConfirmDialog(
+        title: title,
+        message: message,
+        icon: icon,
+        destructiveMessage: destructiveMessage,
+      ),
       barrierDismissible: true,
       barrierColor: AppColors.primaryDark.withValues(
         alpha: AppDimensions.confirmDialogBarrierAlpha,
@@ -59,6 +69,7 @@ class AppConfirmDialog extends StatelessWidget {
       title: AppStrings.areYouSure,
       message: AppStrings.confirmLogOutMessage,
       icon: Symbols.logout,
+      destructiveMessage: true,
     );
   }
 
@@ -157,7 +168,11 @@ class AppConfirmDialog extends StatelessWidget {
                       Text(
                         body,
                         textAlign: TextAlign.center,
-                        style: AppTextStyles.confirmDialogMessage,
+                        style: AppTextStyles.confirmDialogMessage.copyWith(
+                          color: destructiveMessage
+                              ? AppColors.warning
+                              : null,
+                        ),
                       ),
                     ],
                     const SizedBox(height: AppDimensions.sectionSpacing),

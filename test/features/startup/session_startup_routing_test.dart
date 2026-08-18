@@ -159,6 +159,9 @@ void main() {
           userId: 'u',
         ),
       );
+
+      await session.flushPostLoginBootstrap();
+
       expect(await SessionModePreferences.read(), SessionMode.authenticated);
       expect(tokens.accessToken, 'hot-access');
       expect(tokens.refreshToken, 'hot-refresh');
@@ -207,28 +210,35 @@ void main() {
     },
   );
 
-  test('completeSignIn awaits SessionMode.authenticated persistence', () async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
-    Get.testMode = true;
-    Get.reset();
-    final _MemoryTokens tokens = _MemoryTokens();
-    Get.put<AuthTokenReader>(tokens);
-    Get.put(ApiClient(tokenReader: tokens));
-    final AuthSessionController session = AuthSessionController();
+  test(
+    'completeSignIn schedules SessionMode.authenticated without blocking',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      Get.testMode = true;
+      Get.reset();
+      final _MemoryTokens tokens = _MemoryTokens();
+      Get.put<AuthTokenReader>(tokens);
+      Get.put(ApiClient(tokenReader: tokens));
+      final AuthSessionController session = AuthSessionController();
 
-    await session.completeSignIn(
-      const CustomerAuthResponseModel(
-        accessToken: 'a',
-        refreshToken: 'r',
-        sessionId: 's',
-        userId: 'u',
-      ),
-    );
+      await session.completeSignIn(
+        const CustomerAuthResponseModel(
+          accessToken: 'a',
+          refreshToken: 'r',
+          sessionId: 's',
+          userId: 'u',
+        ),
+      );
 
-    // Immediately after await — no race window for Hot Restart.
-    expect(await SessionModePreferences.read(), SessionMode.authenticated);
-    expect(tokens.updateCalled, isTrue);
-  });
+      // Memory session is authoritative immediately; disk mode waits for bootstrap.
+      expect(session.hasAuthenticatedSession.value, isTrue);
+      expect(tokens.updateCalled, isTrue);
+
+      await session.flushPostLoginBootstrap();
+
+      expect(await SessionModePreferences.read(), SessionMode.authenticated);
+    },
+  );
 
   test('enterAsGuest persists guest and never writes tokens', () async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -271,7 +281,8 @@ void main() {
         phone: '1',
       ),
     );
-    await Future<void>.delayed(Duration.zero);
+
+    await session.flushPostLoginBootstrap();
 
     expect(session.hasAuthenticatedSession.value, isTrue);
     expect(session.isGuest.value, isFalse);
@@ -327,7 +338,12 @@ void main() {
     );
     await tester.pump();
 
-    await session.logOut();
+    // logOut awaits remote revoke with authLogoutTimeout; under FakeAsync the
+    // Dio timer only fires when the test clock advances.
+    final Future<void> logout = session.logOut();
+    await tester.pump(AppDimensions.authLogoutTimeout);
+    await tester.pump();
+    await logout;
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
 

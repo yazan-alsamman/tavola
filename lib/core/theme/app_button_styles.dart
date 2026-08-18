@@ -8,6 +8,7 @@ class AppButtonStyles {
     ButtonStyle baseStyle, {
     Color idleBackground = AppColors.primary,
     Color idleForeground = AppColors.textLight,
+    Color? hoverBackground,
   }) {
     return baseStyle.copyWith(
       animationDuration: AppDimensions.hoverDuration,
@@ -16,7 +17,7 @@ class AppButtonStyles {
           return AppColors.disabled;
         }
         if (states.contains(WidgetState.hovered)) {
-          return AppColors.primaryDark;
+          return hoverBackground ?? AppColors.primaryDark;
         }
         return idleBackground;
       }),

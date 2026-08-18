@@ -8,6 +8,7 @@ class RestaurantOfferModel {
     required this.restaurantId,
     required this.title,
     required this.description,
+    this.imageUrl = '',
     this.type = '',
     this.discountType = '',
     this.discountValue,
@@ -20,6 +21,7 @@ class RestaurantOfferModel {
   final String restaurantId;
   final String title;
   final String description;
+  final String imageUrl;
   final String type;
   final String discountType;
   final double? discountValue;
@@ -37,6 +39,9 @@ class RestaurantOfferModel {
       restaurantId: ApiException.coerceString(json['restaurantId']),
       title: ApiException.coerceString(json['title']),
       description: ApiException.coerceString(json['description']),
+      imageUrl: ApiException.coerceString(
+        json['imageUrl'] ?? json['image'] ?? json['coverImageUrl'] ?? json['mediaUrl'],
+      ),
       type: ApiException.coerceString(json['type']),
       discountType: ApiException.coerceString(json['discountType']),
       discountValue: _readDouble(json['discountValue']),

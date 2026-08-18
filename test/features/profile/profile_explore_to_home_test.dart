@@ -166,6 +166,12 @@ void main() {
       expect(Get.find<HomeController>().isClosed, isFalse);
       expect(Get.isRegistered<UserLocationController>(), isTrue);
       expect(Get.find<UserLocationController>().isClosed, isFalse);
+
+      // Flush guest Home Stage 8 Discovery / Dio timers before teardown.
+      await tester.pump(AppDimensions.locationServiceCheckTimeout);
+      await tester.pump(AppDimensions.apiConnectTimeout);
+      await tester.pump(AppDimensions.homeCatalogLoadTimeout);
+      await tester.pump();
     },
   );
 }

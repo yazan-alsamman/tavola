@@ -58,24 +58,24 @@ class AuthRepository {
 
   final Dio _dio;
 
-  static const String refreshPath = '/auth/refresh';
-  static const String customerLoginPath = '/auth/customer/login';
+  static const String refreshPath = AppUrls.authRefreshPath;
+  static const String customerLoginPath = AppUrls.authCustomerLoginPath;
   static const String customerRegisterStartPath =
-      '/auth/customer/register/start';
+      AppUrls.authCustomerRegisterStartPath;
   static const String customerRegisterResendPath =
-      '/auth/customer/register/resend';
+      AppUrls.authCustomerRegisterResendPath;
   static const String customerRegisterVerifyPath =
-      '/auth/customer/register/verify';
+      AppUrls.authCustomerRegisterVerifyPath;
   static const String customerRegisterCompletePath =
-      '/auth/customer/register/complete';
+      AppUrls.authCustomerRegisterCompletePath;
   static const String customerPasswordResetStartPath =
-      '/auth/customer/password-reset/start';
+      AppUrls.authCustomerPasswordResetStartPath;
   static const String customerPasswordResetResendPath =
-      '/auth/customer/password-reset/resend';
+      AppUrls.authCustomerPasswordResetResendPath;
   static const String customerPasswordResetVerifyPath =
-      '/auth/customer/password-reset/verify';
+      AppUrls.authCustomerPasswordResetVerifyPath;
   static const String customerPasswordResetCompletePath =
-      '/auth/customer/password-reset/complete';
+      AppUrls.authCustomerPasswordResetCompletePath;
   static const String logoutPath = AppUrls.authLogoutPath;
   static const String logoutAllPath = AppUrls.authLogoutAllPath;
   static const String sessionsPath = AppUrls.authSessionsPath;

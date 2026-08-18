@@ -103,6 +103,12 @@ void main() {
     expect(find.byType(HomeScreen), findsOneWidget);
     expect(session.isGuest.value, isTrue);
     expect(tester.takeException(), isNull);
+
+    // Guest Stage 8 kicks loadSpecialOfferPromo → Discovery Dio timers.
+    await tester.pump(AppDimensions.locationServiceCheckTimeout);
+    await tester.pump(AppDimensions.apiConnectTimeout);
+    await tester.pump(AppDimensions.homeCatalogLoadTimeout);
+    await tester.pump();
   });
 }
 

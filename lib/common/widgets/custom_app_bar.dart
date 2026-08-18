@@ -34,11 +34,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     // Never kick `/users/me` from AppBar on the first Home frame — that raced
     // cuisine/occasion Discovery and caused Login→Home jank.
 
-    return Obx(() {
-      if (Get.isRegistered<LocaleController>()) {
+    // GetX forbids Obx with no observables — only wrap when locale is registered.
+    if (Get.isRegistered<LocaleController>()) {
+      return Obx(() {
         Get.find<LocaleController>().languageCode.value;
-      }
-      return AppBar(
+        return _buildAppBar();
+      });
+    }
+    return _buildAppBar();
+  }
+
+  Widget _buildAppBar() {
+    return AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: AppColors.surface,
         surfaceTintColor: AppColors.surface,
@@ -155,7 +162,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       );
-    });
   }
 
   static Widget _buildProfileAvatar(String? profileImagePath) {

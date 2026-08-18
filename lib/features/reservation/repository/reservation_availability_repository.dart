@@ -1,6 +1,6 @@
 import '../../../core/constants/app_strings.dart';
 
-/// Provides reservation availability options (slots, durations).
+/// Local reservation option labels (durations). Time slots come from the API.
 class ReservationAvailabilityRepository {
   Future<List<String>> fetchTimeSlots() async {
     return getTimeSlots();
@@ -14,22 +14,14 @@ class ReservationAvailabilityRepository {
     return getDefaultRestaurantName();
   }
 
-  List<String> getTimeSlots() {
-    return List<String>.unmodifiable(_timeSlots);
-  }
+  /// Last-resort empty list — live slots load via [ReservationRepository].
+  List<String> getTimeSlots() => const <String>[];
 
   List<String> getDurationOptions() {
     return List<String>.unmodifiable(_durationOptions);
   }
 
   String getDefaultRestaurantName() => '';
-
-  static List<String> get _timeSlots => [
-    AppStrings.timeSlotOne,
-    AppStrings.timeSlotTwo,
-    AppStrings.timeSlotThree,
-    AppStrings.timeSlotFour,
-  ];
 
   static List<String> get _durationOptions => [
     AppStrings.durationOnePointFive,

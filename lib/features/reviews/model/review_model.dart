@@ -1,4 +1,5 @@
 import '../../../core/network/api_exception.dart';
+import '../../../core/utils/media_url_resolver.dart';
 
 /// Review image from submit / list / get payloads.
 class ReviewImageModel {
@@ -17,11 +18,13 @@ class ReviewImageModel {
         json['imageId'],
         json['id'],
       ]),
-      url: _firstNonEmpty(<Object?>[
-        json['url'],
-        json['imageUrl'],
-        json['src'],
-      ]),
+      url: MediaUrlResolver.resolve(
+        json['url'] ??
+            json['imageUrl'] ??
+            json['src'] ??
+            json['fileId'] ??
+            json['imageId'],
+      ),
     );
   }
 

@@ -29,22 +29,16 @@ class ConversationsRepository {
   /// Optional override for tests; production uses [Get.find].
   final AuthTokenReader? _tokenReaderOverride;
 
-  /// `GET /conversations?limit=&cursor=` (cursor pagination).
-  ///
-  /// Live API rejects offset keys `page` / `pageSize` with VALIDATION_ERROR
-  /// ("property page should not exist"). Matches messages / staff inbox DTOs.
+  /// `GET /conversations?page=&pageSize=`.
   Future<List<ConversationModel>> listConversations({
-    int limit = AppDimensions.conversationsPageSize,
-    String? cursor,
+    int page = AppDimensions.apiDefaultPage,
+    int pageSize = AppDimensions.conversationsPageSize,
   }) async {
     await _ensureAuthenticated();
     final Map<String, dynamic> query = <String, dynamic>{
-      AppUrls.conversationsLimitQueryKey: limit,
+      AppUrls.conversationsPageQueryKey: page,
+      AppUrls.conversationsPageSizeQueryKey: pageSize,
     };
-    final String? cursorValue = cursor?.trim();
-    if (cursorValue != null && cursorValue.isNotEmpty) {
-      query[AppUrls.conversationsCursorQueryKey] = cursorValue;
-    }
     final ApiResponse<List<ConversationModel>> response = await _apiClient
         .get<List<ConversationModel>>(
           AppUrls.conversationsPath,
@@ -142,6 +136,7 @@ class ConversationsRepository {
   Future<ConversationMessageModel> sendMessage({
     required String conversationId,
     required String body,
+    MultipartFile? attachment,
   }) async {
     await _ensureAuthenticated();
     final String id = conversationId.trim();
@@ -153,9 +148,13 @@ class ConversationsRepository {
       throw StateError(AppStrings.invalidConversationMessagePayload);
     }
 
-    final FormData formData = FormData.fromMap(<String, dynamic>{
+    final Map<String, dynamic> payload = <String, dynamic>{
       AppStrings.apiConversationMessageBodyField: text,
-    });
+    };
+    if (attachment != null) {
+      payload[AppStrings.apiConversationMessageAttachmentField] = attachment;
+    }
+    final FormData formData = FormData.fromMap(payload);
     final ApiResponse<ConversationMessageModel> response = await _apiClient
         .postMultipart<ConversationMessageModel>(
           AppUrls.conversationMessagesPath(id),

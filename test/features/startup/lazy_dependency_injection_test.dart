@@ -135,7 +135,9 @@ void main() {
     }
 
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(Get.isRegistered<FavoritesRepository>(), isTrue);
+    // Guest Home skips auth bands (profile/preferences/favorites/notifications)
+    // and jumps to location — Favorites stays unregistered until a real session.
+    expect(Get.isRegistered<FavoritesRepository>(), isFalse);
     expect(Get.isRegistered<TaxonomyRepository>(), isTrue);
     expect(Get.isRegistered<UserLocationController>(), isTrue);
     expect(Get.isRegistered<RestaurantMapRepository>(), isFalse);
@@ -144,6 +146,7 @@ void main() {
     // Flush deferred Home / location / Dio timers from the first Home frame.
     await tester.pump(AppDimensions.locationServiceCheckTimeout);
     await tester.pump(AppDimensions.apiConnectTimeout);
+    await tester.pump(AppDimensions.homeCatalogLoadTimeout);
     await tester.pump();
   });
 }

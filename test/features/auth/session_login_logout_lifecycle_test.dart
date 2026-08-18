@@ -57,6 +57,7 @@ void main() {
           phone: '+971501234567',
         ),
       );
+      await Get.find<AuthSessionController>().flushPostLoginBootstrap();
       await store.flushPendingDiskWrites();
 
       expect(await SessionModePreferences.read(), SessionMode.authenticated);
@@ -109,6 +110,7 @@ void main() {
           userId: 'user-1',
         ),
       );
+      await Get.find<AuthSessionController>().flushPostLoginBootstrap();
       await store.flushPendingDiskWrites();
       expect(vault.values[SecureAuthTokenStore.accessTokenKey], isNotNull);
 

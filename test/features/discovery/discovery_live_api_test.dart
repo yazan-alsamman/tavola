@@ -124,9 +124,31 @@ void main() {
         }
       }
 
+      if (restaurants.length >= 2) {
+        final List<RestaurantModel> compared = await discovery
+            .compareRestaurants(<String>[
+              restaurants[0].id,
+              restaurants[1].id,
+            ])
+            .timeout(const Duration(seconds: 12));
+        expect(compared, hasLength(2));
+        expect(compared.map((RestaurantModel r) => r.id).toSet(), <String>{
+          restaurants[0].id,
+          restaurants[1].id,
+        });
+        for (final RestaurantModel item in compared) {
+          expect(item.name, isNotEmpty);
+          expect(item.status, isNotEmpty);
+        }
+      }
+
       expect(
         AppUrls.discoveryRestaurantsPath.startsWith('/discovery/'),
         isTrue,
+      );
+      expect(
+        AppUrls.discoveryRestaurantsComparePath,
+        '${AppUrls.discoveryRestaurantsPath}/compare',
       );
     },
     timeout: const Timeout(Duration(seconds: 40)),

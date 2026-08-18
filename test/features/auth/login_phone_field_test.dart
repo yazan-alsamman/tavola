@@ -15,8 +15,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    Get.testMode = true;
     Get.reset();
+    Get.testMode = true;
     Get.put(AuthRepository());
     Get.put(LoginController());
   });
@@ -26,8 +26,9 @@ void main() {
   testWidgets('LoginScreen builds after password-reset success args', (
     tester,
   ) async {
-    Get.find<LoginController>().successMessage.value =
-        AppStrings.authPasswordResetComplete;
+    final LoginController login = Get.find<LoginController>();
+    login.successMessage.value = AppStrings.authPasswordResetComplete;
+    login.showPasswordResetSuccess.value = true;
 
     await tester.pumpWidget(
       GetMaterialApp(
@@ -45,10 +46,13 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.pump();
+    // Drain LoginController.onReady warmIdle + any deferred timers.
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.byType(AuthPhoneField), findsOneWidget);
     expect(find.byType(LoginScreen), findsOneWidget);
-    expect(Get.find<LoginController>().successMessage.value, isNotNull);
+    expect(find.text(AppStrings.authPasswordResetComplete), findsWidgets);
+    expect(find.text(AppStrings.resetPassword), findsWidgets);
+    expect(login.showPasswordResetSuccess.value, isTrue);
   });
 }

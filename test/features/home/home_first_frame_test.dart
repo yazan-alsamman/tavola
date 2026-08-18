@@ -144,6 +144,7 @@ class _CountingApiClient extends ApiClient {
     Map<String, dynamic>? queryParameters,
     required T Function(Object? raw) parseData,
     Options? options,
+    CancelToken? cancelToken,
   }) async {
     getCount++;
     return ApiResponse<T>(

@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import '../../core/utils/app_dependency.dart';
 import '../../features/cuisine_preferences/controller/favorite_cuisines_controller.dart';
 import '../../features/cuisine_preferences/view/favorite_cuisines_screen.dart';
+import '../../features/compare/controller/compare_controller.dart';
+import '../../features/compare/view/compare_restaurants_screen.dart';
 import '../../features/details/controller/details_controller.dart';
 import '../../features/details/controller/restaurant_menu_controller.dart';
 import '../../features/details/view/details_screen.dart';
@@ -26,12 +28,18 @@ import '../../features/reservation/controller/select_table_controller.dart';
 import '../../features/reservation/view/reservation_screen.dart';
 import '../../features/reservation/view/select_restaurant_screen.dart';
 import '../../features/reservation/view/select_table_screen.dart';
+import '../../features/auth/controller/active_sessions_controller.dart';
+import '../../features/auth/controller/change_password_controller.dart';
 import '../../features/auth/controller/complete_registration_controller.dart';
+import '../../features/auth/controller/delete_account_controller.dart';
 import '../../features/auth/controller/login_controller.dart';
 import '../../features/auth/controller/otp_controller.dart';
 import '../../features/auth/controller/password_reset_controller.dart';
 import '../../features/auth/controller/sign_up_controller.dart';
+import '../../features/auth/view/active_sessions_screen.dart';
+import '../../features/auth/view/change_password_screen.dart';
 import '../../features/auth/view/complete_registration_screen.dart';
+import '../../features/auth/view/delete_account_screen.dart';
 import '../../features/auth/view/login_screen.dart';
 import '../../features/auth/view/otp_screen.dart';
 import '../../features/auth/view/password_reset_screen.dart';
@@ -52,6 +60,9 @@ class AppRoutes {
   static const String otp = '/otp';
   static const String completeRegistration = '/complete-registration';
   static const String passwordReset = '/password-reset';
+  static const String changePassword = '/change-password';
+  static const String deleteAccount = '/delete-account';
+  static const String activeSessions = '/active-sessions';
   static const String home = '/home';
   static const String map = '/map';
   static const String favorites = '/favorites';
@@ -63,6 +74,7 @@ class AppRoutes {
   static const String selectTable = '/select-table';
   static const String details = '/details';
   static const String restaurantMenu = '/restaurant-menu';
+  static const String compareRestaurants = '/compare-restaurants';
   static const String initial = splash;
 
   static final routes = [
@@ -153,6 +165,30 @@ class AppRoutes {
       }),
     ),
     GetPage(
+      name: changePassword,
+      page: () => const ChangePasswordScreen(),
+      binding: BindingsBuilder(() {
+        AppDependency.ensureAuthFeatureDependencies();
+        AppDependency.putFresh(ChangePasswordController.new);
+      }),
+    ),
+    GetPage(
+      name: deleteAccount,
+      page: () => const DeleteAccountScreen(),
+      binding: BindingsBuilder(() {
+        AppDependency.ensureAuthFeatureDependencies();
+        AppDependency.putFresh(DeleteAccountController.new);
+      }),
+    ),
+    GetPage(
+      name: activeSessions,
+      page: () => const ActiveSessionsScreen(),
+      binding: BindingsBuilder(() {
+        AppDependency.ensureAuthFeatureDependencies();
+        AppDependency.putFresh(ActiveSessionsController.new);
+      }),
+    ),
+    GetPage(
       name: home,
       page: () => const HomeScreen(),
       binding: BindingsBuilder(() {
@@ -238,6 +274,14 @@ class AppRoutes {
       binding: BindingsBuilder(() {
         AppDependency.ensureDetailsDependencies();
         AppDependency.putFresh(RestaurantMenuController.new);
+      }),
+    ),
+    GetPage(
+      name: compareRestaurants,
+      page: () => const CompareRestaurantsScreen(),
+      binding: BindingsBuilder(() {
+        AppDependency.ensureCompareDependencies();
+        AppDependency.putFresh(CompareController.new);
       }),
     ),
   ];

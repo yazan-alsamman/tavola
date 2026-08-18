@@ -490,6 +490,19 @@ class ProfileController extends GetxController {
 
   void selectSection(int index) {
     selectedSectionIndex.value = index;
+    // Deletion cancel flag lives in Keychain — hydrate only when Settings opens,
+    // never on the Login→Home critical path (SecItem races freeze/crash iOS).
+    final bool isSignedIn = Get.isRegistered<AuthSessionController>()
+        ? Get.find<AuthSessionController>().hasAuthenticatedSession.value
+        : false;
+    if (index == settingsSectionIndex && isSignedIn) {
+      AppDependency.ensureUsersRepository();
+      if (Get.isRegistered<UsersRepository>()) {
+        unawaited(
+          Get.find<UsersRepository>().hydratePendingAccountDeletion(),
+        );
+      }
+    }
   }
 
   Future<void> toggleNotification(int index, bool value) async {

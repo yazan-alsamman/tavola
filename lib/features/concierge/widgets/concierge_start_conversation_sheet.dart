@@ -51,8 +51,8 @@ class ConciergeStartConversationSheet {
               children: [
                 Center(
                   child: Container(
-                    width: AppDimensions.sectionSpacing * 2,
-                    height: AppDimensions.cardBorderWidth * 3,
+                    width: AppDimensions.bottomSheetGrabberWidth,
+                    height: AppDimensions.bottomSheetGrabberHeight,
                     decoration: BoxDecoration(
                       color: AppColors.border,
                       borderRadius: BorderRadius.circular(

@@ -56,6 +56,8 @@ class AppSafeImage extends StatelessWidget {
         fit: fit,
         width: width,
         height: height,
+        gaplessPlayback: true,
+        cacheWidth: AppDimensions.restaurantImageCacheWidth,
         errorBuilder: (context, error, stackTrace) => _buildFallback(),
       );
     }

@@ -54,8 +54,10 @@ void main() {
       final SecureAuthTokenStore store = SecureAuthTokenStore(vault: vault);
       Get.put<AuthTokenReader>(store, permanent: true);
       Get.put(ApiClient(tokenReader: store), permanent: true);
+      // Same vault as production shared Keychain — proves login never queues
+      // a competing SecItem read (e.g. pending account-deletion hydrate).
       Get.put(
-        UsersRepository(Get.find<ApiClient>(), vault: _HangingVault()),
+        UsersRepository(Get.find<ApiClient>(), vault: vault),
         permanent: true,
       );
       Get.put(AuthSessionController(), permanent: true);
@@ -83,20 +85,77 @@ void main() {
         Get.find<AuthSessionController>().hasAuthenticatedSession.value,
         isTrue,
       );
-      // SessionMode is awaited; Keychain is only scheduled after it (never
-      // awaited) so hanging SecItem* cannot freeze Login.
-      expect(await SessionModePreferences.read(), SessionMode.authenticated);
+      // SessionMode is best-effort (unawaited); Keychain is only scheduled
+      // (never awaited) so hanging SecItem* / busy platform thread cannot
+      // freeze Login after a successful API response.
+      // Keychain / SessionMode start only after post-login bootstrap (Home paint).
       await Future<void>.delayed(Duration.zero);
+      expect(vault.writeStarts, 0);
+      expect(vault.readStarts, 0);
+      expect(await SessionModePreferences.read(), isNot(SessionMode.authenticated));
+
+      await Get.find<AuthSessionController>().flushPostLoginBootstrap();
+
+      expect(await SessionModePreferences.read(), SessionMode.authenticated);
       expect(vault.writeStarts, greaterThan(0));
+      expect(vault.readStarts, 0);
+    },
+  );
+
+  test(
+    'completeSignIn returns while Guest Keychain clear is still pending',
+    () async {
+      Get.testMode = true;
+      final _HangingVault vault = _HangingVault();
+      final SecureAuthTokenStore store = SecureAuthTokenStore(vault: vault);
+      Get.put<AuthTokenReader>(store, permanent: true);
+      Get.put(ApiClient(tokenReader: store), permanent: true);
+      Get.put(
+        UsersRepository(Get.find<ApiClient>(), vault: _HangingVault()),
+        permanent: true,
+      );
+      Get.put(AuthSessionController(), permanent: true);
+
+      // Simulate Guest cleanup still occupying the Keychain queue.
+      store.scheduleDiskClear();
+      expect(vault.writeStarts + vault.deleteStarts, greaterThan(0));
+
+      final Stopwatch watch = Stopwatch()..start();
+      await Get.find<AuthSessionController>().completeSignIn(
+        const CustomerAuthResponseModel(
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          sessionId: 'session-id',
+          userId: 'user-id',
+          username: 'Yazan',
+          phone: '+971501234567',
+        ),
+      );
+      watch.stop();
+
+      expect(
+        watch.elapsedMilliseconds,
+        lessThan(AppDimensions.secureStorageTimeout.inMilliseconds ~/ 10),
+      );
+      expect(
+        Get.find<AuthSessionController>().hasAuthenticatedSession.value,
+        isTrue,
+      );
+      expect(await store.readAccessToken(), 'access-token');
     },
   );
 }
 
 class _HangingVault implements SecureKeyValueStore {
   int writeStarts = 0;
+  int deleteStarts = 0;
+  int readStarts = 0;
 
   @override
-  Future<String?> read(String key) => Completer<String?>().future;
+  Future<String?> read(String key) {
+    readStarts++;
+    return Completer<String?>().future;
+  }
 
   @override
   Future<void> write(String key, String value) {
@@ -105,7 +164,10 @@ class _HangingVault implements SecureKeyValueStore {
   }
 
   @override
-  Future<void> delete(String key) => Completer<void>().future;
+  Future<void> delete(String key) {
+    deleteStarts++;
+    return Completer<void>().future;
+  }
 }
 
 class _OrderedVault implements SecureKeyValueStore {

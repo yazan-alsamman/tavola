@@ -61,6 +61,9 @@ void main() {
     expect('Closed'.tr, 'مغلق');
     expect('Mark all read'.tr, 'تعليم الكل كمقروء');
     expect('Chat with another restaurant'.tr, 'تحدث مع مطعم آخر');
+    expect('Compare with another restaurant'.tr, 'قارن مع مطعم آخر');
+    expect('Compare Restaurants'.tr, 'مقارنة المطاعم');
+    expect('Delete account'.tr, 'حذف الحساب');
     expect('No profile available.'.tr, 'لا يوجد ملف شخصي متاح.');
     expect(AppStrings.localizeUiLabel('CANCELLED'), 'ملغى');
     expect(AppStrings.localizeUiLabel('Pending'), 'قيد الانتظار');

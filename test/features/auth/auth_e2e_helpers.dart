@@ -8,10 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tavla/app/routes/app_routes.dart';
 import 'package:tavla/core/constants/app_urls.dart';
 import 'package:tavla/core/localization/app_translations.dart';
+import 'package:tavla/core/network/api_client.dart';
 import 'package:tavla/core/network/auth_token_reader.dart';
 import 'package:tavla/core/utils/app_dependency.dart';
 import 'package:tavla/features/auth/controller/auth_session_controller.dart';
@@ -33,6 +35,9 @@ class AuthE2eHarness {
   AuthE2eHarness() {
     Get.testMode = true;
     Get.reset();
+    // SessionModePreferences.write is awaited on successful login — without a
+    // mock, SharedPreferences.getInstance() never completes under FakeAsync.
+    SharedPreferences.setMockInitialValues(<String, Object>{});
 
     tokenStore = MemoryAuthTokenStore();
     adapter = RoutedAdapter();
@@ -43,6 +48,11 @@ class AuthE2eHarness {
     Get.put<AuthTokenReader>(tokenStore, permanent: true);
     Get.put<AuthRepository>(AuthRepository(dio: dio), permanent: true);
     Get.put<AuthSessionController>(AuthSessionController(), permanent: true);
+    // Login idle warm-up + post-login identity apply Users/Discovery repos.
+    Get.put<ApiClient>(
+      ApiClient(dio: dio, tokenReader: tokenStore),
+      permanent: true,
+    );
   }
 
   late final MemoryAuthTokenStore tokenStore;

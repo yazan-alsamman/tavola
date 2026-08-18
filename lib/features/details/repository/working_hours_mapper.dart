@@ -7,6 +7,11 @@ import '../model/opening_hours_day_model.dart';
 class WorkingHoursMapper {
   WorkingHoursMapper._();
 
+  /// Whether [raw] contains at least one day entry (list or wrapped map).
+  static bool hasEntries(Object? raw) {
+    return _extractEntries(raw).isNotEmpty;
+  }
+
   /// Full week (0=Sunday … 6=Saturday) for Details HOURS UI.
   /// Missing days render as [closedLabel].
   static List<OpeningHoursDayModel> weekFromPayload(

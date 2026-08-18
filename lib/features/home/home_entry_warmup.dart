@@ -1,13 +1,11 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/utils/app_dependency.dart';
-import 'home_assets.dart';
 
 /// Idle warm-up for the first Home entry after Welcome / Login.
 ///
 /// Does **not** create [HomeController] (still route-scoped / lazy). Only:
 /// - [TaxonomyRepository] + [DiscoveryRepository] registration (no HTTP)
-/// - Home promo image decode
 ///
 /// Taxonomy / Discovery HTTP stay on Home progressive init (or Splash prep)
 /// so idle warm-up never leaves dangling Dio timers.
@@ -52,10 +50,6 @@ class HomeEntryWarmup {
       AppDependency.ensureTaxonomyRepository();
       AppDependency.ensureDiscoveryRepository();
       _log('ensureTaxonomy+Discovery', deps);
-
-      final Stopwatch promo = Stopwatch()..start();
-      await HomeAssets.precachePromo();
-      _log('promo precache', promo);
 
       _completed = true;
       _log('warmIdle total', total);

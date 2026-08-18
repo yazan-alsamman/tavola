@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_urls.dart';
@@ -13,6 +15,7 @@ import '../model/restaurant_offer_model.dart';
 /// Public (`skipAuth`), cross-tenant Active restaurants only:
 /// - `GET /discovery/restaurants`
 /// - `GET /discovery/restaurants/nearby`
+/// - `POST /discovery/restaurants/compare`
 /// - `GET /discovery/restaurants/:restaurantId`
 /// - `GET /discovery/restaurants/:restaurantId/branches`
 /// - `GET /discovery/restaurants/:restaurantId/branches/:branchId`
@@ -40,49 +43,114 @@ class DiscoveryRepository {
   List<BranchModel>? cachedBranches(String restaurantId) =>
       _branchesByRestaurantId[restaurantId.trim()];
 
-  /// `GET /discovery/restaurants`
+  /// `GET /discovery/restaurants` — browse catalog (cached when [query] empty).
   Future<List<RestaurantModel>> listRestaurants({
     int page = AppDimensions.apiDefaultPage,
     int limit = AppDimensions.apiDefaultLimit,
     bool forceRefresh = false,
+    String? query,
+    double? latitude,
+    double? longitude,
+    double? radiusKm,
+    CancelToken? cancelToken,
   }) async {
-    if (!forceRefresh && _restaurantsCache != null) {
+    final String trimmedQuery = query?.trim() ?? '';
+    final bool isSearch = trimmedQuery.isNotEmpty;
+    if (!isSearch && !forceRefresh && _restaurantsCache != null) {
       return _restaurantsCache!;
     }
-    final Future<List<RestaurantModel>>? inFlight = _listInFlight;
-    if (inFlight != null && !forceRefresh) {
-      return inFlight;
+    if (!isSearch) {
+      final Future<List<RestaurantModel>>? inFlight = _listInFlight;
+      if (inFlight != null && !forceRefresh) {
+        return inFlight;
+      }
     }
 
     final Future<List<RestaurantModel>> request = _loadRestaurants(
       page: page,
       limit: limit,
+      query: trimmedQuery.isEmpty ? null : trimmedQuery,
+      latitude: latitude,
+      longitude: longitude,
+      radiusKm: radiusKm,
+      cancelToken: cancelToken,
+      updateCache: !isSearch,
     );
-    _listInFlight = request;
+    if (!isSearch) {
+      _listInFlight = request;
+    }
     try {
       return await request;
     } finally {
-      if (identical(_listInFlight, request)) {
+      if (!isSearch && identical(_listInFlight, request)) {
         _listInFlight = null;
       }
     }
   }
 
+  /// `GET /discovery/restaurants?q=` — free-text Discovery search.
+  Future<List<RestaurantModel>> searchRestaurants({
+    required String query,
+    int page = AppDimensions.apiDefaultPage,
+    int limit = AppDimensions.apiDefaultLimit,
+    double? latitude,
+    double? longitude,
+    double? radiusKm,
+    CancelToken? cancelToken,
+  }) {
+    return listRestaurants(
+      page: page,
+      limit: limit,
+      forceRefresh: true,
+      query: query,
+      latitude: latitude,
+      longitude: longitude,
+      radiusKm: radiusKm,
+      cancelToken: cancelToken,
+    );
+  }
+
   Future<List<RestaurantModel>> _loadRestaurants({
     required int page,
     required int limit,
+    String? query,
+    double? latitude,
+    double? longitude,
+    double? radiusKm,
+    CancelToken? cancelToken,
+    required bool updateCache,
   }) async {
+    // Live API rejects `pageSize` here; use `page` + `limit`.
+    final Map<String, dynamic> params = <String, dynamic>{
+      AppUrls.discoveryPageQueryKey: page,
+      AppUrls.discoveryLimitQueryKey: limit,
+    };
+    final String? trimmedQuery = query?.trim();
+    if (trimmedQuery != null && trimmedQuery.isNotEmpty) {
+      params[AppUrls.discoverySearchQueryKey] = trimmedQuery;
+    }
+    if (latitude != null && longitude != null) {
+      params[AppUrls.nearbyLatitudeQueryKey] = latitude;
+      params[AppUrls.nearbyLongitudeQueryKey] = longitude;
+      if (radiusKm != null) {
+        params[AppUrls.nearbyRadiusKmQueryKey] = radiusKm;
+      }
+    }
+
     final ApiResponse<List<RestaurantModel>> response = await _apiClient
         .get<List<RestaurantModel>>(
           AppUrls.discoveryRestaurantsPath,
-          queryParameters: <String, dynamic>{'page': page, 'limit': limit},
+          queryParameters: params,
           options: ApiClient.skipAuthOptions(),
+          cancelToken: cancelToken,
           parseData: _parseRestaurantItems,
         );
     final List<RestaurantModel> items = List<RestaurantModel>.unmodifiable(
       response.data,
     );
-    _restaurantsCache = items;
+    if (updateCache) {
+      _restaurantsCache = items;
+    }
     for (final RestaurantModel item in items) {
       if (item.id.isNotEmpty) {
         _restaurantById[item.id] = item;
@@ -91,32 +159,78 @@ class DiscoveryRepository {
     return items;
   }
 
-  /// `GET /discovery/restaurants/nearby` (`lat`, `lng`, optional `radiusKm`).
+  /// `GET /discovery/restaurants/nearby` (`lat`, `lng`, optional `radiusKm`, `q`).
   Future<List<RestaurantModel>> listNearbyRestaurants({
     required double latitude,
     required double longitude,
     double radiusKm = AppDimensions.nearbySearchRadiusKm,
     int page = AppDimensions.apiDefaultPage,
     int limit = AppDimensions.apiDefaultLimit,
+    String? query,
+    CancelToken? cancelToken,
   }) async {
+    final Map<String, dynamic> params = <String, dynamic>{
+      AppUrls.nearbyLatitudeQueryKey: latitude,
+      AppUrls.nearbyLongitudeQueryKey: longitude,
+      AppUrls.nearbyRadiusKmQueryKey: radiusKm,
+      AppUrls.discoveryPageQueryKey: page,
+      AppUrls.discoveryLimitQueryKey: limit,
+    };
+    final String trimmedQuery = query?.trim() ?? '';
+    if (trimmedQuery.isNotEmpty) {
+      params[AppUrls.discoverySearchQueryKey] = trimmedQuery;
+    }
     final ApiResponse<List<RestaurantModel>> response = await _apiClient
         .get<List<RestaurantModel>>(
           AppUrls.discoveryRestaurantsNearbyPath,
-          queryParameters: <String, dynamic>{
-            AppUrls.nearbyLatitudeQueryKey: latitude,
-            AppUrls.nearbyLongitudeQueryKey: longitude,
-            AppUrls.nearbyRadiusKmQueryKey: radiusKm,
-            'page': page,
-            'limit': limit,
-          },
+          queryParameters: params,
           options: ApiClient.skipAuthOptions(),
+          cancelToken: cancelToken,
           parseData: _parseRestaurantItems,
         );
     return List<RestaurantModel>.unmodifiable(response.data);
   }
 
-  /// `GET /discovery/restaurants/:restaurantId/offers`
-  Future<List<RestaurantOfferModel>> listOffers(String restaurantId) async {
+  /// `POST /discovery/restaurants/compare` — 2–5 restaurant IDs.
+  Future<List<RestaurantModel>> compareRestaurants(
+    List<String> restaurantIds,
+  ) async {
+    final List<String> ids = restaurantIds
+        .map((String id) => id.trim())
+        .where((String id) => id.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (ids.length < AppDimensions.compareMinRestaurants ||
+        ids.length > AppDimensions.compareMaxRestaurants) {
+      throw StateError(AppStrings.invalidRestaurantPayload);
+    }
+
+    final ApiResponse<List<RestaurantModel>> response = await _apiClient
+        .post<List<RestaurantModel>>(
+          AppUrls.discoveryRestaurantsComparePath,
+          data: <String, dynamic>{
+            AppStrings.apiCompareRestaurantIdsField: ids,
+          },
+          options: ApiClient.skipAuthOptions(),
+          parseData: _parseRestaurantItems,
+        );
+    final List<RestaurantModel> items = List<RestaurantModel>.unmodifiable(
+      response.data,
+    );
+    for (final RestaurantModel item in items) {
+      if (item.id.isNotEmpty) {
+        _restaurantById[item.id] = item;
+      }
+    }
+    return items;
+  }
+
+  /// `GET /discovery/restaurants/:restaurantId/offers?page=&limit=`
+  Future<List<RestaurantOfferModel>> listOffers(
+    String restaurantId, {
+    int page = AppDimensions.apiDefaultPage,
+    int limit = AppDimensions.apiDefaultLimit,
+  }) async {
     final String id = restaurantId.trim();
     if (id.isEmpty) {
       return const <RestaurantOfferModel>[];
@@ -124,6 +238,10 @@ class DiscoveryRepository {
     final ApiResponse<List<RestaurantOfferModel>> response = await _apiClient
         .get<List<RestaurantOfferModel>>(
           AppUrls.discoveryOffersPath(id),
+          queryParameters: <String, dynamic>{
+            AppUrls.discoveryPageQueryKey: page,
+            AppUrls.discoveryLimitQueryKey: limit,
+          },
           options: ApiClient.skipAuthOptions(),
           parseData: _parseOfferItems,
         );
@@ -155,7 +273,7 @@ class DiscoveryRepository {
     return restaurant;
   }
 
-  /// `GET /discovery/restaurants/:restaurantId/branches`
+  /// `GET /discovery/restaurants/:restaurantId/branches?page=&limit=`
   Future<List<BranchModel>> listBranches(
     String restaurantId, {
     int page = AppDimensions.apiDefaultPage,
@@ -176,7 +294,10 @@ class DiscoveryRepository {
     final ApiResponse<List<BranchModel>> response = await _apiClient
         .get<List<BranchModel>>(
           AppUrls.discoveryBranchesPath(id),
-          queryParameters: <String, dynamic>{'page': page, 'limit': limit},
+          queryParameters: <String, dynamic>{
+            AppUrls.discoveryPageQueryKey: page,
+            AppUrls.discoveryLimitQueryKey: limit,
+          },
           options: ApiClient.skipAuthOptions(),
           parseData: _parseBranchItems,
         );

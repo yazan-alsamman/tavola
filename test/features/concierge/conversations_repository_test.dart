@@ -162,11 +162,13 @@ void main() {
     final List<ConversationModel> list = await repo.listConversations();
     expect(list.single.conversationId, 'c-1');
     expect(
-      requests.first.queryParameters[AppUrls.conversationsLimitQueryKey],
+      requests.first.queryParameters[AppUrls.conversationsPageQueryKey],
       isNotNull,
     );
-    expect(requests.first.queryParameters.containsKey('page'), isFalse);
-    expect(requests.first.queryParameters.containsKey('pageSize'), isFalse);
+    expect(
+      requests.first.queryParameters[AppUrls.conversationsPageSizeQueryKey],
+      isNotNull,
+    );
 
     final ConversationModel started = await repo.startConversation(
       restaurantId: 'r-1',

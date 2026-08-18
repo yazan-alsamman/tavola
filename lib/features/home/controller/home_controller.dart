@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -15,7 +16,6 @@ import '../../../core/utils/app_dependency.dart';
 import '../../auth/controller/auth_session_controller.dart';
 import '../../details/controller/details_controller.dart';
 import '../../details/controller/restaurant_menu_controller.dart';
-import '../../details/repository/restaurant_details_repository.dart';
 import '../../discovery/model/restaurant_offer_model.dart';
 import '../../discovery/repository/discovery_repository.dart';
 import '../../favorites/repository/favorites_repository.dart';
@@ -57,6 +57,14 @@ class HomeController extends GetxController {
   final RxBool isLoadingRestaurants = true.obs;
   final RxnString restaurantsError = RxnString();
   final RxString searchQuery = ''.obs;
+  final RxBool isSearchingRestaurants = false.obs;
+  final RxnString searchError = RxnString();
+  final RxList<RestaurantModel> searchResults = <RestaurantModel>[].obs;
+  final RxBool isServerSearchActive = false.obs;
+
+  Timer? _searchDebounce;
+  CancelToken? _searchCancelToken;
+  int _searchRequestSerial = 0;
 
   /// Featured Home promo from nearby/catalog + `GET .../offers`.
   final Rxn<RestaurantOfferModel> featuredOffer = Rxn<RestaurantOfferModel>();
@@ -80,16 +88,53 @@ class HomeController extends GetxController {
 
   bool _postFrameLoadsStarted = false;
   bool _progressiveInitCancelled = false;
+  bool _authenticatedBootstrapStarted = false;
   HomeProgressiveInit? _progressiveInit;
 
   /// Test/perf: true after the post-frame progressive kickoff has been scheduled.
   bool get didSchedulePostFrameLoads => _postFrameLoadsStarted;
+
+  /// Test/perf: true after Guest→Auth / re-login catch-up was scheduled.
+  bool get didStartAuthenticatedBootstrap => _authenticatedBootstrapStarted;
 
   /// Test-only: stop progressive bands so unit tests can drive loads explicitly.
   @visibleForTesting
   void cancelProgressiveInit() {
     _progressiveInitCancelled = true;
     _progressiveInit?.cancel();
+  }
+
+  /// Clears the Guest→Auth bootstrap gate (logout / enter guest).
+  ///
+  /// Permanent [HomeController] survives shell changes; without this, a later
+  /// Login would skip authenticated Home stages.
+  void resetAuthenticatedBootstrapGate() {
+    _authenticatedBootstrapStarted = false;
+    _progressiveInit?.resetAuthenticatedCatchUpGate();
+  }
+
+  /// Explicit Guest → authenticated (or Logout → Login) Home transition.
+  ///
+  /// When progressive init already ran as guest (or for a prior account),
+  /// schedules only the missing authenticated stages. When progressive has
+  /// not started yet, the normal first-frame path sees the authenticated
+  /// session and runs auth bands itself.
+  void onBecameAuthenticated() {
+    if (isClosed || _authenticatedBootstrapStarted) {
+      return;
+    }
+    if (!Get.isRegistered<AuthSessionController>() ||
+        Get.find<AuthSessionController>().isAnonymousGuest) {
+      return;
+    }
+    _authenticatedBootstrapStarted = true;
+    if (!_postFrameLoadsStarted) {
+      return;
+    }
+    final HomeProgressiveInit init =
+        _progressiveInit ?? HomeProgressiveInit(this);
+    _progressiveInit ??= init;
+    init.startAuthenticatedCatchUp();
   }
 
   FavoritesRepository? get _favoritesOrNull =>
@@ -122,6 +167,8 @@ class HomeController extends GetxController {
   void onClose() {
     _progressiveInit?.cancel();
     _progressiveInit = null;
+    _searchDebounce?.cancel();
+    _cancelInFlightSearch();
     searchController.dispose();
     super.onClose();
   }
@@ -267,8 +314,6 @@ class HomeController extends GetxController {
           _HomeListErrorKind.empty,
           AppStrings.restaurantsEmpty,
         );
-      } else {
-        unawaited(_enrichRestaurantHoursLabels());
       }
       _logCatalog('restaurants ok', items.length);
     } on TimeoutException {
@@ -295,42 +340,6 @@ class HomeController extends GetxController {
     } finally {
       isLoadingRestaurants.value = false;
     }
-  }
-
-  /// Fills [RestaurantModel.hoursLabel] from primary-branch working-hours.
-  Future<void> _enrichRestaurantHoursLabels() async {
-    if (isClosed || restaurants.isEmpty) {
-      return;
-    }
-    AppDependency.ensureRestaurantDetailsRepository();
-    if (!Get.isRegistered<RestaurantDetailsRepository>()) {
-      return;
-    }
-    final RestaurantDetailsRepository details =
-        Get.find<RestaurantDetailsRepository>();
-    final List<RestaurantModel> snapshot = restaurants.toList(growable: false);
-    final List<RestaurantModel> enriched = await Future.wait(
-      snapshot.map((RestaurantModel restaurant) async {
-        if (restaurant.hoursLabel.trim().isNotEmpty) {
-          return restaurant;
-        }
-        try {
-          final String label = await details
-              .fetchTodayHoursLabel(restaurant.id)
-              .timeout(AppDimensions.homeCatalogLoadTimeout);
-          if (label.trim().isEmpty) {
-            return restaurant;
-          }
-          return restaurant.copyWith(hoursLabel: label);
-        } catch (_) {
-          return restaurant;
-        }
-      }),
-    );
-    if (isClosed) {
-      return;
-    }
-    restaurants.assignAll(enriched);
   }
 
   Future<void> loadCuisineCategories() async {
@@ -462,10 +471,123 @@ class HomeController extends GetxController {
       return;
     }
     searchQuery.value = value;
+    _searchDebounce?.cancel();
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      _cancelInFlightSearch();
+      isServerSearchActive.value = false;
+      searchResults.clear();
+      searchError.value = null;
+      isSearchingRestaurants.value = false;
+      return;
+    }
+    // Keep the current list visible while debouncing; spinner starts when the
+    // Discovery `q` request actually fires.
+    _searchDebounce = Timer(AppDimensions.homeSearchDebounce, () {
+      unawaited(_runServerSearch(trimmed));
+    });
+  }
+
+  Future<void> retrySearch() async {
+    final String query = searchQuery.value.trim();
+    if (query.isEmpty) {
+      return;
+    }
+    await _runServerSearch(query);
+  }
+
+  Future<void> _runServerSearch(String query) async {
+    if (isClosed) {
+      return;
+    }
+    _cancelInFlightSearch();
+    final CancelToken cancelToken = CancelToken();
+    _searchCancelToken = cancelToken;
+    final int serial = ++_searchRequestSerial;
+    isSearchingRestaurants.value = true;
+    searchError.value = null;
+    try {
+      double? latitude;
+      double? longitude;
+      if (Get.isRegistered<UserLocationController>()) {
+        final UserLocationController location =
+            Get.find<UserLocationController>();
+        latitude = location.latitude;
+        longitude = location.longitude;
+      }
+      final List<RestaurantModel> items = await _discoveryRepository
+          .searchRestaurants(
+            query: query,
+            latitude: latitude,
+            longitude: longitude,
+            cancelToken: cancelToken,
+          )
+          .timeout(AppDimensions.homeCatalogLoadTimeout);
+      if (isClosed || serial != _searchRequestSerial) {
+        return;
+      }
+      searchResults.assignAll(items);
+      isServerSearchActive.value = true;
+      if (items.isEmpty) {
+        searchError.value = AppStrings.searchRestaurantsEmpty;
+      }
+    } on ApiException catch (error) {
+      if (error.isCancelled || serial != _searchRequestSerial) {
+        return;
+      }
+      searchResults.clear();
+      isServerSearchActive.value = true;
+      searchError.value = error.message;
+    } on TimeoutException {
+      if (serial != _searchRequestSerial) {
+        return;
+      }
+      searchResults.clear();
+      isServerSearchActive.value = true;
+      searchError.value = AppStrings.networkTimeoutError;
+    } catch (_) {
+      if (serial != _searchRequestSerial) {
+        return;
+      }
+      searchResults.clear();
+      isServerSearchActive.value = true;
+      searchError.value = AppStrings.networkUnexpectedError;
+    } finally {
+      if (!isClosed && serial == _searchRequestSerial) {
+        isSearchingRestaurants.value = false;
+      }
+    }
+  }
+
+  void _cancelInFlightSearch() {
+    final CancelToken? token = _searchCancelToken;
+    _searchCancelToken = null;
+    if (token != null && !token.isCancelled) {
+      token.cancel();
+    }
   }
 
   List<RestaurantModel> get filteredRestaurants {
-    Iterable<RestaurantModel> items = restaurants;
+    // Final text search is server-backed (`q`). Cuisine/occasion chips refine
+    // the current result set — SearchRestaurantsQueryDto has no category keys.
+    // While debouncing, provisionally refine the cached catalog so typing stays
+    // responsive until Discovery responds.
+    Iterable<RestaurantModel> items;
+    final String query = searchQuery.value.trim();
+    if (isServerSearchActive.value) {
+      items = searchResults;
+    } else {
+      items = restaurants;
+      if (query.isNotEmpty) {
+        final String needle = query.toLowerCase();
+        items = items.where(
+          (RestaurantModel restaurant) =>
+              restaurant.name.toLowerCase().contains(needle) ||
+              restaurant.cuisine.toLowerCase().contains(needle) ||
+              restaurant.location.toLowerCase().contains(needle),
+        );
+      }
+    }
     final int filterIndex = selectedFilterIndex.value;
     if (filterIndex > 0 && filterIndex < restaurantFilters.length) {
       final String cuisine = restaurantFilters[filterIndex];
@@ -478,16 +600,6 @@ class HomeController extends GetxController {
     if (occasion != null && occasion.isNotEmpty) {
       items = items.where(
         (RestaurantModel restaurant) => _matchesOccasion(restaurant, occasion),
-      );
-    }
-
-    final String query = searchQuery.value.trim().toLowerCase();
-    if (query.isNotEmpty) {
-      items = items.where(
-        (RestaurantModel restaurant) =>
-            restaurant.name.toLowerCase().contains(query) ||
-            restaurant.cuisine.toLowerCase().contains(query) ||
-            restaurant.location.toLowerCase().contains(query),
       );
     }
     return items.toList(growable: false);
@@ -524,7 +636,10 @@ class HomeController extends GetxController {
   }
 
   /// Book the restaurant behind the featured Discovery offer.
-  void openFeaturedOfferReservation() {
+  Future<void> openFeaturedOfferReservation() async {
+    if (!await AuthSessionController.requireSignInIfRegistered()) {
+      return;
+    }
     final RestaurantModel? restaurant = featuredOfferRestaurant.value;
     if (restaurant == null || restaurant.id.trim().isEmpty) {
       SelectRestaurantController.open();

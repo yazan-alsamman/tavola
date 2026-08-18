@@ -3,6 +3,8 @@ import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/api_response.dart';
+import '../model/menu_category_model.dart';
+import '../model/menu_item_model.dart';
 import '../model/restaurant_menu_model.dart';
 
 /// Public restaurant menu APIs (Postman folder **Menu**).
@@ -10,6 +12,8 @@ import '../model/restaurant_menu_model.dart';
 /// - `GET /restaurants/:restaurantId/menus`
 /// - `GET /restaurants/:restaurantId/menus/default`
 /// - `GET /restaurants/:restaurantId/menus/:menuId`
+/// - `GET /restaurants/:restaurantId/menus/:menuId/categories/:categoryId`
+/// - `GET /restaurants/:restaurantId/menus/:menuId/categories/:categoryId/items/:itemId`
 class MenuRepository {
   MenuRepository(this._apiClient);
 
@@ -60,6 +64,59 @@ class MenuRepository {
           AppUrls.restaurantMenuPath(rid, mid),
           options: ApiClient.skipAuthOptions(),
           parseData: _parseMenuTree,
+        );
+    return response.data;
+  }
+
+  /// `GET /restaurants/:id/menus/:menuId/categories/:categoryId`.
+  Future<MenuCategoryModel> getCategoryById({
+    required String restaurantId,
+    required String menuId,
+    required String categoryId,
+  }) async {
+    final String rid = restaurantId.trim();
+    final String mid = menuId.trim();
+    final String cid = categoryId.trim();
+    if (rid.isEmpty || mid.isEmpty || cid.isEmpty) {
+      throw ApiException(message: AppStrings.invalidMenuPayload);
+    }
+    final ApiResponse<MenuCategoryModel> response = await _apiClient
+        .get<MenuCategoryModel>(
+          AppUrls.restaurantMenuCategoryPath(
+            restaurantId: rid,
+            menuId: mid,
+            categoryId: cid,
+          ),
+          options: ApiClient.skipAuthOptions(),
+          parseData: _parseCategory,
+        );
+    return response.data;
+  }
+
+  /// `GET /restaurants/:id/menus/:menuId/categories/:categoryId/items/:itemId`.
+  Future<MenuItemModel> getItemById({
+    required String restaurantId,
+    required String menuId,
+    required String categoryId,
+    required String itemId,
+  }) async {
+    final String rid = restaurantId.trim();
+    final String mid = menuId.trim();
+    final String cid = categoryId.trim();
+    final String iid = itemId.trim();
+    if (rid.isEmpty || mid.isEmpty || cid.isEmpty || iid.isEmpty) {
+      throw ApiException(message: AppStrings.invalidMenuPayload);
+    }
+    final ApiResponse<MenuItemModel> response = await _apiClient
+        .get<MenuItemModel>(
+          AppUrls.restaurantMenuItemPath(
+            restaurantId: rid,
+            menuId: mid,
+            categoryId: cid,
+            itemId: iid,
+          ),
+          options: ApiClient.skipAuthOptions(),
+          parseData: _parseItem,
         );
     return response.data;
   }
@@ -127,5 +184,29 @@ class MenuRepository {
       }
     }
     return parsed;
+  }
+
+  static MenuCategoryModel _parseCategory(Object? raw) {
+    if (raw is! Map) {
+      throw ApiException(message: AppStrings.invalidMenuPayload);
+    }
+    final MenuCategoryModel category = MenuCategoryModel.fromJson(
+      Map<String, dynamic>.from(raw),
+    );
+    if (category.id.isEmpty && category.name.isEmpty) {
+      throw ApiException(message: AppStrings.invalidMenuPayload);
+    }
+    return category;
+  }
+
+  static MenuItemModel _parseItem(Object? raw) {
+    if (raw is! Map) {
+      throw ApiException(message: AppStrings.invalidMenuPayload);
+    }
+    final MenuItemModel item = MenuItemModel.fromJson(Map<String, dynamic>.from(raw));
+    if (item.id.isEmpty && item.name.isEmpty) {
+      throw ApiException(message: AppStrings.invalidMenuPayload);
+    }
+    return item;
   }
 }

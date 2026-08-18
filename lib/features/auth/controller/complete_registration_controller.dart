@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -6,6 +8,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/navigation/app_navigation.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/utils/app_dependency.dart';
 import '../model/auth_device.dart';
 import '../model/auth_validation.dart';
 import '../model/customer_auth_otp_route_args.dart';
@@ -13,6 +16,7 @@ import '../model/customer_login_request_model.dart';
 import '../model/customer_registration_request_models.dart';
 import '../repository/auth_repository.dart';
 import 'auth_session_controller.dart';
+import 'login_controller.dart';
 
 /// Sign-up step 3 after OTP: password → `POST /auth/customer/register/complete`.
 class CompleteRegistrationController extends GetxController {
@@ -73,6 +77,8 @@ class CompleteRegistrationController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     var signedIn = false;
+    var accountCreated = false;
+    var openLoginAfterFailure = false;
     try {
       final String password = passwordController.text;
       await _authRepository.completeCustomerRegistration(
@@ -82,6 +88,8 @@ class CompleteRegistrationController extends GetxController {
           password: password,
         ),
       );
+      // Account exists on the server from this point — never re-register.
+      accountCreated = true;
       final response = await _authRepository.loginCustomer(
         CustomerLoginRequestModel(
           countryCode: registrationArgs.countryCode,
@@ -92,20 +100,40 @@ class CompleteRegistrationController extends GetxController {
         ),
       );
       await Get.find<AuthSessionController>().completeSignIn(response);
-      // Login payloads sometimes omit username; keep the signup name.
+      // Memory-only — Keychain username flush waits for post-login bootstrap.
       if (registrationArgs.username.trim().isNotEmpty) {
-        await Get.find<AuthSessionController>().rememberProfileUsername(
+        Get.find<AuthSessionController>().stashSignupUsername(
           registrationArgs.username,
         );
       }
       signedIn = true;
     } on ApiException catch (error) {
       if (!isClosed) {
-        errorMessage.value = error.message;
+        if (accountCreated) {
+          // Registration succeeded; authentication did not. Recover via Login.
+          errorMessage.value = AppStrings.authRegistrationComplete;
+          openLoginAfterFailure = true;
+        } else {
+          errorMessage.value = error.message;
+        }
+      }
+    } on TimeoutException {
+      if (!isClosed) {
+        if (accountCreated) {
+          errorMessage.value = AppStrings.authRegistrationComplete;
+          openLoginAfterFailure = true;
+        } else {
+          errorMessage.value = AppStrings.networkTimeoutError;
+        }
       }
     } catch (_) {
       if (!isClosed) {
-        errorMessage.value = AppStrings.networkUnexpectedError;
+        if (accountCreated) {
+          errorMessage.value = AppStrings.authRegistrationComplete;
+          openLoginAfterFailure = true;
+        } else {
+          errorMessage.value = AppStrings.networkUnexpectedError;
+        }
       }
     } finally {
       if (!isClosed) {
@@ -115,7 +143,29 @@ class CompleteRegistrationController extends GetxController {
 
     if (signedIn && !isClosed) {
       AppNavigation.goShell(AppRoutes.home);
+      Get.find<AuthSessionController>().schedulePostLoginBootstrap();
+      return;
     }
+    if (openLoginAfterFailure && !isClosed) {
+      _openLoginAfterAccountCreated();
+    }
+  }
+
+  /// Account already exists — send the user to Login without re-registering.
+  void _openLoginAfterAccountCreated() {
+    AppDependency.ensureLoginRouteDependencies();
+    if (Get.isRegistered<LoginController>()) {
+      Get.find<LoginController>().prepareForPasswordResetReturn(
+        AppStrings.authRegistrationComplete,
+        countryCode: registrationArgs.countryCode,
+        dialCode: registrationArgs.dialCode,
+        phoneNumber: registrationArgs.phoneNumber,
+      );
+    }
+    AppNavigation.goShell(
+      AppRoutes.login,
+      arguments: AppStrings.authRegistrationComplete,
+    );
   }
 
   void _onFieldsChanged() {
