@@ -4,21 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:tavla/core/constants/app_strings.dart';
 import 'package:tavla/core/network/api_client.dart';
 import 'package:tavla/core/network/auth_token_reader.dart';
 import 'package:tavla/features/cuisine_preferences/controller/favorite_cuisines_controller.dart';
-import 'package:tavla/features/taxonomy/model/cuisine_category_model.dart';
+import 'package:tavla/features/taxonomy/model/occasion_category_model.dart';
 import 'package:tavla/features/taxonomy/repository/taxonomy_repository.dart';
 
 class _HangingTaxonomyRepository extends TaxonomyRepository {
   _HangingTaxonomyRepository(super.apiClient);
 
-  final Completer<List<CuisineCategoryModel>> _completer =
-      Completer<List<CuisineCategoryModel>>();
+  final Completer<List<OccasionCategoryModel>> _completer =
+      Completer<List<OccasionCategoryModel>>();
 
   @override
-  Future<List<CuisineCategoryModel>> fetchCuisineCategories({
+  Future<List<OccasionCategoryModel>> fetchOccasionCategories({
     bool forceRefresh = false,
   }) {
     return _completer.future;
@@ -35,7 +34,7 @@ class _FailingTaxonomyRepository extends TaxonomyRepository {
   _FailingTaxonomyRepository(super.apiClient);
 
   @override
-  Future<List<CuisineCategoryModel>> fetchCuisineCategories({
+  Future<List<OccasionCategoryModel>> fetchOccasionCategories({
     bool forceRefresh = false,
   }) async {
     throw Exception('network down');
@@ -46,20 +45,20 @@ class _LiveTaxonomyRepository extends TaxonomyRepository {
   _LiveTaxonomyRepository(super.apiClient);
 
   @override
-  Future<List<CuisineCategoryModel>> fetchCuisineCategories({
+  Future<List<OccasionCategoryModel>> fetchOccasionCategories({
     bool forceRefresh = false,
   }) async {
-    return const <CuisineCategoryModel>[
-      CuisineCategoryModel(
-        id: 'c1',
-        slug: 'italian',
-        name: 'Italian',
+    return const <OccasionCategoryModel>[
+      OccasionCategoryModel(
+        id: 'o1',
+        slug: OccasionCategoryModel.slugDateNight,
+        name: 'Date Night',
         sortOrder: 1,
       ),
-      CuisineCategoryModel(
-        id: 'c2',
-        slug: 'japanese',
-        name: 'Japanese',
+      OccasionCategoryModel(
+        id: 'o2',
+        slug: OccasionCategoryModel.slugFamily,
+        name: 'Family',
         sortOrder: 2,
       ),
     ];
@@ -78,30 +77,33 @@ void main() {
 
   tearDown(Get.reset);
 
-  test('shows fallback chips immediately when taxonomy hangs', () async {
-    final _HangingTaxonomyRepository taxonomy = _HangingTaxonomyRepository(
-      Get.find<ApiClient>(),
-    );
-    Get.put<TaxonomyRepository>(taxonomy);
+  test(
+    'shows fallback occasion chips immediately when taxonomy hangs',
+    () async {
+      final _HangingTaxonomyRepository taxonomy = _HangingTaxonomyRepository(
+        Get.find<ApiClient>(),
+      );
+      Get.put<TaxonomyRepository>(taxonomy);
 
-    final FavoriteCuisinesController controller = FavoriteCuisinesController(
-      taxonomyRepository: taxonomy,
-    );
-    controller.onInit();
+      final FavoriteCuisinesController controller = FavoriteCuisinesController(
+        taxonomyRepository: taxonomy,
+      );
+      controller.onInit();
 
-    expect(controller.isLoadingCuisineCategories.value, isFalse);
-    expect(controller.cuisineOptions, isNotEmpty);
-    expect(
-      controller.cuisineOptions.length,
-      AppStrings.favoriteCuisineOptionKeys.length,
-    );
-    expect(controller.cuisineOptions.first.name, 'American');
+      expect(controller.isLoadingOccasionCategories.value, isFalse);
+      expect(controller.occasionOptions, isNotEmpty);
+      expect(
+        controller.occasionOptions.length,
+        OccasionCategoryModel.fallbackItems().length,
+      );
+      expect(controller.occasionOptions.first.name, 'Date Night');
 
-    taxonomy.completeWithError();
-    await controller.loadCuisineCategories();
-    expect(controller.isLoadingCuisineCategories.value, isFalse);
-    expect(controller.cuisineOptions, isNotEmpty);
-  });
+      taxonomy.completeWithError();
+      await controller.loadOccasionCategories();
+      expect(controller.isLoadingOccasionCategories.value, isFalse);
+      expect(controller.occasionOptions, isNotEmpty);
+    },
+  );
 
   test('keeps fallback chips when taxonomy fails', () async {
     final TaxonomyRepository taxonomy = _FailingTaxonomyRepository(
@@ -113,33 +115,36 @@ void main() {
       taxonomyRepository: taxonomy,
     );
     controller.onInit();
-    await controller.loadCuisineCategories();
+    await controller.loadOccasionCategories();
 
-    expect(controller.isLoadingCuisineCategories.value, isFalse);
-    expect(controller.cuisineOptions, isNotEmpty);
-    expect(controller.cuisineCategoriesError.value, isNull);
+    expect(controller.isLoadingOccasionCategories.value, isFalse);
+    expect(controller.occasionOptions, isNotEmpty);
+    expect(controller.occasionCategoriesError.value, isNull);
   });
 
-  test('replaces fallback with live taxonomy when available', () async {
-    final TaxonomyRepository taxonomy = _LiveTaxonomyRepository(
-      Get.find<ApiClient>(),
-    );
-    Get.put<TaxonomyRepository>(taxonomy);
+  test(
+    'replaces fallback with live occasion taxonomy when available',
+    () async {
+      final TaxonomyRepository taxonomy = _LiveTaxonomyRepository(
+        Get.find<ApiClient>(),
+      );
+      Get.put<TaxonomyRepository>(taxonomy);
 
-    final FavoriteCuisinesController controller = FavoriteCuisinesController(
-      taxonomyRepository: taxonomy,
-    );
-    controller.onInit();
-    await controller.loadCuisineCategories();
+      final FavoriteCuisinesController controller = FavoriteCuisinesController(
+        taxonomyRepository: taxonomy,
+      );
+      controller.onInit();
+      await controller.loadOccasionCategories();
 
-    expect(controller.cuisineOptions.length, 2);
-    expect(
-      controller.cuisineOptions.map((CuisineCategoryModel c) => c.name),
-      <String>['Italian', 'Japanese'],
-    );
-  });
+      expect(controller.occasionOptions.length, 2);
+      expect(
+        controller.occasionOptions.map((OccasionCategoryModel c) => c.name),
+        <String>['Date Night', 'Family'],
+      );
+    },
+  );
 
-  test('toggle selection works on fallback chips', () async {
+  test('toggle selection works on fallback occasion chips', () async {
     final TaxonomyRepository taxonomy = _FailingTaxonomyRepository(
       Get.find<ApiClient>(),
     );
@@ -150,11 +155,11 @@ void main() {
     );
     controller.onInit();
 
-    controller.toggleCuisine('Italian');
+    controller.toggleOccasion('Date Night');
     expect(controller.hasSelection, isTrue);
-    expect(controller.isSelected('Italian'), isTrue);
+    expect(controller.isSelected('Date Night'), isTrue);
 
-    controller.toggleCuisine('Italian');
+    controller.toggleOccasion('Date Night');
     expect(controller.hasSelection, isFalse);
   });
 }

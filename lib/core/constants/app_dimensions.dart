@@ -47,6 +47,7 @@ class AppDimensions {
   );
   static const double reservationCardHeight = 136.0;
   static const double reservationImageWidth = 130.0;
+
   /// Single-line slots so Date / Time / Guests values stay on one baseline.
   static const double reservationDetailLabelLineHeight = 16.0;
   static const double reservationDetailValueLineHeight = 20.0;
@@ -166,9 +167,11 @@ class AppDimensions {
   static const double reservationReviewSheetStarSize = 36.0;
   static const double reservationReviewSheetMaxHeightFactor = 0.88;
   static const double reservationReviewPhotoThumbSize = 64.0;
+
   /// Drag handle on modal bottom sheets (Write Review, Compare picker, etc.).
   static const double bottomSheetGrabberWidth = 48.0;
   static const double bottomSheetGrabberHeight = 3.0;
+
   /// Soft fill behind the login password-reset success banner.
   static const double loginSuccessBannerFillAlpha = 0.12;
   static const int reviewMinRating = 1;
@@ -202,6 +205,14 @@ class AppDimensions {
   static const double conciergeBubbleRadius = 18.0;
   static const double conciergeBubbleTailRadius = 4.0;
   static const double conciergeHeaderAvatarSize = 40.0;
+
+  /// Compact onboarding preview of the Chat / messaging screen.
+  static const double onboardingMessagingPreviewRadius = 22.0;
+  static const double onboardingMessagingComposerHeight = 36.0;
+  static const double onboardingMessagingSendButtonSize = 32.0;
+  static const double onboardingMessagingTitleFontSize = 16.0;
+  static const double onboardingMessagingBubbleFontSize = 12.0;
+  static const double onboardingMessagingBubbleWidthFactor = 0.78;
   static const double mapInitialZoom = 14.2;
   static const double mapInitialLatitude = 51.5124;
   static const double mapInitialLongitude = -0.1472;
@@ -678,7 +689,7 @@ class AppDimensions {
   static const Duration onboardingPageEntranceDuration = Duration(
     milliseconds: 1050,
   );
-  static const double onboardingDinematePageTopOffset = 24.0;
+  static const double onboardingDinematePageTopOffset = 8.0;
   static const Duration onboardingDotAnimDuration = Duration(milliseconds: 280);
   static const double onboardingPageFadeFactor = 0.5;
   static const double onboardingPageScaleFactor = 0.08;

@@ -32,6 +32,7 @@ class AppStrings {
       'The requested resource was not found.'.tr;
   static String get networkTooManyRequestsError =>
       'Too many attempts. Please wait and try again.'.tr;
+
   /// HTTP Authorization header name (matches [ApiClient] Bearer attach).
   static const String authorizationHeaderKey = 'Authorization';
   static const String bearerTokenPrefix = 'Bearer ';
@@ -173,13 +174,12 @@ class AppStrings {
       'Earn points with every reservation and unlock refined dining privileges.'
           .tr;
   static String get onboardingDinemateHeadline =>
-      'Not finding a place to eat? Ask Tavola AI'.tr;
+      'Need a table? Message your host'.tr;
   static String get onboardingDinemateHint =>
-      'Tavola AI guides you to the perfect table for any occasion.'.tr;
-  static const String onboardingDinemateTitle = 'Tavola AI';
-  static String get onboardingDinemateStatus => 'Always ready'.tr;
-  static String get onboardingDinemateComposerHint =>
-      'Ask Tavola AI for a recommendation...'.tr;
+      'Chat with restaurants the same way you message — simple and direct.'.tr;
+  static const String onboardingDinemateTitle = conciergeTitle;
+  static String get onboardingDinemateStatus => conciergeStatus;
+  static String get onboardingDinemateComposerHint => conciergeMessageHint;
   static String get onboardingDinemateUserMessage =>
       'Find me an intimate table for two tonight.'.tr;
   static String get onboardingDinemateAiMessage =>
@@ -255,15 +255,16 @@ class AppStrings {
   static const String localeLanguageCodeKey = 'locale_language_code';
   static const String favoriteCuisinesSelectedKey =
       'favorite_cuisines_selected';
+
   /// Persisted startup session mode ([SessionMode]) — SharedPreferences only.
   static const String sessionModeKey = 'session_mode';
   static const String sessionModeNoneValue = 'none';
   static const String sessionModeGuestValue = 'guest';
   static const String sessionModeAuthenticatedValue = 'authenticated';
 
-  static String get favoriteCuisinesTitle => 'Favorite Cuisines'.tr;
+  static String get favoriteCuisinesTitle => 'Favorite Occasions'.tr;
   static String get favoriteCuisinesSubtitle =>
-      'Select the cuisines you enjoy the most to get personalized recommendations.'
+      'Select the occasions you enjoy the most to get personalized recommendations.'
           .tr;
   static String get favoriteCuisinesSkip => 'Skip for Now'.tr;
   static String get favoriteCuisinesConfirm => 'Confirm'.tr;
@@ -361,11 +362,14 @@ class AppStrings {
       'Active sessions signed in to your account.'.tr;
   static String get deleteAccount => 'Delete account'.tr;
   static String get deleteAccountInstruction =>
-      'Enter your password to request account deletion. You can cancel during the grace period by signing in again.'.tr;
+      'Enter your password to request account deletion. You can cancel during the grace period by signing in again.'
+          .tr;
   static String get deleteAccountConfirmMessage =>
-      'Your account will be scheduled for deletion. All sessions will end immediately. Continue?'.tr;
+      'Your account will be scheduled for deletion. All sessions will end immediately. Continue?'
+          .tr;
   static String get deleteAccountSuccess =>
-      'Account deletion requested. You can cancel by signing in again during the grace period.'.tr;
+      'Account deletion requested. You can cancel by signing in again during the grace period.'
+          .tr;
   static String get deleteAccountOpenReservations =>
       'Cancel your open reservations before deleting your account.'.tr;
   static String get cancelAccountDeletion => 'Cancel account deletion'.tr;
@@ -377,7 +381,8 @@ class AppStrings {
       'Cancel the pending account deletion request?'.tr;
   static String get exportMyData => 'Export my data'.tr;
   static String get exportMyDataDescription =>
-      'Download a copy of your profile, preferences, reservations, reviews, and favorites.'.tr;
+      'Download a copy of your profile, preferences, reservations, reviews, and favorites.'
+          .tr;
   static String get exportMyDataSuccess =>
       'Data export generated successfully.'.tr;
   static String exportMyDataSummary({
@@ -392,18 +397,16 @@ class AppStrings {
           'favorites': '$favorites',
         });
   }
+
   static String get revokeSession => 'Revoke'.tr;
-  static String get revokeSessionConfirm =>
-      'Revoke this device session?'.tr;
+  static String get revokeSessionConfirm => 'Revoke this device session?'.tr;
   static String get currentSessionLabel => 'This device'.tr;
   static String get sessionsEmpty => 'No active sessions found.'.tr;
-  static String get sessionsLoadError =>
-      'Could not load device sessions.'.tr;
+  static String get sessionsLoadError => 'Could not load device sessions.'.tr;
   static String get unknownDevice => 'Unknown device'.tr;
   static String get restaurantReviews => 'Reviews'.tr;
   static String get restaurantReviewsEmpty => 'No reviews yet.'.tr;
-  static String get restaurantReviewsLoadError =>
-      'Could not load reviews.'.tr;
+  static String get restaurantReviewsLoadError => 'Could not load reviews.'.tr;
   static String get restaurantReviewsLoadMore => 'Load more reviews'.tr;
   static String get viewReviewDetails => 'View review'.tr;
   static String get reservationSlotsEmpty =>
@@ -858,8 +861,7 @@ class AppStrings {
   static String get conversationClosedStatus => 'Closed'.tr;
   static String get conversationOpenStatus => 'Open'.tr;
   static String get conversationsStartNew => 'Start conversation'.tr;
-  static String get conversationsChooseRestaurant =>
-      'Choose a restaurant'.tr;
+  static String get conversationsChooseRestaurant => 'Choose a restaurant'.tr;
   static String get conversationsCloseAction => 'Close chat'.tr;
   static String get conversationsBackToList => 'All chats'.tr;
   static String get conversationsClosedBanner =>
@@ -906,7 +908,8 @@ class AppStrings {
   static String get yourReview => 'Your review'.tr;
   static String get writeAReview => 'Write a review'.tr;
   static String get submitReview => 'Submit review'.tr;
-  static String get reviewCommentHint => 'Share a few words about your evening.'.tr;
+  static String get reviewCommentHint =>
+      'Share a few words about your evening.'.tr;
   static String get reviewSubmitted => 'Review submitted successfully.'.tr;
   static String get reviewSubmitFailed => 'Could not submit your review.'.tr;
   static String get reviewDeleted => 'Review removed.'.tr;
@@ -1035,6 +1038,7 @@ class AppStrings {
   static String get hoursWeekday => '12:00 PM – 11:00 PM'.tr;
   static String get hoursWeekend => '11:00 AM – 12:00 AM'.tr;
   static String get hoursClosed => 'Closed'.tr;
+
   /// Shown in Details Hours card while working-hours API has no rows yet.
   static String get hoursUnavailable => 'Hours unavailable.'.tr;
   static String get ratingUnavailable => '—'.tr;

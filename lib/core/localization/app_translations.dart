@@ -302,6 +302,7 @@ class AppTranslations extends Translations {
     'Family': 'Family',
     'Favorite': 'Favorite',
     'Favorite Cuisines': 'Favorite Cuisines',
+    'Favorite Occasions': 'Favorite Occasions',
     'Favorite dining selections': 'Favorite dining selections',
     'Favorites': 'Favorites',
     'Favorites Screen': 'Favorites Screen',
@@ -413,7 +414,8 @@ class AppTranslations extends Translations {
     'Export my data': 'Export my data',
     'Download a copy of your profile, preferences, reservations, reviews, and favorites.':
         'Download a copy of your profile, preferences, reservations, reviews, and favorites.',
-    'Data export generated successfully.': 'Data export generated successfully.',
+    'Data export generated successfully.':
+        'Data export generated successfully.',
     'Reservations: @reservations • Reviews: @reviews • Favorites: @favorites':
         'Reservations: @reservations • Reviews: @reviews • Favorites: @favorites',
     'This is a preview of your booking confirmation. Share the code with your guests when you reserve for real.':
@@ -647,6 +649,9 @@ class AppTranslations extends Translations {
     'Cancel this reservation?': 'Cancel this reservation?',
     'Reschedule this reservation?': 'Reschedule this reservation?',
     'Log out of your account?': 'Log out of your account?',
+    'Need a table? Message your host': 'Need a table? Message your host',
+    'Chat with restaurants the same way you message — simple and direct.':
+        'Chat with restaurants the same way you message — simple and direct.',
     'Not finding a place to eat? Ask Tavola AI':
         'Not finding a place to eat? Ask Tavola AI',
     'November': 'November',
@@ -779,6 +784,8 @@ class AppTranslations extends Translations {
     'SELECT DATE': 'SELECT DATE',
     'Select the cuisines you enjoy the most to get personalized recommendations.':
         'Select the cuisines you enjoy the most to get personalized recommendations.',
+    'Select the occasions you enjoy the most to get personalized recommendations.':
+        'Select the occasions you enjoy the most to get personalized recommendations.',
     'Select your restaurant': 'Select your restaurant',
     'Select your table': 'Select your table',
     'SELECTED': 'SELECTED',
@@ -972,8 +979,7 @@ class AppTranslations extends Translations {
     'Charcoal Aubergine': 'باذنجان على الفحم',
     'Charred greens with citrus vinaigrette.': 'خضروات مشوية مع تتبيلة حمضيات.',
     'Chat': 'المحادثة',
-    'Sign in to message your dining host.':
-        'سجّل الدخول لمراسلة مضيف الطعام.',
+    'Sign in to message your dining host.': 'سجّل الدخول لمراسلة مضيف الطعام.',
     'No conversations yet. Start one with a restaurant.':
         'لا توجد محادثات بعد. ابدأ محادثة مع مطعم.',
     'Could not load conversations. Please try again.':
@@ -1076,8 +1082,7 @@ class AppTranslations extends Translations {
         'استمتع بعشاء فاخر بنكهات يختارها الشيف وأجواء دافئة.',
     'Could not load offers. Please try again.':
         'تعذر تحميل العروض. يرجى المحاولة مرة أخرى.',
-    'No special offers available right now.':
-        'لا تتوفر عروض خاصة حالياً.',
+    'No special offers available right now.': 'لا تتوفر عروض خاصة حالياً.',
     'Invalid offer payload.': 'بيانات العرض غير صالحة.',
     'Account created. Please log in.': 'تم إنشاء الحساب. يرجى تسجيل الدخول.',
     'Password updated. Please log in.':
@@ -1114,6 +1119,7 @@ class AppTranslations extends Translations {
     'Family-friendly seating': 'مقاعد مناسبة للعائلات',
     'Favorite': 'المفضلة',
     'Favorite Cuisines': 'المأكولات المفضلة',
+    'Favorite Occasions': 'المناسبات المفضلة',
     'Favorite dining selections': 'اختيارات الطعام المفضلة',
     'Favorites': 'المفضلة',
     'Favorites Screen': 'شاشة المفضلة',
@@ -1454,6 +1460,9 @@ class AppTranslations extends Translations {
     'Cancel this reservation?': 'إلغاء هذا الحجز؟',
     'Reschedule this reservation?': 'إعادة جدولة هذا الحجز؟',
     'Log out of your account?': 'تسجيل الخروج من حسابك؟',
+    'Need a table? Message your host': 'تحتاج طاولة؟ راسل مضيفك',
+    'Chat with restaurants the same way you message — simple and direct.':
+        'راسل المطاعم كما تراسل في المحادثات — بسيط ومباشر.',
     'Not finding a place to eat? Ask Tavola AI':
         'لم تجد مكانًا لتناول الطعام؟ اسأل Tavola AI',
     'November': 'نوفمبر',
@@ -1579,6 +1588,8 @@ class AppTranslations extends Translations {
     'SELECT DATE': 'اختر التاريخ',
     'Select the cuisines you enjoy the most to get personalized recommendations.':
         'اختر المأكولات التي تفضلها أكثر للحصول على توصيات مخصصة.',
+    'Select the occasions you enjoy the most to get personalized recommendations.':
+        'اختر المناسبات التي تفضلها أكثر للحصول على توصيات مخصصة.',
     'Select your restaurant': 'اختر مطعمك',
     'Select your table': 'اختر طاولتك',
     'SELECTED': 'محدد',

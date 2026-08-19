@@ -73,7 +73,8 @@ class AppUrls {
   static const String reservationsPageSizeQueryKey = 'pageSize';
   static const String reservationsLimitQueryKey = 'limit';
   static const String reservationsMyPath = '$reservationsPath/my';
-  static const String reservationsMyUpcomingPath = '$reservationsMyPath/upcoming';
+  static const String reservationsMyUpcomingPath =
+      '$reservationsMyPath/upcoming';
   static const String reservationsMyHistoryPath = '$reservationsMyPath/history';
 
   static String reservationsDetailPath(String reservationId) =>
@@ -176,7 +177,9 @@ class AppUrls {
   static const String notificationsIdentityTokenPath =
       '$notificationsPath/identity-token';
   static const String notificationsPageQueryKey = 'page';
-  static const String notificationsPageSizeQueryKey = 'pageSize';
+
+  /// Live API rejects `pageSize` here; use `limit` (same as Discovery).
+  static const String notificationsLimitQueryKey = 'limit';
   static const String notificationsUnreadQueryKey = 'unread';
 
   static String notificationReadPath(String notificationId) =>
@@ -200,11 +203,8 @@ class AppUrls {
   static String conversationClosePath(String conversationId) =>
       '${conversationPath(conversationId)}/close';
 
-  /// Conversation list pagination (`GET /conversations?page=&pageSize=`).
-  static const String conversationsPageQueryKey = 'page';
-  static const String conversationsPageSizeQueryKey = 'pageSize';
-
-  /// Messages page size (`GET /conversations/:id/messages?limit=`).
+  /// Conversation list + messages cursor pagination (`limit`, optional `cursor`).
+  /// Live `GET /conversations` rejects `page` and `pageSize`.
   static const String conversationsLimitQueryKey = 'limit';
 
   /// Opaque cursor for messages cursor pagination, if backend returns it.
@@ -213,6 +213,7 @@ class AppUrls {
   /// Customer reviews (Postman folder **10 - Reviews** + `GET /users/me/reviews`).
   static const String reviewsPath = '/reviews';
   static const String myReviewsPath = '/users/me/reviews';
+
   /// Reviews list pagination in current Postman collection.
   static const String reviewsPageQueryKey = 'page';
   static const String reviewsPageSizeQueryKey = 'pageSize';

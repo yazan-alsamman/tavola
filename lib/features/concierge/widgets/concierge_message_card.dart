@@ -9,10 +9,14 @@ class ConciergeMessageCard extends StatelessWidget {
     super.key,
     required this.message,
     this.isFromCustomer = false,
+    this.maxWidth,
+    this.compact = false,
   });
 
   final String message;
   final bool isFromCustomer;
+  final double? maxWidth;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +42,9 @@ class ConciergeMessageCard extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth:
+              maxWidth ??
               MediaQuery.sizeOf(context).width *
-              AppDimensions.conciergeMessageWidthFactor,
+                  AppDimensions.conciergeMessageWidthFactor,
         ),
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -53,13 +58,22 @@ class ConciergeMessageCard extends StatelessWidget {
                   ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.contentPadding,
-              vertical: AppDimensions.regularSpacing,
+            padding: EdgeInsets.symmetric(
+              horizontal: compact
+                  ? AppDimensions.compactSpacing
+                  : AppDimensions.contentPadding,
+              vertical: compact
+                  ? AppDimensions.compactSpacing
+                  : AppDimensions.regularSpacing,
             ),
             child: Text(
               message,
+              maxLines: compact ? 3 : null,
+              overflow: compact ? TextOverflow.ellipsis : TextOverflow.visible,
               style: AppTextStyles.conciergeMessage.copyWith(
+                fontSize: compact
+                    ? AppDimensions.onboardingMessagingBubbleFontSize
+                    : null,
                 color: isFromCustomer
                     ? AppColors.textLight
                     : AppColors.textPrimary,

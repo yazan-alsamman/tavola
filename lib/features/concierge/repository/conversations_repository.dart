@@ -29,16 +29,19 @@ class ConversationsRepository {
   /// Optional override for tests; production uses [Get.find].
   final AuthTokenReader? _tokenReaderOverride;
 
-  /// `GET /conversations?page=&pageSize=`.
+  /// `GET /conversations?limit=&cursor=` (cursor pagination).
   Future<List<ConversationModel>> listConversations({
-    int page = AppDimensions.apiDefaultPage,
-    int pageSize = AppDimensions.conversationsPageSize,
+    int limit = AppDimensions.conversationsPageSize,
+    String? cursor,
   }) async {
     await _ensureAuthenticated();
     final Map<String, dynamic> query = <String, dynamic>{
-      AppUrls.conversationsPageQueryKey: page,
-      AppUrls.conversationsPageSizeQueryKey: pageSize,
+      AppUrls.conversationsLimitQueryKey: limit,
     };
+    final String? cursorValue = cursor?.trim();
+    if (cursorValue != null && cursorValue.isNotEmpty) {
+      query[AppUrls.conversationsCursorQueryKey] = cursorValue;
+    }
     final ApiResponse<List<ConversationModel>> response = await _apiClient
         .get<List<ConversationModel>>(
           AppUrls.conversationsPath,
@@ -60,9 +63,7 @@ class ConversationsRepository {
     if (rid.isEmpty) {
       throw StateError(AppStrings.invalidConversationPayload);
     }
-    final Map<String, dynamic> body = <String, dynamic>{
-      'restaurantId': rid,
-    };
+    final Map<String, dynamic> body = <String, dynamic>{'restaurantId': rid};
     final String? branch = branchId?.trim();
     if (branch != null && branch.isNotEmpty) {
       body['branchId'] = branch;
@@ -189,9 +190,7 @@ class ConversationsRepository {
           AppUrls.conversationClosePath(id),
           parseData: (Object? raw) {
             if (raw is Map) {
-              return ConversationModel.fromJson(
-                Map<String, dynamic>.from(raw),
-              );
+              return ConversationModel.fromJson(Map<String, dynamic>.from(raw));
             }
             return null;
           },
@@ -199,10 +198,8 @@ class ConversationsRepository {
     return response.data;
   }
 
-  Future<bool> _hasAccessToken() => AuthAccessGuard.hasAccessToken(
-        tokenReader: _tokenReaderOverride,
-      );
-
+  Future<bool> _hasAccessToken() =>
+      AuthAccessGuard.hasAccessToken(tokenReader: _tokenReaderOverride);
 
   Future<void> _ensureAuthenticated() async {
     if (!await _hasAccessToken()) {
@@ -218,9 +215,7 @@ class ConversationsRepository {
         continue;
       }
       try {
-        parsed.add(
-          ConversationModel.fromJson(Map<String, dynamic>.from(item)),
-        );
+        parsed.add(ConversationModel.fromJson(Map<String, dynamic>.from(item)));
       } catch (_) {
         // Skip malformed rows.
       }
@@ -298,8 +293,7 @@ class ConversationMessagesPage {
   static List<ConversationMessageModel> parseItems(Object? raw) {
     final List<dynamic> items;
     if (raw is Map) {
-      final Object? nested =
-          raw['items'] ?? raw['messages'] ?? raw['results'];
+      final Object? nested = raw['items'] ?? raw['messages'] ?? raw['results'];
       items = nested is List ? nested : const <dynamic>[];
     } else if (raw is List) {
       items = raw;

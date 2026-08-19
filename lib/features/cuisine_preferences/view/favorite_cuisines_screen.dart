@@ -39,7 +39,7 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Symbols.restaurant_menu,
+                      Symbols.celebration,
                       size: AppDimensions.favoriteCuisinesIconSize,
                       color: AppColors.primaryDark,
                     ),
@@ -60,12 +60,12 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                   Expanded(
                     flex: 8,
                     child: Obx(() {
-                      if (controller.isLoadingCuisineCategories.value) {
+                      if (controller.isLoadingOccasionCategories.value) {
                         return const Center(child: CircularProgressIndicator());
                       }
 
                       final String? error =
-                          controller.cuisineCategoriesError.value;
+                          controller.occasionCategoriesError.value;
                       if (error != null) {
                         return Center(
                           child: Column(
@@ -80,7 +80,7 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                                 height: AppDimensions.regularSpacing,
                               ),
                               TextButton(
-                                onPressed: controller.loadCuisineCategories,
+                                onPressed: controller.loadOccasionCategories,
                                 style: TextButton.styleFrom(
                                   textStyle: AppTextStyles.authLinkEmphasis,
                                 ),
@@ -94,10 +94,10 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                         );
                       }
 
-                      if (controller.cuisineOptions.isEmpty) {
+                      if (controller.occasionOptions.isEmpty) {
                         return Center(
                           child: Text(
-                            AppStrings.cuisineCategoriesEmpty,
+                            AppStrings.occasionCategoriesEmpty,
                             textAlign: TextAlign.center,
                             style: AppTextStyles.favoriteCuisinesSubtitle,
                           ),
@@ -109,11 +109,11 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                           alignment: WrapAlignment.center,
                           spacing: AppDimensions.favoriteCuisinesChipSpacing,
                           runSpacing: AppDimensions.favoriteCuisinesChipSpacing,
-                          children: controller.cuisineOptions.map((cuisine) {
-                            final String name = cuisine.name;
+                          children: controller.occasionOptions.map((occasion) {
+                            final String name = occasion.name;
                             final bool selected = controller.isSelected(name);
                             return GestureDetector(
-                              onTap: () => controller.toggleCuisine(name),
+                              onTap: () => controller.toggleOccasion(name),
                               child: AnimatedContainer(
                                 duration: AppDimensions.hoverDuration,
                                 curve: Curves.easeOutCubic,
@@ -139,7 +139,7 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                                 child: Text(
                                   AppStrings.localizeUiLabel(
                                     name,
-                                    alternate: cuisine.slug,
+                                    alternate: occasion.slug,
                                   ),
                                   style: AppTextStyles.favoriteCuisineChip
                                       .copyWith(

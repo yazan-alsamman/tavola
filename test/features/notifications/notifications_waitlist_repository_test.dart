@@ -52,6 +52,15 @@ void main() {
               (RequestOptions options, RequestInterceptorHandler handler) {
                 if (options.path.endsWith('/notifications') &&
                     options.method == 'GET') {
+                  expect(
+                    options.queryParameters[AppUrls.notificationsLimitQueryKey],
+                    isNotNull,
+                  );
+                  expect(
+                    options.queryParameters.containsKey('pageSize'),
+                    isFalse,
+                    reason: 'Live notifications API rejects pageSize',
+                  );
                   handler.resolve(
                     Response<dynamic>(
                       requestOptions: options,

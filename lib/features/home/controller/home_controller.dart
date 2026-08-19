@@ -202,11 +202,11 @@ class HomeController extends GetxController {
 
     final List<OccasionCategoryModel>? occasions =
         _taxonomyRepository.cachedOccasionCategories;
-    if (occasions != null) {
-      occasionCategoryItems.assignAll(occasions);
-      occasionCategories.assignAll(
-        occasions.map((OccasionCategoryModel item) => item.name).toList(),
-      );
+    if (occasions != null && occasions.isNotEmpty) {
+      _applyOccasionItems(occasions);
+      isLoadingOccasionCategories.value = false;
+    } else {
+      _applyOccasionItems(OccasionCategoryModel.fallbackItems());
       isLoadingOccasionCategories.value = false;
     }
 
@@ -259,10 +259,7 @@ class HomeController extends GetxController {
   _HomeListErrorKind? _cuisineErrorKind;
   _HomeListErrorKind? _occasionErrorKind;
 
-  static void _applyLocalizedError(
-    RxnString target,
-    _HomeListErrorKind? kind,
-  ) {
+  static void _applyLocalizedError(RxnString target, _HomeListErrorKind? kind) {
     if (kind == null || target.value == null) {
       return;
     }
@@ -291,12 +288,6 @@ class HomeController extends GetxController {
     cuisineCategoriesError.value = message;
   }
 
-  void _setOccasionError(_HomeListErrorKind kind, String message) {
-    _occasionErrorKind = kind;
-    occasionCategoriesError.value = message;
-  }
-
-  /// `GET /discovery/restaurants` — customer catalog.
   Future<void> loadRestaurants() async {
     final bool showSpinner = restaurants.isEmpty;
     if (showSpinner) {
@@ -389,6 +380,9 @@ class HomeController extends GetxController {
   }
 
   Future<void> loadOccasionCategories() async {
+    if (occasionCategoryItems.isEmpty) {
+      _applyOccasionItems(OccasionCategoryModel.fallbackItems());
+    }
     final bool showSpinner = occasionCategoryItems.isEmpty;
     if (showSpinner) {
       isLoadingOccasionCategories.value = true;
@@ -399,41 +393,42 @@ class HomeController extends GetxController {
       final List<OccasionCategoryModel> items = await _taxonomyRepository
           .fetchOccasionCategories()
           .timeout(AppDimensions.homeCatalogLoadTimeout);
-      occasionCategoryItems.assignAll(items);
-      occasionCategories.assignAll(
-        items.map((OccasionCategoryModel item) => item.name).toList(),
-      );
-      final String? selected = selectedOccasion.value;
-      if (selected != null && !occasionCategories.contains(selected)) {
-        selectedOccasion.value = null;
+      if (items.isNotEmpty) {
+        _applyOccasionItems(items);
+        _logCatalog('occasion ok', items.length);
+        return;
       }
-      _logCatalog('occasion ok', items.length);
+      if (occasionCategoryItems.isEmpty) {
+        _applyOccasionItems(OccasionCategoryModel.fallbackItems());
+      }
     } on TimeoutException {
       _logCatalog('occasion timeout', 0);
       if (occasionCategoryItems.isEmpty) {
-        occasionCategories.clear();
-        _setOccasionError(
-          _HomeListErrorKind.timeout,
-          AppStrings.networkTimeoutError,
-        );
+        _applyOccasionItems(OccasionCategoryModel.fallbackItems());
       }
     } on ApiException catch (error) {
       _logCatalog('occasion api: ${error.message}', 0);
       if (occasionCategoryItems.isEmpty) {
-        occasionCategories.clear();
-        _setOccasionError(_HomeListErrorKind.api, error.message);
+        _applyOccasionItems(OccasionCategoryModel.fallbackItems());
       }
     } catch (error) {
       _logCatalog('occasion unexpected: $error', 0);
       if (occasionCategoryItems.isEmpty) {
-        occasionCategories.clear();
-        _setOccasionError(
-          _HomeListErrorKind.unexpected,
-          AppStrings.networkUnexpectedError,
-        );
+        _applyOccasionItems(OccasionCategoryModel.fallbackItems());
       }
     } finally {
       isLoadingOccasionCategories.value = false;
+    }
+  }
+
+  void _applyOccasionItems(List<OccasionCategoryModel> items) {
+    occasionCategoryItems.assignAll(items);
+    occasionCategories.assignAll(
+      items.map((OccasionCategoryModel item) => item.name).toList(),
+    );
+    final String? selected = selectedOccasion.value;
+    if (selected != null && !occasionCategories.contains(selected)) {
+      selectedOccasion.value = null;
     }
   }
 
@@ -674,9 +669,9 @@ class HomeController extends GetxController {
     try {
       if (Get.isRegistered<UserLocationController>()) {
         try {
-          await Get.find<UserLocationController>()
-              .refreshStatus()
-              .timeout(AppDimensions.homeCatalogLoadTimeout);
+          await Get.find<UserLocationController>().refreshStatus().timeout(
+            AppDimensions.homeCatalogLoadTimeout,
+          );
         } catch (_) {
           // Location is optional; catalog fallback still applies.
         }
@@ -694,9 +689,9 @@ class HomeController extends GetxController {
       List<RestaurantModel> catalog = restaurants.toList(growable: false);
       if (catalog.isEmpty) {
         try {
-          catalog = await _discoveryRepository
-              .listRestaurants()
-              .timeout(AppDimensions.homeCatalogLoadTimeout);
+          catalog = await _discoveryRepository.listRestaurants().timeout(
+            AppDimensions.homeCatalogLoadTimeout,
+          );
         } catch (_) {
           catalog = const <RestaurantModel>[];
         }

@@ -35,7 +35,7 @@ class NotificationsRepository {
           notificationsPath,
           queryParameters: <String, dynamic>{
             AppUrls.notificationsPageQueryKey: page,
-            AppUrls.notificationsPageSizeQueryKey: limit,
+            AppUrls.notificationsLimitQueryKey: limit,
             AppUrls.notificationsUnreadQueryKey: ?unread,
           },
           parseData: NotificationsPageModel.parseItems,
