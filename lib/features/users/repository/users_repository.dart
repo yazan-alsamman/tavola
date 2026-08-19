@@ -55,6 +55,7 @@ class UsersRepository {
   static const String favoritesPath = AppUrls.usersMeFavoritesPath;
   static const String _pageQueryKey = 'page';
   static const String _pageSizeQueryKey = 'pageSize';
+  static const String _limitQueryKey = 'limit';
   static const String _usernameKey = 'customer_username';
   static const String _phoneKey = 'customer_phone';
   static const String _avatarUrlKey = 'customer_avatar_url';
@@ -495,19 +496,48 @@ class UsersRepository {
     int page = AppDimensions.apiDefaultPage,
     int limit = AppDimensions.apiDefaultLimit,
   }) async {
-    final ApiResponse<List<RestaurantModel>> response = await _apiClient
-        .get<List<RestaurantModel>>(
-          favoritesPath,
-          queryParameters: <String, dynamic>{
-            _pageQueryKey: page,
-            _pageSizeQueryKey: limit,
-          },
-          parseData: _parseFavoriteRestaurants,
+    final List<Map<String, dynamic>> queries = <Map<String, dynamic>>[
+      <String, dynamic>{_pageQueryKey: page, _pageSizeQueryKey: limit},
+      <String, dynamic>{_pageQueryKey: page, _limitQueryKey: limit},
+      <String, dynamic>{_limitQueryKey: limit},
+      const <String, dynamic>{},
+    ];
+
+    ApiException? lastError;
+    for (int index = 0; index < queries.length; index++) {
+      final Map<String, dynamic> query = queries[index];
+      try {
+        final ApiResponse<List<RestaurantModel>> response = await _apiClient
+            .get<List<RestaurantModel>>(
+              favoritesPath,
+              queryParameters: query.isEmpty ? null : query,
+              parseData: _parseFavoriteRestaurants,
+            );
+        _cachedFavoriteRestaurants = List<RestaurantModel>.unmodifiable(
+          response.data,
         );
-    _cachedFavoriteRestaurants = List<RestaurantModel>.unmodifiable(
-      response.data,
-    );
-    return _cachedFavoriteRestaurants;
+        return _cachedFavoriteRestaurants;
+      } on ApiException catch (error) {
+        lastError = error;
+        final bool hasNext = index < queries.length - 1;
+        if (!hasNext || !_shouldRetryFavoritePagination(error)) {
+          rethrow;
+        }
+      }
+    }
+    throw lastError ?? ApiException.unexpected();
+  }
+
+  static bool _shouldRetryFavoritePagination(ApiException error) {
+    if (!error.isValidation && error.statusCode != 400) {
+      return false;
+    }
+    final String message = error.message.toLowerCase();
+    return message.contains('pagesize') ||
+        message.contains('page size') ||
+        message.contains('property page should not exist') ||
+        message.contains('property limit should not exist') ||
+        message.contains('unknown query');
   }
 
   Future<void> addFavoriteRestaurant(String restaurantId) async {
@@ -515,9 +545,7 @@ class UsersRepository {
   }
 
   Future<void> removeFavoriteRestaurant(String restaurantId) async {
-    await _apiClient.deleteNoContent(
-      AppUrls.usersMeFavoritePath(restaurantId),
-    );
+    await _apiClient.deleteNoContent(AppUrls.usersMeFavoritePath(restaurantId));
   }
 
   /// `GET /users/me/export` — GDPR portability export bundle.
@@ -562,9 +590,7 @@ class UsersRepository {
                 Map<String, dynamic>.from(raw),
               );
             }
-            return const DeleteAccountResultModel(
-              scheduledAnonymizationAt: '',
-            );
+            return const DeleteAccountResultModel(scheduledAnonymizationAt: '');
           },
         );
     final DeleteAccountResultModel result = DeleteAccountResultModel(
@@ -591,9 +617,9 @@ class UsersRepository {
         ? 'pending'
         : scheduledAnonymizationAt.trim();
     try {
-      await _vault.write(_pendingDeletionAtKey, value).timeout(
-        AppDimensions.secureStorageTimeout,
-      );
+      await _vault
+          .write(_pendingDeletionAtKey, value)
+          .timeout(AppDimensions.secureStorageTimeout);
     } catch (_) {
       // In-memory flag still drives Settings cancel row.
     }
@@ -602,9 +628,9 @@ class UsersRepository {
   Future<void> clearPendingAccountDeletion() async {
     hasPendingAccountDeletion.value = false;
     try {
-      await _vault.delete(_pendingDeletionAtKey).timeout(
-        AppDimensions.secureStorageTimeout,
-      );
+      await _vault
+          .delete(_pendingDeletionAtKey)
+          .timeout(AppDimensions.secureStorageTimeout);
     } catch (_) {
       // Best-effort disk clear.
     }
@@ -615,8 +641,7 @@ class UsersRepository {
       final String? raw = await _vault
           .read(_pendingDeletionAtKey)
           .timeout(AppDimensions.secureStorageTimeout);
-      hasPendingAccountDeletion.value =
-          raw != null && raw.trim().isNotEmpty;
+      hasPendingAccountDeletion.value = raw != null && raw.trim().isNotEmpty;
     } catch (_) {
       // Keep current in-memory value.
     }
@@ -624,8 +649,9 @@ class UsersRepository {
 
   static UserProfileModel _parseProfile(Object? raw) {
     if (raw is Map) {
-      final Map<String, dynamic> flattened =
-          CustomerIdentityPayload.flatten(raw);
+      final Map<String, dynamic> flattened = CustomerIdentityPayload.flatten(
+        raw,
+      );
       if (kDebugMode) {
         debugPrint(
           '[ProfileIdentity] keys=${flattened.keys.toList()} '

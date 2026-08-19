@@ -92,6 +92,30 @@ void main() {
     expect(users.fetchCount, 1);
     expect(repo.isFavorite('r-1'), isTrue);
   });
+
+  test('watchFavorites schedules deferred init retry automatically', () async {
+    final _MutableTokenReader tokenReader = _MutableTokenReader();
+    final _MutableGuestMode guestMode = _MutableGuestMode();
+    final _FakeUsersRepository users = _FakeUsersRepository();
+
+    Get.put<AuthTokenReader>(tokenReader);
+    Get.put<GuestModeReader>(guestMode);
+
+    final FavoritesRepository repo = FavoritesRepository(
+      usersRepository: users,
+    );
+
+    await repo.ensureInitialized();
+    expect(users.fetchCount, 0);
+
+    tokenReader.token = 'access-token';
+    repo.watchFavorites();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(users.fetchCount, 1);
+    expect(repo.isFavorite('r-1'), isTrue);
+  });
 }
 
 class _MutableTokenReader implements AuthTokenReader {

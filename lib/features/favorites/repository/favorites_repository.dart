@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 
 import '../../../core/network/api_exception.dart';
@@ -22,6 +24,7 @@ class FavoritesRepository extends GetxService {
   final RxInt favoritesRevision = 0.obs;
 
   bool _initialized = false;
+  bool _initRetryScheduled = false;
   final RxBool isSyncing = false.obs;
   final RxnString syncError = RxnString();
 
@@ -97,7 +100,10 @@ class FavoritesRepository extends GetxService {
   bool isFavorite(String id) => favoriteStates[id] ?? false;
 
   /// Call inside `Obx` builders so favorite heart UI rebuilds on toggle.
-  int watchFavorites() => favoritesRevision.value;
+  int watchFavorites() {
+    _scheduleInitRetry();
+    return favoritesRevision.value;
+  }
 
   /// Toggle via `POST/DELETE /users/me/favorites/:restaurantId`.
   ///
@@ -212,5 +218,19 @@ class FavoritesRepository extends GetxService {
     }
     final String? access = await Get.find<AuthTokenReader>().readAccessToken();
     return access != null && access.trim().isNotEmpty;
+  }
+
+  void _scheduleInitRetry() {
+    if (_initialized || isSyncing.value || _initRetryScheduled) {
+      return;
+    }
+    _initRetryScheduled = true;
+    scheduleMicrotask(() async {
+      _initRetryScheduled = false;
+      if (_initialized || isSyncing.value) {
+        return;
+      }
+      await ensureInitialized();
+    });
   }
 }
