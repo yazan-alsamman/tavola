@@ -43,14 +43,18 @@ class FavoritesRepository extends GetxService {
     // that can stall Home after "Continue as guest".
     if (Get.isRegistered<GuestModeReader>() &&
         Get.find<GuestModeReader>().isAnonymousGuest) {
-      _initialized = true;
+      // Guest sessions must not lock initialization: once the user signs in
+      // in the same app lifecycle we need to sync favorites immediately.
+      _initialized = false;
       return;
     }
     if (Get.isRegistered<AuthTokenReader>()) {
       final String? access = await Get.find<AuthTokenReader>()
           .readAccessToken();
       if (access == null || access.trim().isEmpty) {
-        _initialized = true;
+        // Access token may still be hydrating from secure storage on startup.
+        // Keep this false so later calls can retry and populate favorites.
+        _initialized = false;
         return;
       }
     }
@@ -80,7 +84,9 @@ class FavoritesRepository extends GetxService {
       _initialized = true;
     } on ApiException catch (error) {
       syncError.value = error.message;
-      _initialized = true;
+      // Auth failures are often transient around startup hydration/login race.
+      // Do not lock initialization so a later call can retry and recover.
+      _initialized = !error.isUnauthorized;
     } catch (_) {
       _initialized = true;
     } finally {
