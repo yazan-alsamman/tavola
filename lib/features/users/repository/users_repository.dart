@@ -166,6 +166,9 @@ class UsersRepository {
 
   /// Best-effort Keychain flush for cached username/phone.
   Future<void> flushIdentityToDisk() async {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return;
+    }
     if (!_identityDiskDirty) {
       return;
     }
@@ -197,7 +200,9 @@ class UsersRepository {
     _cachedAvatarUrl = '';
     _identityHydrated = true;
     _identityDiskDirty = false;
-    unawaited(_clearIdentityOnDisk());
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
+      unawaited(_clearIdentityOnDisk());
+    }
   }
 
   Future<void> _clearIdentityOnDisk() async {

@@ -171,6 +171,7 @@ class SecureAuthTokenStore implements AuthTokenSession {
   String? _accessTokenCache;
   String? _refreshTokenCache;
   bool _hydrated = false;
+
   /// After one Keychain timeout, allow a single retry (Hot Restart recovery).
   /// A second timeout marks hydrated empty so Home bands cannot storm SecItem*.
   bool _hydrateTimedOutOnce = false;

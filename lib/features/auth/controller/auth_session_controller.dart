@@ -32,8 +32,7 @@ class AuthSessionController extends GetxController implements GuestModeReader {
 
   /// True anonymous browsing — no tokens, no authenticated APIs.
   @override
-  bool get isAnonymousGuest =>
-      isGuest.value && !hasAuthenticatedSession.value;
+  bool get isAnonymousGuest => isGuest.value && !hasAuthenticatedSession.value;
 
   /// App-bar Login CTA: guest-only, never while a real session exists.
   bool get shouldShowGuestLoginButton => isAnonymousGuest;
@@ -205,7 +204,11 @@ class AuthSessionController extends GetxController implements GuestModeReader {
           ? Get.find<AuthTokenReader>()
           : null;
       if (reader is SecureAuthTokenStore) {
-        reader.scheduleDiskClear();
+        // iOS may deadlock when Guest disk-clear races post-login writes.
+        // Keep Guest memory semantics and avoid starting a risky clear here.
+        if (defaultTargetPlatform != TargetPlatform.iOS) {
+          reader.scheduleDiskClear();
+        }
       }
     } catch (_) {}
     unawaited(_clearGuestIdentity());
@@ -473,7 +476,6 @@ class AuthSessionController extends GetxController implements GuestModeReader {
   /// True when a non-empty access token is available in the session store.
   Future<bool> hasAccessToken() => AuthAccessGuard.hasAccessToken();
 
-
   /// Account-only gate (favorites, avatar, reservations, settings, …).
   ///
   /// Opens Login when there is no Bearer token.
@@ -569,8 +571,8 @@ class AuthSessionController extends GetxController implements GuestModeReader {
           !Get.isRegistered<AuthTokenReader>()) {
         return;
       }
-      final String? access =
-          await Get.find<AuthTokenReader>().readAccessToken();
+      final String? access = await Get.find<AuthTokenReader>()
+          .readAccessToken();
       if (access == null || access.trim().isEmpty) {
         return;
       }
