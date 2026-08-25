@@ -62,13 +62,12 @@ void main() {
 
     final List<RestaurantModel> hits = await discovery.searchRestaurants(
       query: 'pasta',
-      latitude: 33.5,
-      longitude: 36.2,
     );
 
     expect(lastPath, AppUrls.discoveryRestaurantsPath);
     expect(lastQuery?[AppUrls.discoverySearchQueryKey], 'pasta');
-    expect(lastQuery?[AppUrls.nearbyLatitudeQueryKey], 33.5);
+    expect(lastQuery?.containsKey(AppUrls.nearbyLatitudeQueryKey), isFalse);
+    expect(lastQuery?.containsKey(AppUrls.nearbyLongitudeQueryKey), isFalse);
     expect(
       lastQuery?[AppUrls.discoveryLimitQueryKey],
       isNotNull,

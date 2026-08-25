@@ -217,6 +217,7 @@ class AppUrls {
   /// Reviews list pagination in current Postman collection.
   static const String reviewsPageQueryKey = 'page';
   static const String reviewsPageSizeQueryKey = 'pageSize';
+  static const String reviewsLimitQueryKey = 'limit';
 
   static String restaurantReviewsPath(String restaurantId) =>
       '/restaurants/${restaurantId.trim()}/reviews';

@@ -5,6 +5,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../core/network/api_response.dart';
 import '../../../core/network/auth_token_reader.dart';
 import '../model/review_model.dart';
@@ -28,15 +29,12 @@ class ReviewsRepository {
     int pageSize = AppDimensions.apiDefaultLimit,
   }) async {
     await _ensureAuthenticated();
-    final ApiResponse<List<ReviewModel>> response = await _apiClient
-        .get<List<ReviewModel>>(
-          AppUrls.myReviewsPath,
-          queryParameters: <String, dynamic>{
-            AppUrls.reviewsPageQueryKey: page,
-            AppUrls.reviewsPageSizeQueryKey: pageSize,
-          },
-          parseData: ReviewsPageModel.parseItems,
-        );
+    final ApiResponse<List<ReviewModel>> response = await _fetchReviewsPage(
+      AppUrls.myReviewsPath,
+      page: page,
+      pageSize: pageSize,
+      useSkipAuth: false,
+    );
     final ReviewsPageModel pageModel = ReviewsPageModel.fromItems(
       items: response.data,
       meta: response.meta,
@@ -77,16 +75,12 @@ class ReviewsRepository {
     if (id.isEmpty) {
       throw StateError(AppStrings.invalidReviewPayload);
     }
-    final ApiResponse<List<ReviewModel>> response = await _apiClient
-        .get<List<ReviewModel>>(
-          AppUrls.restaurantReviewsPath(id),
-          queryParameters: <String, dynamic>{
-            AppUrls.reviewsPageQueryKey: page,
-            AppUrls.reviewsPageSizeQueryKey: pageSize,
-          },
-          options: ApiClient.skipAuthOptions(),
-          parseData: ReviewsPageModel.parseItems,
-        );
+    final ApiResponse<List<ReviewModel>> response = await _fetchReviewsPage(
+      AppUrls.restaurantReviewsPath(id),
+      page: page,
+      pageSize: pageSize,
+      useSkipAuth: true,
+    );
     return ReviewsPageModel.fromItems(
       items: response.data,
       meta: response.meta,
@@ -237,6 +231,54 @@ class ReviewsRepository {
     if (!await _hasAccessToken()) {
       throw StateError(AppStrings.networkUnauthorizedError);
     }
+  }
+
+  Future<ApiResponse<List<ReviewModel>>> _fetchReviewsPage(
+    String path, {
+    required int page,
+    required int pageSize,
+    required bool useSkipAuth,
+  }) async {
+    final List<Map<String, dynamic>> queryVariants = <Map<String, dynamic>>[
+      <String, dynamic>{
+        AppUrls.reviewsPageQueryKey: page,
+        AppUrls.reviewsLimitQueryKey: pageSize,
+      },
+      <String, dynamic>{
+        AppUrls.reviewsPageQueryKey: page,
+        AppUrls.reviewsPageSizeQueryKey: pageSize,
+      },
+    ];
+    ApiException? lastError;
+    for (int i = 0; i < queryVariants.length; i++) {
+      final Map<String, dynamic> query = queryVariants[i];
+      try {
+        return await _apiClient.get<List<ReviewModel>>(
+          path,
+          queryParameters: query,
+          options: useSkipAuth ? ApiClient.skipAuthOptions() : null,
+          parseData: ReviewsPageModel.parseItems,
+        );
+      } on ApiException catch (error) {
+        lastError = error;
+        final bool hasNext = i < queryVariants.length - 1;
+        if (!hasNext || !_shouldRetryReviewsPagination(error)) {
+          rethrow;
+        }
+      }
+    }
+    throw lastError ?? ApiException.unexpected();
+  }
+
+  static bool _shouldRetryReviewsPagination(ApiException error) {
+    if (!error.isValidation && error.statusCode != 400) {
+      return false;
+    }
+    final String message = error.message.toLowerCase();
+    return message.contains('pagesize') ||
+        message.contains('page size') ||
+        message.contains('property page should not exist') ||
+        message.contains('property limit should not exist');
   }
 
   static ReviewModel _parseReview(Object? raw) {

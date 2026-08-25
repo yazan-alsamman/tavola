@@ -502,21 +502,8 @@ class HomeController extends GetxController {
     isSearchingRestaurants.value = true;
     searchError.value = null;
     try {
-      double? latitude;
-      double? longitude;
-      if (Get.isRegistered<UserLocationController>()) {
-        final UserLocationController location =
-            Get.find<UserLocationController>();
-        latitude = location.latitude;
-        longitude = location.longitude;
-      }
       final List<RestaurantModel> items = await _discoveryRepository
-          .searchRestaurants(
-            query: query,
-            latitude: latitude,
-            longitude: longitude,
-            cancelToken: cancelToken,
-          )
+          .searchRestaurants(query: query, cancelToken: cancelToken)
           .timeout(AppDimensions.homeCatalogLoadTimeout);
       if (isClosed || serial != _searchRequestSerial) {
         return;

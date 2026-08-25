@@ -129,13 +129,9 @@ class DiscoveryRepository {
     if (trimmedQuery != null && trimmedQuery.isNotEmpty) {
       params[AppUrls.discoverySearchQueryKey] = trimmedQuery;
     }
-    if (latitude != null && longitude != null) {
-      params[AppUrls.nearbyLatitudeQueryKey] = latitude;
-      params[AppUrls.nearbyLongitudeQueryKey] = longitude;
-      if (radiusKm != null) {
-        params[AppUrls.nearbyRadiusKmQueryKey] = radiusKm;
-      }
-    }
+    // `lat/lng` are only valid on `/discovery/restaurants/nearby`.
+    // Keep the signature for backward compatibility at call sites, but never
+    // attach location params to the catalog/search endpoint.
 
     final ApiResponse<List<RestaurantModel>> response = await _apiClient
         .get<List<RestaurantModel>>(
@@ -208,9 +204,7 @@ class DiscoveryRepository {
     final ApiResponse<List<RestaurantModel>> response = await _apiClient
         .post<List<RestaurantModel>>(
           AppUrls.discoveryRestaurantsComparePath,
-          data: <String, dynamic>{
-            AppStrings.apiCompareRestaurantIdsField: ids,
-          },
+          data: <String, dynamic>{AppStrings.apiCompareRestaurantIdsField: ids},
           options: ApiClient.skipAuthOptions(),
           parseData: _parseRestaurantItems,
         );
