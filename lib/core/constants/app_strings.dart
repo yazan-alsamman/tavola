@@ -436,6 +436,9 @@ class AppStrings {
   static String get concierge => 'Concierge'.tr;
   static String get profile => 'Profile'.tr;
   static String get settings => 'Settings'.tr;
+  static String get privacyPolicy => 'Privacy Policy'.tr;
+  static String get privacyPolicyDescription =>
+      'Read how we collect and use your data.'.tr;
   static String get languageSettings => 'Language'.tr;
   static String get languageSettingsDescription =>
       'Switch the app between English and Arabic.'.tr;

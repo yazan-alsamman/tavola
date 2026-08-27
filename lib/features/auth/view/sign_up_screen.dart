@@ -67,15 +67,13 @@ class SignUpScreen extends StatelessWidget {
                           ? const SizedBox.shrink()
                           : AuthFieldHint(message: controller.phoneHint.value!),
                     ),
-                    Obx(
-                      () {
-                        final String? message = controller.errorMessage.value;
-                        if (message == null) {
-                          return const SizedBox.shrink();
-                        }
-                        return AuthFieldHint(message: message);
-                      },
-                    ),
+                    Obx(() {
+                      final String? message = controller.errorMessage.value;
+                      if (message == null) {
+                        return const SizedBox.shrink();
+                      }
+                      return AuthFieldHint(message: message);
+                    }),
                     const SizedBox(height: AppDimensions.regularSpacing),
                     Center(
                       child: TextButton(

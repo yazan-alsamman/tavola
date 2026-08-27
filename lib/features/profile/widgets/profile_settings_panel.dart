@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/routes/app_routes.dart';
 import '../../../common/widgets/app_confirm_dialog.dart';
@@ -11,6 +12,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/constants/app_urls.dart';
 import '../../../core/localization/locale_controller.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/theme/app_button_styles.dart';
@@ -35,7 +37,8 @@ class ProfileSettingsPanel extends StatelessWidget {
       final bool isSignedIn = Get.isRegistered<AuthSessionController>()
           ? Get.find<AuthSessionController>().hasAuthenticatedSession.value
           : false;
-      final List<(String, String)> options = profileController.notificationOptions
+      final List<(String, String)> options = profileController
+          .notificationOptions
           .toList(growable: false);
       final List<bool> values = profileController.notificationSettings.toList(
         growable: false,
@@ -243,6 +246,43 @@ class ProfileSettingsPanel extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: AppDimensions.sectionSpacing),
+          Row(
+            children: [
+              Icon(
+                Symbols.policy,
+                color: AppColors.primary,
+                size: AppDimensions.settingsIconSize,
+              ),
+              const SizedBox(width: AppDimensions.smallSpacing),
+              Expanded(
+                child: Text(
+                  AppStrings.privacyPolicy,
+                  style: AppTextStyles.settingsHeader,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.smallSpacing),
+          HoverableCard(
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+                border: Border.all(
+                  color: AppColors.border,
+                  width: AppDimensions.cardBorderWidth,
+                ),
+              ),
+              child: _SettingsNavRow(
+                title: AppStrings.privacyPolicy,
+                body: AppStrings.privacyPolicyDescription,
+                onTap: _openPrivacyPolicyFromSettings,
+              ),
+            ),
+          ),
           if (isSignedIn) ...[
             const SizedBox(height: AppDimensions.sectionSpacing),
             Row(
@@ -379,6 +419,17 @@ class ProfileSettingsPanel extends StatelessWidget {
   }
 }
 
+Future<void> _openPrivacyPolicyFromSettings() async {
+  final Uri uri = Uri.parse(AppUrls.privacyPolicyUrl);
+  final bool opened = await launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+  );
+  if (!opened) {
+    Get.snackbar(AppStrings.privacyPolicy, AppStrings.networkUnexpectedError);
+  }
+}
+
 class _SettingsNavRow extends StatelessWidget {
   const _SettingsNavRow({
     required this.title,
@@ -408,15 +459,9 @@ class _SettingsNavRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: AppTextStyles.settingsItemTitle,
-                    ),
+                    Text(title, style: AppTextStyles.settingsItemTitle),
                     const SizedBox(height: AppDimensions.tinySpacing),
-                    Text(
-                      body,
-                      style: AppTextStyles.settingsItemBody,
-                    ),
+                    Text(body, style: AppTextStyles.settingsItemBody),
                   ],
                 ),
               ),
@@ -433,7 +478,6 @@ class _SettingsNavRow extends StatelessWidget {
     );
   }
 }
-
 
 Future<void> _exportMyData() async {
   AppDependency.ensureUsersRepository();
@@ -460,7 +504,6 @@ Future<void> _exportMyData() async {
     Get.snackbar(AppStrings.exportMyData, AppStrings.networkUnexpectedError);
   }
 }
-
 
 Future<void> _cancelPendingAccountDeletion() async {
   final bool confirmed = await AppConfirmDialog.show(

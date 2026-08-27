@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../common/widgets/app_success_toast.dart';
 import '../../../common/widgets/auth_field_hint.dart';
@@ -12,6 +13,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/constants/app_urls.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../controller/login_controller.dart';
 import '../widgets/auth_page_header.dart';
@@ -69,10 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
         controller.successMessage.value?.trim().isNotEmpty == true
         ? controller.successMessage.value!.trim()
         : AppStrings.authPasswordResetComplete;
-    AppSuccessToast.show(
-      title: AppStrings.resetPassword,
-      message: message,
-    );
+    AppSuccessToast.show(title: AppStrings.resetPassword, message: message);
   }
 
   @override
@@ -145,6 +144,33 @@ class _LoginScreenState extends State<LoginScreen> {
                           : AuthFieldHint(
                               message: controller.passwordHint.value!,
                             ),
+                    ),
+                    const SizedBox(height: AppDimensions.smallSpacing),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: _openPrivacyPolicy,
+                        icon: Icon(
+                          Symbols.policy,
+                          size: AppDimensions.tinyIconSize,
+                          color: AppColors.primaryDark,
+                        ),
+                        label: Text(
+                          AppStrings.privacyPolicy,
+                          style: AppTextStyles.authLink.copyWith(
+                            color: AppColors.primaryDark,
+                            fontSize: AppDimensions.guestLoginButtonFontSize,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primaryDark,
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
                     ),
                     Obx(
                       () => controller.errorMessage.value == null
@@ -244,6 +270,17 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+}
+
+Future<void> _openPrivacyPolicy() async {
+  final Uri uri = Uri.parse(AppUrls.privacyPolicyUrl);
+  final bool opened = await launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+  );
+  if (!opened) {
+    Get.snackbar(AppStrings.privacyPolicy, AppStrings.networkUnexpectedError);
   }
 }
 

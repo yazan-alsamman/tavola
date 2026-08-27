@@ -1,6 +1,9 @@
 class AppUrls {
   AppUrls._();
 
+  static const String privacyPolicyUrl =
+      'https://www.termsfeed.com/live/329399af-df22-4985-bb59-eb003931ce09';
+
   /// Raster basemap tiles (OSM data via CARTO CDN).
   ///
   /// Do not use `tile.openstreetmap.org` in production apps — OSM Foundation

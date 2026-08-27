@@ -795,6 +795,9 @@ class AppTranslations extends Translations {
     'Set on Garden Street beside olive trees and soft courtyard lighting for warm arrivals.':
         'Set on Garden Street beside olive trees and soft courtyard lighting for warm arrivals.',
     'Settings': 'Settings',
+    'Privacy Policy': 'Privacy Policy',
+    'Read how we collect and use your data.':
+        'Read how we collect and use your data.',
     'Settings Screen': 'Settings Screen',
     'SIGN IN': 'SIGN IN',
     'SIGN UP': 'SIGN UP',
@@ -1599,6 +1602,9 @@ class AppTranslations extends Translations {
     'Set on Garden Street beside olive trees and soft courtyard lighting for warm arrivals.':
         'يقع في شارع الحديقة بجانب أشجار الزيتون وإضاءة فناء ناعمة لاستقبال دافئ.',
     'Settings': 'الإعدادات',
+    'Privacy Policy': 'سياسة الخصوصية',
+    'Read how we collect and use your data.':
+        'اقرأ كيف نجمع بياناتك ونستخدمها.',
     'Settings Screen': 'شاشة الإعدادات',
     'SIGN IN': 'تسجيل الدخول',
     'SIGN UP': 'إنشاء حساب',

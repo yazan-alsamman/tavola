@@ -51,6 +51,7 @@ dependencies:
   material_symbols_icons: ^4.2960.0
   geolocator: ^14.0.3
   phone_numbers_parser: ^9.0.24
+  url_launcher: ^6.3.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
