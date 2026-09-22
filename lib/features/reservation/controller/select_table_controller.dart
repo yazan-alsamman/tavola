@@ -269,6 +269,8 @@ class SelectTableController extends GetxController {
         return AppStrings.availableTableDescription;
       case TableStatus.occupied:
         return AppStrings.occupiedTableNote;
+      case TableStatus.reserved:
+        return AppStrings.reservedTableNote;
       case TableStatus.cleaning:
         return AppStrings.cleaningTableNote;
       case TableStatus.disabled:

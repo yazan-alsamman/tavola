@@ -749,6 +749,9 @@ class AppStrings {
   static String get mainDining => 'DINING'.tr;
   static String get serviceArea => 'SERVICE'.tr;
   static String get entrance => 'ENTRANCE'.tr;
+  static String get kitchen => 'KITCHEN'.tr;
+  static String get bar => 'BAR'.tr;
+  static String get reception => 'RECEPTION'.tr;
   static String get selectedTableLabel => 'SELECTED TABLE'.tr;
   static String get windowSeatBadge => 'WINDOW'.tr;
   static String get tableDescriptionA2 =>

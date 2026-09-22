@@ -8,9 +8,14 @@ import '../model/table_status.dart';
 import 'table_status_dot.dart';
 
 class TableStatusLegend extends StatelessWidget {
-  const TableStatusLegend({super.key, this.overlay = false});
+  const TableStatusLegend({
+    super.key,
+    this.overlay = false,
+    this.horizontal = false,
+  });
 
   final bool overlay;
+  final bool horizontal;
 
   static List<_LegendItem> get _items => [
     _LegendItem(
@@ -18,46 +23,87 @@ class TableStatusLegend extends StatelessWidget {
       label: AppStrings.tableAvailable,
     ),
     _LegendItem(status: TableStatus.occupied, label: AppStrings.tableOccupied),
+    _LegendItem(status: TableStatus.reserved, label: AppStrings.tableReserved),
     _LegendItem(status: TableStatus.cleaning, label: AppStrings.tableCleaning),
     _LegendItem(status: TableStatus.disabled, label: AppStrings.tableDisabled),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final Widget legend = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (overlay)
-          Padding(
-            padding: const EdgeInsets.only(
-              bottom: AppDimensions.compactSpacing,
-            ),
-            child: Text(
-              AppStrings.tableStatus,
-              style: AppTextStyles.reservationSectionLabel,
-            ),
-          ),
-        ...List.generate(_items.length, (index) {
-          final _LegendItem item = _items[index];
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: index == _items.length - 1
-                  ? 0
-                  : AppDimensions.compactSpacing,
-            ),
+    final List<Widget> items = List<Widget>.generate(_items.length, (index) {
+      final _LegendItem item = _items[index];
+      return Padding(
+        padding: horizontal
+            ? EdgeInsetsDirectional.only(
+                start: index == 0 ? 0 : AppDimensions.regularSpacing,
+              )
+            : EdgeInsets.only(
+                bottom: index == _items.length - 1
+                    ? 0
+                    : AppDimensions.compactSpacing,
+              ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TableStatusDot(status: item.status),
+            const SizedBox(width: AppDimensions.smallSpacing),
+            Text(item.label, style: AppTextStyles.tableStatusLegendLabel),
+          ],
+        ),
+      );
+    });
+
+    final Widget legend = horizontal
+        ? SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                TableStatusDot(status: item.status),
-                const SizedBox(width: AppDimensions.smallSpacing),
-                Text(item.label, style: AppTextStyles.tableStatusLegendLabel),
+                Text(
+                  AppStrings.tableStatus,
+                  style: AppTextStyles.reservationSectionLabel,
+                ),
+                const SizedBox(width: AppDimensions.regularSpacing),
+                ...items,
               ],
             ),
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (overlay)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: AppDimensions.compactSpacing,
+                  ),
+                  child: Text(
+                    AppStrings.tableStatus,
+                    style: AppTextStyles.reservationSectionLabel,
+                  ),
+                ),
+              ...items,
+            ],
           );
-        }),
-      ],
-    );
+
+    if (horizontal) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.contentPadding,
+          vertical: AppDimensions.smallSpacing,
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(
+            top: BorderSide(
+              color: AppColors.border,
+              width: AppDimensions.cardBorderWidth,
+            ),
+          ),
+        ),
+        child: legend,
+      );
+    }
 
     if (!overlay) {
       return legend;
@@ -65,11 +111,11 @@ class TableStatusLegend extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.compactHorizontalPadding,
-        vertical: AppDimensions.compactVerticalPadding,
+        horizontal: AppDimensions.smallSpacing,
+        vertical: AppDimensions.regularSpacing,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface75,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
         border: Border.all(
           color: AppColors.border,

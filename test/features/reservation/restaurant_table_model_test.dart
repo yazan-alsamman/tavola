@@ -71,16 +71,13 @@ void main() {
     expect(table.isSelectable, isFalse);
   });
 
-  test('maps operational statuses without Reserved', () {
-    expect(
-      TableStatus.values.map((TableStatus status) => status.name),
-      isNot(contains('reserved')),
-    );
+  test('maps operational statuses from Backend status field', () {
     expect(
       TableStatus.values,
       <TableStatus>[
         TableStatus.available,
         TableStatus.occupied,
+        TableStatus.reserved,
         TableStatus.cleaning,
         TableStatus.disabled,
       ],
@@ -96,6 +93,13 @@ void main() {
     expect(
       RestaurantTableModel.fromJson(<String, dynamic>{
         'tableId': '1',
+        'status': 'reserved',
+      }).status,
+      TableStatus.reserved,
+    );
+    expect(
+      RestaurantTableModel.fromJson(<String, dynamic>{
+        'tableId': '1',
         'status': 'Cleaning',
       }).status,
       TableStatus.cleaning,
@@ -104,13 +108,6 @@ void main() {
       RestaurantTableModel.fromJson(<String, dynamic>{
         'tableId': '1',
         'status': 'Disabled',
-      }).status,
-      TableStatus.disabled,
-    );
-    expect(
-      RestaurantTableModel.fromJson(<String, dynamic>{
-        'tableId': '1',
-        'status': 'reserved',
       }).status,
       TableStatus.disabled,
     );

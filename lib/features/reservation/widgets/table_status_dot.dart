@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../model/table_status.dart';
+import '../model/table_status_theme.dart';
 
 class TableStatusDot extends StatelessWidget {
   const TableStatusDot({
@@ -20,29 +21,14 @@ class TableStatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (status) {
       case TableStatus.available:
-        return Container(
-          width: size,
-          height: size,
-          decoration: const BoxDecoration(
-            color: AppColors.primaryDark,
-            shape: BoxShape.circle,
-          ),
-        );
       case TableStatus.occupied:
-        return Container(
-          width: size,
-          height: size,
-          decoration: const BoxDecoration(
-            color: AppColors.accent,
-            shape: BoxShape.circle,
-          ),
-        );
+      case TableStatus.reserved:
       case TableStatus.disabled:
         return Container(
           width: size,
           height: size,
-          decoration: const BoxDecoration(
-            color: AppColors.disabled,
+          decoration: BoxDecoration(
+            color: status.badgeColor,
             shape: BoxShape.circle,
           ),
         );

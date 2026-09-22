@@ -7,9 +7,11 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/navigation/app_navigation.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/utils/app_dependency.dart';
 import '../../../core/utils/post_frame_work.dart';
 import '../../auth/controller/auth_session_controller.dart';
 import '../../compare/controller/compare_controller.dart';
+import '../../concierge/controller/concierge_controller.dart';
 import '../../favorites/repository/favorites_repository.dart';
 import '../../home/model/restaurant_model.dart';
 import '../../reservation/controller/reservation_controller.dart';
@@ -362,6 +364,26 @@ class DetailsController extends GetxController {
 
   void openMenu() {
     RestaurantMenuController.open(restaurant);
+  }
+
+  /// Opens Chat for this Details restaurant only — never a global inbox.
+  Future<void> openChat() async {
+    if (Get.isRegistered<AuthSessionController>() &&
+        !await Get.find<AuthSessionController>()
+            .requireSignInForProtectedAction()) {
+      return;
+    }
+    final RestaurantModel current = restaurant;
+    if (current.id.trim().isEmpty) {
+      Get.snackbar(AppStrings.chat, AppStrings.invalidRestaurantPayload);
+      return;
+    }
+    AppDependency.ensureConciergeDependencies();
+    final ConciergeController chat = AppDependency.putPermanentIfAbsent(
+      ConciergeController.new,
+    );
+    unawaited(chat.openChatForRestaurant(current));
+    AppNavigation.goShell(AppRoutes.concierge, arguments: current);
   }
 
   /// Opens Compare Restaurants with this restaurant as side A.

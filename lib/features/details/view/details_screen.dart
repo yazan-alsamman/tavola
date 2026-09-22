@@ -103,6 +103,7 @@ class DetailsScreen extends StatelessWidget {
             child: RestaurantCardActionButtons(
               onReservationPressed: controller.openReservation,
               onMenuPressed: controller.openMenu,
+              onChatPressed: controller.openChat,
             ),
           ),
           Padding(

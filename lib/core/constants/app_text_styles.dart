@@ -559,7 +559,14 @@ class AppTextStyles {
     fontSize: 10,
     fontWeight: FontWeight.w700,
     letterSpacing: 1.2,
-    color: AppColors.accent,
+    color: AppColors.textSecondary,
+  );
+
+  static TextStyle get floorPlanZonePillLabel => AppFonts.ui(
+    fontSize: 10,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 1.1,
+    color: AppColors.textSecondary,
   );
 
   static TextStyle get floorPlanTableLabel => AppFonts.ui(
@@ -567,6 +574,13 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
     letterSpacing: 0.4,
     color: AppColors.textLight,
+  );
+
+  static TextStyle get floorPlanTableLabelOnLight => AppFonts.ui(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.4,
+    color: AppColors.textPrimary,
   );
 
   static TextStyle get floorPlanTableLabelOnAccent => AppFonts.ui(

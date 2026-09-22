@@ -37,4 +37,22 @@ class AppColors {
   static const Color textLight80 = Color(0xCCFFFFFF);
   static const Color surface75 = Color(0xBFFFFFFF);
   static const Color surfaceAlt90 = Color(0xE6F3EEFA);
+
+  static const Color floorPlanCanvas = Color(0xFFFAF7F2);
+  static const Color floorPlanRoom = Color(0xFFF0EDF6);
+  static const Color floorPlanRoomAlt = Color(0xFFE8E4F2);
+  static const Color floorPlanTableFill = Color(0xFFFFFBFF);
+  static const Color floorPlanChair = Color(0xFFE4DCF2);
+  static const Color floorPlanKitchen = Color(0xFF3D8B6E);
+  static const Color floorPlanKitchenFill = Color(0xFFE6F3EC);
+  static const Color floorPlanBar = Color(0xFF7A2E6C);
+  static const Color floorPlanBarFill = Color(0xFFF6E6F1);
+  static const Color floorPlanReception = Color(0xFF3D5F8B);
+  static const Color floorPlanReceptionFill = Color(0xFFE6EEF6);
+  static const Color floorPlanEntrance = Color(0xFFC47A2C);
+  static const Color floorPlanEntranceFill = Color(0xFFF6E4C8);
+  static const Color floorPlanService = Color(0xFF2A7A8C);
+  static const Color floorPlanServiceFill = Color(0xFFE4F2F4);
+  static const Color floorPlanDining = Color(0xFF5B3A8C);
+  static const Color floorPlanWindow = Color(0xFF6B5B9A);
 }

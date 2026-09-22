@@ -12,6 +12,8 @@ extension TableStatusTheme on TableStatus {
         return AppStrings.tableAvailable;
       case TableStatus.occupied:
         return AppStrings.tableOccupied;
+      case TableStatus.reserved:
+        return AppStrings.tableReserved;
       case TableStatus.cleaning:
         return AppStrings.tableCleaning;
       case TableStatus.disabled:
@@ -25,6 +27,8 @@ extension TableStatusTheme on TableStatus {
         return AppColors.primaryDark;
       case TableStatus.occupied:
         return AppColors.accent;
+      case TableStatus.reserved:
+        return AppColors.bronze;
       case TableStatus.cleaning:
         return AppColors.surfaceAlt;
       case TableStatus.disabled:
@@ -38,6 +42,8 @@ extension TableStatusTheme on TableStatus {
         return AppColors.textLight;
       case TableStatus.occupied:
         return AppColors.textPrimary;
+      case TableStatus.reserved:
+        return AppColors.textLight;
       case TableStatus.cleaning:
         return AppColors.textSecondary;
       case TableStatus.disabled:
@@ -51,6 +57,8 @@ extension TableStatusTheme on TableStatus {
         return AppColors.primaryDark;
       case TableStatus.occupied:
         return AppColors.accent;
+      case TableStatus.reserved:
+        return AppColors.bronze;
       case TableStatus.cleaning:
         return AppColors.surface;
       case TableStatus.disabled:
@@ -64,10 +72,27 @@ extension TableStatusTheme on TableStatus {
         return AppColors.primaryDark;
       case TableStatus.occupied:
         return AppColors.accent;
+      case TableStatus.reserved:
+        return AppColors.bronze;
       case TableStatus.cleaning:
         return AppColors.border;
       case TableStatus.disabled:
         return AppColors.border;
+    }
+  }
+
+  Color get chairColor {
+    switch (this) {
+      case TableStatus.available:
+        return AppColors.primaryDark;
+      case TableStatus.occupied:
+        return AppColors.accent;
+      case TableStatus.reserved:
+        return AppColors.bronze;
+      case TableStatus.cleaning:
+        return AppColors.border;
+      case TableStatus.disabled:
+        return AppColors.disabled;
     }
   }
 
@@ -77,6 +102,8 @@ extension TableStatusTheme on TableStatus {
         return AppTextStyles.floorPlanTableLabel;
       case TableStatus.occupied:
         return AppTextStyles.floorPlanTableLabelOnAccent;
+      case TableStatus.reserved:
+        return AppTextStyles.floorPlanTableLabel;
       case TableStatus.cleaning:
         return AppTextStyles.floorPlanTableLabelMuted;
       case TableStatus.disabled:
@@ -90,6 +117,8 @@ extension TableStatusTheme on TableStatus {
         return AppTextStyles.floorPlanSeatBadge;
       case TableStatus.occupied:
         return AppTextStyles.floorPlanSeatBadgeOnAccent;
+      case TableStatus.reserved:
+        return AppTextStyles.floorPlanSeatBadge;
       case TableStatus.cleaning:
         return AppTextStyles.floorPlanSeatBadgeMuted;
       case TableStatus.disabled:

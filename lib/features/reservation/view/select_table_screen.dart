@@ -62,7 +62,7 @@ class SelectTableScreen extends StatelessWidget {
                             width: double.infinity,
                             clipBehavior: Clip.antiAlias,
                             decoration: BoxDecoration(
-                              color: AppColors.surface,
+                              color: AppColors.floorPlanCanvas,
                               borderRadius: BorderRadius.circular(
                                 AppDimensions.cardRadius,
                               ),

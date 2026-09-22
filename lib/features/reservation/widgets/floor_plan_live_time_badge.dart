@@ -46,8 +46,8 @@ class _FloorPlanLiveTimeBadgeState extends State<FloorPlanLiveTimeBadge> {
         vertical: AppDimensions.compactVerticalPadding,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface75,
-        borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
         border: Border.all(
           color: AppColors.border,
           width: AppDimensions.cardBorderWidth,

@@ -13,10 +13,12 @@ class RestaurantCardActionButtons extends StatelessWidget {
     super.key,
     required this.onReservationPressed,
     required this.onMenuPressed,
+    required this.onChatPressed,
   });
 
   final VoidCallback onReservationPressed;
   final VoidCallback onMenuPressed;
+  final VoidCallback onChatPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +90,41 @@ class RestaurantCardActionButtons extends StatelessWidget {
               ),
               child: Text(
                 AppStrings.menu,
+                style: AppTextStyles.restaurantCardActionButton,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppDimensions.restaurantCardActionGap),
+          HoverableButton(
+            child: OutlinedButton(
+              onPressed: onChatPressed,
+              style: AppButtonStyles.outlinedHover(
+                OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  backgroundColor: AppColors.surface,
+                  side: const BorderSide(
+                    color: AppColors.primary,
+                    width: AppDimensions.restaurantCardActionBorderWidth,
+                  ),
+                  textStyle: AppTextStyles.restaurantCardActionButton,
+                  minimumSize: const Size(
+                    0,
+                    AppDimensions.restaurantCardActionMinHeight,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal:
+                        AppDimensions.restaurantCardActionHorizontalPadding,
+                    vertical: AppDimensions.restaurantCardActionVerticalPadding,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.restaurantCardActionRadius,
+                    ),
+                  ),
+                ),
+              ),
+              child: Text(
+                AppStrings.chat,
                 style: AppTextStyles.restaurantCardActionButton,
               ),
             ),

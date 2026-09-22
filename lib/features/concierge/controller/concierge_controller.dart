@@ -48,6 +48,7 @@ class ConciergeController extends GetxController {
   String? _messagesCursor;
   bool _hasMoreMessages = false;
   bool _postFrameLoadsStarted = false;
+  RestaurantModel? _pendingRestaurantChat;
 
   @override
   void onInit() {
@@ -78,6 +79,11 @@ class ConciergeController extends GetxController {
       final List<ConversationModel> items = await _repository
           .listConversations();
       conversations.assignAll(items);
+
+      if (_pendingRestaurantChat != null) {
+        await _consumePendingRestaurantChat();
+        return;
+      }
 
       if (items.isEmpty) {
         activeConversation.value = null;
@@ -227,6 +233,54 @@ class ConciergeController extends GetxController {
     } finally {
       isSending.value = false;
     }
+  }
+
+  /// Opens or starts the conversation for [restaurant] only (card/Details id).
+  Future<void> openChatForRestaurant(RestaurantModel restaurant) async {
+    final String id = restaurant.id.trim();
+    if (id.isEmpty) {
+      Get.snackbar(AppStrings.chat, AppStrings.invalidRestaurantPayload);
+      return;
+    }
+    _pendingRestaurantChat = restaurant;
+    if (!_postFrameLoadsStarted || isLoadingConversations.value) {
+      return;
+    }
+    await _consumePendingRestaurantChat();
+  }
+
+  Future<void> _consumePendingRestaurantChat() async {
+    final RestaurantModel? restaurant = _pendingRestaurantChat;
+    _pendingRestaurantChat = null;
+    if (restaurant == null) {
+      return;
+    }
+    final String id = restaurant.id.trim();
+    if (id.isEmpty) {
+      Get.snackbar(AppStrings.chat, AppStrings.invalidRestaurantPayload);
+      return;
+    }
+
+    ConversationModel? match;
+    for (final ConversationModel item in conversations) {
+      if (item.restaurantId.trim() == id && item.isOpen) {
+        match = item;
+        break;
+      }
+    }
+    if (match == null) {
+      for (final ConversationModel item in conversations) {
+        if (item.restaurantId.trim() == id) {
+          match = item;
+          break;
+        }
+      }
+    }
+    if (match != null) {
+      await openConversation(match);
+      return;
+    }
+    await startConversationWithRestaurant(restaurant);
   }
 
   Future<void> startConversationWithRestaurant(

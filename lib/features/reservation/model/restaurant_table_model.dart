@@ -197,6 +197,8 @@ class RestaurantTableModel {
         return TableStatus.available;
       case AppStrings.apiTableStatusOccupied:
         return TableStatus.occupied;
+      case AppStrings.apiTableStatusReserved:
+        return TableStatus.reserved;
       case AppStrings.apiTableStatusCleaning:
         return TableStatus.cleaning;
       case AppStrings.apiTableStatusDisabled:
