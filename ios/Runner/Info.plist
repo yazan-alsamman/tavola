@@ -24,10 +24,16 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>TAVOLA uses your location to show nearby restaurants and provide location-based recommendations.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>TAVOLA uses your location to show nearby restaurants and provide location-based recommendations.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>TAVOLA needs photo library access so you can choose a profile avatar or attach a photo to a restaurant review.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -68,9 +74,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>TAVOLA needs photo library access so you can choose a profile avatar or attach a photo to a restaurant review.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>TAVOLA needs your location to recommend nearby restaurants.</string>
 </dict>
 </plist>
