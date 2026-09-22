@@ -4,12 +4,20 @@ class AppUrls {
   static const String privacyPolicyUrl =
       'https://www.termsfeed.com/live/329399af-df22-4985-bb59-eb003931ce09';
 
-  /// Raster basemap tiles (OSM data via CARTO CDN).
+  /// Raster basemap tiles (OpenStreetMap data).
   ///
-  /// Do not use `tile.openstreetmap.org` in production apps — OSM Foundation
-  /// tile policy forbids bulk/app usage, and flutter_map logs a debug warning.
-  static const String mapRasterTiles =
-      'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+  /// CARTO Voyager (`basemaps.cartocdn.com`) now watermarks unauthenticated
+  /// raster tiles with "API key required". Default is the OSM Germany
+  /// community server, which needs no key.
+  ///
+  /// Do not default to `tile.openstreetmap.org` — OSM Foundation tile policy
+  /// forbids bulk/app usage, and flutter_map logs a debug warning.
+  /// Override at build time with `--dart-define=MAP_RASTER_TILES=...`
+  /// (for example a CARTO URL that already includes `?key=`).
+  static const String mapRasterTiles = String.fromEnvironment(
+    'MAP_RASTER_TILES',
+    defaultValue: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+  );
 
   /// Passed to [TileLayer.userAgentPackageName] (becomes `flutter_map (...)`).
   /// Must identify this app — never `unknown` or `com.example.app`.

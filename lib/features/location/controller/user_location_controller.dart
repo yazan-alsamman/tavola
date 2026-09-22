@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/services/location_service.dart';
+import '../location_prompt_preferences.dart';
 import '../model/location_permission_state.dart';
 import '../model/user_location_model.dart';
 
@@ -13,13 +14,26 @@ import '../model/user_location_model.dart';
 /// Views bind to observables only — never call [LocationService] from UI.
 class UserLocationController extends GetxController {
   UserLocationController({LocationService? locationService})
-    : _locationService = locationService ?? Get.find<LocationService>();
+    : _locationService = locationService ?? Get.find<LocationService>() {
+    _hydrateActivationPromptFromCache();
+  }
 
   final LocationService _locationService;
+
+  void _hydrateActivationPromptFromCache() {
+    final bool? cached = LocationPromptPreferences.cachedOrNull;
+    if (cached == null) {
+      return;
+    }
+    hasRequestedActivation.value = cached;
+    activationPromptResolved.value = true;
+  }
 
   final Rx<UserLocationModel> location = UserLocationModel.initial.obs;
   final RxBool isLoading = false.obs;
   final RxnString errorMessage = RxnString();
+  final RxBool hasRequestedActivation = false.obs;
+  final RxBool activationPromptResolved = false.obs;
 
   bool get hasCoordinates => location.value.hasCoordinates;
 
@@ -36,12 +50,38 @@ class UserLocationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Never block the creating route's first frame on platform location I/O.
+    // Restore the ask-flag first, then read the real OS status. Never request
+    // permission here — that stays user-driven via [handlePrimaryAction].
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!isClosed) {
-        unawaited(refreshStatus());
+        unawaited(_bootstrap());
       }
     });
+  }
+
+  Future<void> _bootstrap() async {
+    await _restoreActivationPromptState();
+    if (!isClosed) {
+      await refreshStatus();
+    }
+  }
+
+  Future<void> _restoreActivationPromptState() async {
+    hasRequestedActivation.value = await LocationPromptPreferences.hasRequested();
+    activationPromptResolved.value = true;
+  }
+
+  Future<void> _markActivationRequested() async {
+    hasRequestedActivation.value = true;
+    activationPromptResolved.value = true;
+    await LocationPromptPreferences.markRequested();
+  }
+
+  bool get _suppressActivationPrompt {
+    if (!activationPromptResolved.value) {
+      return true;
+    }
+    return hasRequestedActivation.value;
   }
 
   /// Reads service + permission without requesting access or coordinates.
@@ -81,6 +121,7 @@ class UserLocationController extends GetxController {
 
   /// User-driven: request permission (if needed) then fetch coordinates.
   Future<void> requestPermissionAndLocate() async {
+    await _markActivationRequested();
     isLoading.value = true;
     errorMessage.value = null;
     try {
@@ -130,10 +171,12 @@ class UserLocationController extends GetxController {
   }
 
   Future<void> openAppSettings() async {
+    await _markActivationRequested();
     await _locationService.openAppSettings();
   }
 
   Future<void> openLocationSettings() async {
+    await _markActivationRequested();
     await _locationService.openLocationSettings();
   }
 
@@ -160,6 +203,12 @@ class UserLocationController extends GetxController {
       case LocationPermissionState.serviceDisabled:
         return AppStrings.locationServiceDisabled;
       case LocationPermissionState.unknown:
+        if (!activationPromptResolved.value) {
+          return AppStrings.locationLoading;
+        }
+        if (hasRequestedActivation.value) {
+          return AppStrings.locationPermissionDenied;
+        }
         return AppStrings.locationEnablePrompt;
     }
   }
@@ -169,6 +218,9 @@ class UserLocationController extends GetxController {
     switch (location.value.permissionStatus) {
       case LocationPermissionState.unknown:
       case LocationPermissionState.denied:
+        if (_suppressActivationPrompt) {
+          return null;
+        }
         return AppStrings.locationEnableAction;
       case LocationPermissionState.deniedForever:
       case LocationPermissionState.restricted:

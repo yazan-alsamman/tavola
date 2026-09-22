@@ -258,6 +258,9 @@ class AppStrings {
 
   /// Persisted startup session mode ([SessionMode]) — SharedPreferences only.
   static const String sessionModeKey = 'session_mode';
+
+  /// Whether the in-app location activation prompt has already been shown.
+  static const String locationPromptRequestedKey = 'location_prompt_requested';
   static const String sessionModeNoneValue = 'none';
   static const String sessionModeGuestValue = 'guest';
   static const String sessionModeAuthenticatedValue = 'authenticated';
@@ -680,6 +683,8 @@ class AppStrings {
       'Explore the dining room, choose an available table, and confirm your placement.'
           .tr;
   static String get tableAvailable => 'AVAILABLE'.tr;
+  static String get tableOccupied => 'OCCUPIED'.tr;
+  static String get tableDisabled => 'DISABLED'.tr;
   static String get tableReserved => 'RESERVED'.tr;
   static String get tableCleaning => 'CLEANING'.tr;
 
@@ -773,6 +778,14 @@ class AppStrings {
   static String get reservedTableNote =>
       'Currently held for an arriving party. Please choose another available table.'
           .tr;
+  static String get occupiedTableNote =>
+      'This table is currently occupied. Please choose another available table.'
+          .tr;
+  static String get disabledTableNote =>
+      'This table is disabled and cannot be booked.'.tr;
+  static String get tableUnavailableForSlotNote =>
+      'This table is not available for the selected date and time. Please choose another table.'
+          .tr;
   static String get cleaningTableNote =>
       'Being refreshed for the next service. This table will be ready shortly.'
           .tr;
@@ -818,24 +831,6 @@ class AppStrings {
   ];
   static String get selectTablePrompt =>
       'Please select an available table to continue.'.tr;
-  static const String tableIdW1 = 'w1';
-  static const String tableIdR3 = 'r3';
-  static const String tableIdC2 = 'c2';
-  static const String tableIdA2 = 'a2';
-  static const String tableIdB4 = 'b4';
-  static const String tableIdV5 = 'v5';
-  static const String tableIdP6 = 'p6';
-  static const String tableIdT7 = 't7';
-  static const String tableIdM8 = 'm8';
-  static const String tableLabelW1 = 'W1';
-  static const String tableLabelR3 = 'R3';
-  static const String tableLabelC2 = 'C2';
-  static const String tableLabelA2 = 'A2';
-  static const String tableLabelB4 = 'B4';
-  static const String tableLabelV5 = 'V5';
-  static const String tableLabelP6 = 'P6';
-  static const String tableLabelT7 = 'T7';
-  static const String tableLabelM8 = 'M8';
 
   static const String conciergeTitle = 'TAVOLA Concierge';
   static String get conciergeStatus => 'Active always'.tr;
@@ -903,7 +898,7 @@ class AppStrings {
   static String get openStreetMapContributors =>
       'OpenStreetMap contributors'.tr;
   static String get cartoAttribution => 'CARTO'.tr;
-  static String get mapAttributionLabel => 'OpenStreetMap · CARTO'.tr;
+  static String get mapAttributionLabel => openStreetMapContributors;
 
   static String get reservationHistory => 'Reservation history'.tr;
   static String get reservationHistoryCompleted => 'Completed'.tr;

@@ -192,6 +192,14 @@ class AppTranslations extends Translations {
     'Choose your table and preferred seating to craft a refined dining experience.':
         'Choose your table and preferred seating to craft a refined dining experience.',
     'CLEANING': 'CLEANING',
+    'DISABLED': 'DISABLED',
+    'OCCUPIED': 'OCCUPIED',
+    'This table is currently occupied. Please choose another available table.':
+        'This table is currently occupied. Please choose another available table.',
+    'This table is disabled and cannot be booked.':
+        'This table is disabled and cannot be booked.',
+    'This table is not available for the selected date and time. Please choose another table.':
+        'This table is not available for the selected date and time. Please choose another table.',
     'Closed': 'Closed',
     'Vietnamese': 'Vietnamese',
     'Wedding': 'Wedding',
@@ -1017,6 +1025,14 @@ class AppTranslations extends Translations {
     'Choose your table and preferred seating to craft a refined dining experience.':
         'اختر طاولتك ومقعدك المفضل لصياغة تجربة طعام راقية.',
     'CLEANING': 'قيد التنظيف',
+    'DISABLED': 'معطلة',
+    'OCCUPIED': 'مشغولة',
+    'This table is currently occupied. Please choose another available table.':
+        'هذه الطاولة مشغولة حالياً. يرجى اختيار طاولة أخرى متاحة.',
+    'This table is disabled and cannot be booked.':
+        'هذه الطاولة معطلة ولا يمكن حجزها.',
+    'This table is not available for the selected date and time. Please choose another table.':
+        'هذه الطاولة غير متاحة في التاريخ والوقت المحددين. يرجى اختيار طاولة أخرى.',
     'Closed': 'مغلق',
     'Vietnamese': 'فيتنامي',
     'Wedding': 'زفاف',

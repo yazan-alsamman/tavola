@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 
 import '../../../app/routes/app_routes.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/onboarding_preferences.dart';
 import '../../reservation/controller/reservation_controller.dart';
 import '../../reservation/controller/select_table_controller.dart';
@@ -62,7 +61,7 @@ class OnboardingController extends GetxController {
       return;
     }
     final preferred = selectTable.floorPlanTables.firstWhereOrNull(
-      (table) => table.id == AppStrings.tableIdW1,
+      (table) => table.isSelectable,
     );
     selectTable.selectTable(preferred ?? selectTable.floorPlanTables.first);
   }

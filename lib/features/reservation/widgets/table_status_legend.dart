@@ -17,8 +17,9 @@ class TableStatusLegend extends StatelessWidget {
       status: TableStatus.available,
       label: AppStrings.tableAvailable,
     ),
-    _LegendItem(status: TableStatus.reserved, label: AppStrings.tableReserved),
+    _LegendItem(status: TableStatus.occupied, label: AppStrings.tableOccupied),
     _LegendItem(status: TableStatus.cleaning, label: AppStrings.tableCleaning),
+    _LegendItem(status: TableStatus.disabled, label: AppStrings.tableDisabled),
   ];
 
   @override

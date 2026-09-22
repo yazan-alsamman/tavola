@@ -75,15 +75,11 @@ class TableRepository {
   }) async {
     final DiscoveryRepository? discovery = _discovery;
     if (discovery == null) {
-      return const <RestaurantTableModel>[];
+      throw StateError(AppStrings.tablesNoFloorPlanAvailable);
     }
-    try {
-      final DiscoveryFloorPlanModel floorPlan = await discovery
-          .getActiveFloorPlan(restaurantId: restaurantId, branchId: branchId);
-      return floorPlan.tables;
-    } catch (_) {
-      return const <RestaurantTableModel>[];
-    }
+    final DiscoveryFloorPlanModel floorPlan = await discovery
+        .getActiveFloorPlan(restaurantId: restaurantId, branchId: branchId);
+    return floorPlan.tables;
   }
 
   Future<RestaurantTableModel> fetchTableById(String tableId) async {

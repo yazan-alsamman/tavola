@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/auth_token_reader.dart';
 import '../../home/model/restaurant_model.dart';
@@ -86,11 +87,15 @@ class FavoritesRepository extends GetxService {
       _notifyFavoriteListeners();
       _initialized = true;
     } on ApiException catch (error) {
+      if (error.isCancelled) {
+        return;
+      }
       syncError.value = error.message;
       // Auth failures are often transient around startup hydration/login race.
       // Do not lock initialization so a later call can retry and recover.
       _initialized = !error.isUnauthorized;
     } catch (_) {
+      syncError.value = AppStrings.networkUnexpectedError;
       _initialized = true;
     } finally {
       isSyncing.value = false;

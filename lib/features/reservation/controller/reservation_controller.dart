@@ -170,6 +170,9 @@ class ReservationController extends GetxController {
       if (isClosed || requestId != _slotsRequestId) {
         return;
       }
+      if (error.isCancelled) {
+        return;
+      }
       availabilitySlots.clear();
       timeSlots.clear();
       slotsError.value = error.message.isNotEmpty
@@ -314,8 +317,11 @@ class ReservationController extends GetxController {
       // Prefetch Search Availability before opening Select Table.
       await _reservationRepository.searchAvailability(window);
     } on ApiException catch (error) {
+      if (error.isCancelled) {
+        return;
+      }
       Get.snackbar(AppStrings.nextSelectTable, error.message);
-      if (error.statusCode == 401) {
+      if (error.isUnauthorized) {
         await session.requireSignInForProtectedAction();
       }
       return;

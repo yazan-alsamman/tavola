@@ -1,10 +1,10 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../controller/select_table_controller.dart';
 import '../model/restaurant_table_model.dart';
 import '../model/table_status.dart';
 import '../model/table_status_theme.dart';
@@ -15,93 +15,97 @@ class FloorPlanTable extends StatelessWidget {
     required this.table,
     required this.isSelected,
     required this.onTap,
-    this.size = AppDimensions.floorPlanTableSize,
+    required this.width,
+    required this.height,
   });
 
   final RestaurantTableModel table;
   final bool isSelected;
   final VoidCallback onTap;
-  final double size;
+  final double width;
+  final double height;
 
   Widget get _tableContent {
     return FittedBox(
       fit: BoxFit.scaleDown,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _label,
-          if (table.isCategoryExample) ...[
-            const SizedBox(height: AppDimensions.tinySpacing),
-            Text(
-              SelectTableController.seatCountText(table.seatCount),
-              style: _seatStyle,
-            ),
-          ],
-        ],
-      ),
+      child: Text(table.tableNumber, style: table.status.tableLabelStyle),
     );
   }
-
-  TextStyle get _seatStyle => table.status.seatBadgeStyle;
 
   @override
   Widget build(BuildContext context) {
     final bool isCleaning = table.status == TableStatus.cleaning;
-    final BorderRadius radius = BorderRadius.circular(
-      AppDimensions.floorPlanTableRadius,
-    );
+    final BorderRadius radius = table.isRound
+        ? BorderRadius.circular(math.max(width, height))
+        : BorderRadius.circular(AppDimensions.floorPlanTableRadius);
+    final double rotationRadians =
+        ((table.rotation ?? 0) * math.pi) / 180;
 
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: AppDimensions.hoverDuration,
-        curve: Curves.easeOutCubic,
-        width: size,
-        height: size,
-        padding: const EdgeInsets.all(AppDimensions.tinySpacing),
-        decoration: BoxDecoration(
-          color: _backgroundColor,
-          borderRadius: radius,
-          border: Border.all(
-            color: isSelected ? AppColors.primaryDark : _borderColor,
-            width: isSelected
-                ? AppDimensions.occasionSelectedBorderWidth
-                : isCleaning
-                ? AppDimensions.dashedBorderStrokeWidth
-                : AppDimensions.cardBorderWidth,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isSelected
-                  ? AppColors.primaryDark22
-                  : AppColors.primaryDark10,
-              blurRadius: isSelected
-                  ? AppDimensions.floorPlanSelectedShadowBlur
-                  : AppDimensions.floorPlanIdleShadowBlur,
-              offset: const Offset(0, AppDimensions.tinySpacing),
+      child: Transform.rotate(
+        angle: rotationRadians,
+        child: AnimatedContainer(
+          duration: AppDimensions.hoverDuration,
+          curve: Curves.easeOutCubic,
+          width: width,
+          height: height,
+          padding: const EdgeInsets.all(AppDimensions.tinySpacing),
+          decoration: BoxDecoration(
+            color: _backgroundColor,
+            borderRadius: radius,
+            border: Border.all(
+              color: isSelected ? AppColors.primaryDark : _borderColor,
+              width: isSelected
+                  ? AppDimensions.occasionSelectedBorderWidth
+                  : isCleaning
+                  ? AppDimensions.dashedBorderStrokeWidth
+                  : AppDimensions.cardBorderWidth,
             ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: isSelected
+                    ? AppColors.primaryDark22
+                    : AppColors.primaryDark10,
+                blurRadius: isSelected
+                    ? AppDimensions.floorPlanSelectedShadowBlur
+                    : AppDimensions.floorPlanIdleShadowBlur,
+                offset: const Offset(0, AppDimensions.tinySpacing),
+              ),
+            ],
+          ),
+          child: isCleaning
+              ? CustomPaint(
+                  painter: _DashedRectPainter(
+                    color: AppColors.border,
+                    strokeWidth: AppDimensions.dashedBorderStrokeWidth,
+                    borderRadius: table.isRound
+                        ? math.max(width, height)
+                        : AppDimensions.floorPlanTableRadius,
+                  ),
+                  child: Center(child: _tableContent),
+                )
+              : Center(child: _tableContent),
         ),
-        child: isCleaning
-            ? CustomPaint(
-                painter: _DashedRectPainter(
-                  color: AppColors.border,
-                  strokeWidth: AppDimensions.dashedBorderStrokeWidth,
-                  borderRadius: AppDimensions.floorPlanTableRadius,
-                ),
-                child: Center(child: _tableContent),
-              )
-            : Center(child: _tableContent),
       ),
     );
   }
 
-  Color get _backgroundColor => table.status.tableBackgroundColor;
+  Color get _backgroundColor {
+    if (table.status == TableStatus.available &&
+        table.isAvailableForWindow == false) {
+      return AppColors.surfaceAlt;
+    }
+    return table.status.tableBackgroundColor;
+  }
 
-  Color get _borderColor => table.status.tableBorderColor;
-
-  Widget get _label => Text(table.label, style: table.status.tableLabelStyle);
+  Color get _borderColor {
+    if (table.status == TableStatus.available &&
+        table.isAvailableForWindow == false) {
+      return AppColors.border;
+    }
+    return table.status.tableBorderColor;
+  }
 }
 
 class _DashedRectPainter extends CustomPainter {

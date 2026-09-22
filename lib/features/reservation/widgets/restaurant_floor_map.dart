@@ -1,13 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_strings.dart';
-import '../../../core/constants/app_text_styles.dart';
 import '../controller/select_table_controller.dart';
+import '../model/floor_plan_geometry.dart';
 import '../model/restaurant_table_model.dart';
-import '../model/table_status.dart';
 import 'floor_plan_live_time_badge.dart';
 import 'floor_plan_table.dart';
 import 'table_status_legend.dart';
@@ -27,6 +27,7 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
   late final Animation<double> _pulseAnimation;
   final TransformationController _transformController =
       TransformationController();
+  String _fittedSignature = '';
 
   @override
   void initState() {
@@ -51,107 +52,168 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
     super.dispose();
   }
 
+  void _fitCanvas({
+    required Size viewport,
+    required Size canvas,
+    required List<RestaurantTableModel> tables,
+  }) {
+    final String signature = tables
+        .map(
+          (RestaurantTableModel table) =>
+              '${table.tableId}:${table.positionX}:${table.positionY}:${table.width}:${table.height}',
+        )
+        .join('|');
+    if (signature == _fittedSignature) {
+      return;
+    }
+    _fittedSignature = signature;
+    final Matrix4 fitted = FloorPlanGeometry.fitToViewport(
+      viewport: viewport,
+      canvas: canvas,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _transformController.value = fitted;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final double mapWidth = constraints.maxWidth;
-        final double mapHeight = constraints.maxHeight;
-        final double scaleX = mapWidth / AppDimensions.floorPlanMapWidth;
-        final double scaleY = mapHeight / AppDimensions.floorPlanMapHeight;
-        final double tableScale = scaleX < scaleY ? scaleX : scaleY;
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double viewportWidth = constraints.maxWidth;
+        final double viewportHeight = constraints.maxHeight;
 
         return SizedBox(
-          width: mapWidth,
-          height: mapHeight,
-          child: InteractiveViewer(
-            transformationController: _transformController,
-            minScale: AppDimensions.floorPlanMapMinScale,
-            maxScale: AppDimensions.floorPlanMapMaxScale,
-            boundaryMargin: const EdgeInsets.all(AppDimensions.smallSpacing),
-            clipBehavior: Clip.hardEdge,
-            child: SizedBox(
-              width: mapWidth,
-              height: mapHeight,
-              child: Obx(
-                () => Stack(
-                  clipBehavior: Clip.hardEdge,
-                  children: [
-                    SizedBox.expand(
-                      child: CustomPaint(painter: _RestaurantMapPainter()),
+          width: viewportWidth,
+          height: viewportHeight,
+          child: Obx(() {
+            final List<RestaurantTableModel> tables = widget
+                .controller
+                .floorPlanTables
+                .toList(growable: false);
+            final Size canvas = FloorPlanGeometry.canvasSize(tables);
+            _fitCanvas(
+              viewport: Size(viewportWidth, viewportHeight),
+              canvas: canvas,
+              tables: tables,
+            );
+
+            return Stack(
+              clipBehavior: Clip.hardEdge,
+              children: [
+                Positioned.fill(
+                  child: InteractiveViewer(
+                    transformationController: _transformController,
+                    constrained: false,
+                    minScale: AppDimensions.floorPlanMapMinScale,
+                    maxScale: AppDimensions.floorPlanMapMaxScale,
+                    boundaryMargin: const EdgeInsets.all(
+                      AppDimensions.smallSpacing,
                     ),
-                    PositionedDirectional(
-                      top: AppDimensions.regularSpacing,
-                      start: AppDimensions.regularSpacing,
-                      child: const TableStatusLegend(overlay: true),
-                    ),
-                    const PositionedDirectional(
-                      top: AppDimensions.regularSpacing,
-                      end: AppDimensions.regularSpacing,
-                      child: FloorPlanLiveTimeBadge(),
-                    ),
-                    ...widget.controller.floorPlanTables.map(
-                      (table) => _buildMapTable(
-                        table,
-                        scaleX: scaleX,
-                        scaleY: scaleY,
-                        tableScale: tableScale,
-                        mapWidth: mapWidth,
-                        mapHeight: mapHeight,
+                    clipBehavior: Clip.hardEdge,
+                    child: SizedBox(
+                      width: canvas.width,
+                      height: canvas.height,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          const Positioned.fill(
+                            child: CustomPaint(painter: _FloorPlanSurfacePainter()),
+                          ),
+                          ...tables.map(
+                            (RestaurantTableModel table) => FloorPlanPlacedTable(
+                              table: table,
+                              isSelected:
+                                  widget.controller.selectedTableId.value ==
+                                  table.tableId,
+                              pulse: _pulseAnimation,
+                              onTap: () => widget.controller.selectTable(table),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
+                const PositionedDirectional(
+                  top: AppDimensions.regularSpacing,
+                  start: AppDimensions.regularSpacing,
+                  child: TableStatusLegend(overlay: true),
+                ),
+                const PositionedDirectional(
+                  top: AppDimensions.regularSpacing,
+                  end: AppDimensions.regularSpacing,
+                  child: FloorPlanLiveTimeBadge(),
+                ),
+              ],
+            );
+          }),
         );
       },
     );
   }
 
-  Widget _buildMapTable(
-    RestaurantTableModel table, {
-    required double scaleX,
-    required double scaleY,
-    required double tableScale,
-    required double mapWidth,
-    required double mapHeight,
-  }) {
-    final double baseSize = table.mapSize ?? AppDimensions.floorPlanTableSize;
-    final double size = baseSize * tableScale;
-    final double left = table.mapX * scaleX;
-    final double top = table.mapY * scaleY;
-    final bool isSelected = widget.controller.selectedTableId.value == table.id;
-    final bool shouldPulse =
-        table.status == TableStatus.available && !isSelected;
+}
 
-    final double clampedLeft = left.clamp(0.0, mapWidth - size);
-    final double clampedTop = top.clamp(0.0, mapHeight - size);
+/// Places a table at Backend `positionX`/`positionY` using [Positioned.left]/[Positioned.top].
+/// RTL must not use Directional positioning — coordinates stay origin top-left.
+class FloorPlanPlacedTable extends StatelessWidget {
+  const FloorPlanPlacedTable({
+    super.key,
+    required this.table,
+    required this.isSelected,
+    required this.onTap,
+    this.pulse,
+  });
+
+  final RestaurantTableModel table;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Animation<double>? pulse;
+
+  @override
+  Widget build(BuildContext context) {
+    final Rect? rect = FloorPlanGeometry.tableRect(table);
+    if (rect == null) {
+      return const SizedBox.shrink();
+    }
+
+    final bool shouldPulse = table.isSelectable && !isSelected && pulse != null;
+    final Widget tableWidget = FloorPlanTable(
+      key: ValueKey<String>('floor-plan-table-${table.tableId}'),
+      table: table,
+      isSelected: isSelected,
+      width: rect.width,
+      height: rect.height,
+      onTap: onTap,
+    );
 
     return Positioned(
-      left: clampedLeft,
-      top: clampedTop,
-      child: AnimatedBuilder(
-        animation: _pulseAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: shouldPulse ? _pulseAnimation.value : 1,
-            child: child,
-          );
-        },
-        child: FloorPlanTable(
-          table: table,
-          isSelected: isSelected,
-          size: size,
-          onTap: () => widget.controller.selectTable(table),
-        ),
-      ),
+      key: ValueKey<String>('floor-plan-position-${table.tableId}'),
+      left: rect.left,
+      top: rect.top,
+      child: pulse == null
+          ? tableWidget
+          : AnimatedBuilder(
+              animation: pulse!,
+              builder: (BuildContext context, Widget? child) {
+                return Transform.scale(
+                  scale: shouldPulse ? pulse!.value : 1,
+                  child: child,
+                );
+              },
+              child: tableWidget,
+            ),
     );
   }
 }
 
-class _RestaurantMapPainter extends CustomPainter {
+class _FloorPlanSurfacePainter extends CustomPainter {
+  const _FloorPlanSurfacePainter();
+
   @override
   void paint(Canvas canvas, Size size) {
     final Rect bounds = Offset.zero & size;
@@ -167,14 +229,12 @@ class _RestaurantMapPainter extends CustomPainter {
     );
 
     const double inset = AppDimensions.floorPlanMapInset;
-    const double padding = AppDimensions.floorPlanMapInnerPadding;
-
     final RRect outer = RRect.fromRectAndRadius(
       Rect.fromLTWH(
         inset,
         inset,
-        size.width - inset * 2,
-        size.height - inset * 2,
+        math.max(0, size.width - inset * 2),
+        math.max(0, size.height - inset * 2),
       ),
       const Radius.circular(AppDimensions.cardRadius),
     );
@@ -192,134 +252,6 @@ class _RestaurantMapPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = AppDimensions.cardBorderWidth,
     );
-
-    final double diningLineY =
-        size.height * AppDimensions.floorPlanDiningLineFactor;
-    final double serviceLineY =
-        size.height * AppDimensions.floorPlanServiceLineFactor;
-    final double serviceSplitX =
-        size.width * AppDimensions.floorPlanServiceSplitFactor;
-
-    final RRect windowBay = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        padding,
-        padding,
-        size.width - padding * 2,
-        size.height * AppDimensions.floorPlanWindowHeightFactor,
-      ),
-      const Radius.circular(AppDimensions.regularSpacing),
-    );
-    canvas.drawRRect(windowBay, Paint()..color = AppColors.secondaryLight);
-    canvas.drawRRect(
-      windowBay,
-      Paint()
-        ..color = AppColors.border
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = AppDimensions.floorPlanHairlineStroke,
-    );
-
-    canvas.drawRect(
-      Rect.fromLTRB(padding, diningLineY, size.width - padding, serviceLineY),
-      Paint()..color = AppColors.primaryDark10,
-    );
-    canvas.drawRect(
-      Rect.fromLTRB(
-        serviceSplitX,
-        serviceLineY,
-        size.width - padding,
-        size.height - padding,
-      ),
-      Paint()..color = AppColors.secondaryLight,
-    );
-
-    final Paint zoneLine = Paint()
-      ..color = AppColors.border
-      ..strokeWidth = AppDimensions.floorPlanHairlineStroke;
-
-    canvas.drawLine(
-      Offset(padding, diningLineY),
-      Offset(size.width - padding, diningLineY),
-      zoneLine,
-    );
-    canvas.drawLine(
-      Offset(padding, serviceLineY),
-      Offset(size.width - padding, serviceLineY),
-      zoneLine,
-    );
-    canvas.drawLine(
-      Offset(serviceSplitX, serviceLineY),
-      Offset(serviceSplitX, size.height - padding),
-      zoneLine,
-    );
-
-    _drawZoneLabel(
-      canvas,
-      AppStrings.windowSeating,
-      Offset(
-        size.width * AppDimensions.floorPlanZoneLabelXFactor,
-        AppDimensions.floorPlanZoneLabelTop,
-      ),
-      size.width,
-    );
-    _drawZoneLabel(
-      canvas,
-      AppStrings.mainDining,
-      Offset(
-        size.width * AppDimensions.floorPlanZoneLabelXFactor,
-        diningLineY + AppDimensions.floorPlanZoneLabelOffsetY,
-      ),
-      size.width,
-    );
-    _drawZoneLabel(
-      canvas,
-      AppStrings.serviceArea,
-      Offset(
-        size.width * AppDimensions.floorPlanServiceLabelXFactor,
-        serviceLineY + AppDimensions.floorPlanZoneLabelOffsetY,
-      ),
-      size.width,
-    );
-
-    final RRect entrance = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(
-          size.width * AppDimensions.floorPlanEntranceXFactor,
-          size.height - AppDimensions.floorPlanEntranceBottomOffset,
-        ),
-        width: size.width * AppDimensions.floorPlanEntranceWidthFactor,
-        height: AppDimensions.floorPlanEntranceHeight,
-      ),
-      const Radius.circular(AppDimensions.pillRadius),
-    );
-    canvas.drawRRect(entrance, Paint()..color = AppColors.primaryDark10);
-    _drawZoneLabel(
-      canvas,
-      AppStrings.entrance,
-      Offset(
-        size.width * AppDimensions.floorPlanEntranceLabelXFactor,
-        size.height - AppDimensions.floorPlanEntranceLabelBottomOffset,
-      ),
-      size.width,
-    );
-  }
-
-  void _drawZoneLabel(
-    Canvas canvas,
-    String label,
-    Offset offset,
-    double maxWidth,
-  ) {
-    final TextPainter painter =
-        TextPainter(
-          text: TextSpan(text: label, style: AppTextStyles.floorPlanZoneLabel),
-          textDirection: TextDirection.ltr,
-          maxLines: 1,
-          ellipsis: AppStrings.textEllipsis,
-        )..layout(
-          maxWidth: maxWidth * AppDimensions.floorPlanZoneLabelMaxWidthFactor,
-        );
-
-    painter.paint(canvas, offset);
   }
 
   @override

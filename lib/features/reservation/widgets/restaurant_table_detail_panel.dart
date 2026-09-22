@@ -7,7 +7,6 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../controller/select_table_controller.dart';
 import '../model/restaurant_table_model.dart';
-import '../model/table_status.dart';
 import '../model/table_status_theme.dart';
 
 class RestaurantTableDetailPanel extends StatelessWidget {
@@ -23,7 +22,7 @@ class RestaurantTableDetailPanel extends StatelessWidget {
       }
 
       final RestaurantTableModel table = controller.selectedTable!;
-      final bool isAvailable = table.status == TableStatus.available;
+      final bool isAvailable = table.isSelectable;
 
       return AnimatedSize(
         duration: AppDimensions.hoverDuration,

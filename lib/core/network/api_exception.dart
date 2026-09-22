@@ -19,7 +19,10 @@ class ApiException implements Exception {
   bool get isUnauthorized => statusCode == 401;
   bool get isForbidden => statusCode == 403;
   bool get isNotFound => statusCode == 404;
-  bool get isValidation => code == 'VALIDATION_ERROR' || statusCode == 422;
+  bool get isBadRequest => statusCode == 400;
+  bool get isConflict => statusCode == 409;
+  bool get isValidation =>
+      code == 'VALIDATION_ERROR' || statusCode == 422 || statusCode == 400;
   bool get isCancelled => code == 'REQUEST_CANCELLED';
 
   factory ApiException.fromErrorBody(
@@ -43,7 +46,7 @@ class ApiException implements Exception {
     } else if (rootMessage.isNotEmpty) {
       message = rootMessage;
     } else {
-      message = AppStrings.networkUnexpectedError;
+      message = ApiException.fromStatusCode(statusCode).message;
     }
 
     return ApiException(
@@ -200,6 +203,62 @@ class ApiException implements Exception {
       message: AppStrings.networkTooManyRequestsError,
       statusCode: 429,
     );
+  }
+
+  /// HTTP status fallback when the response has no usable error body.
+  factory ApiException.fromStatusCode(int? status, {String? message}) {
+    final String trimmed = (message ?? '').trim();
+    switch (status) {
+      case 400:
+        return ApiException(
+          message: trimmed.isNotEmpty
+              ? trimmed
+              : AppStrings.networkUnexpectedError,
+          statusCode: 400,
+        );
+      case 401:
+        return trimmed.isNotEmpty
+            ? ApiException(message: trimmed, statusCode: 401)
+            : ApiException.unauthorized();
+      case 403:
+        return trimmed.isNotEmpty
+            ? ApiException(message: trimmed, statusCode: 403)
+            : ApiException.forbidden();
+      case 404:
+        return trimmed.isNotEmpty
+            ? ApiException(message: trimmed, statusCode: 404)
+            : ApiException.notFound();
+      case 409:
+        return ApiException(
+          message: trimmed.isNotEmpty
+              ? trimmed
+              : AppStrings.networkUnexpectedError,
+          statusCode: 409,
+        );
+      case 422:
+        return ApiException(
+          message: trimmed.isNotEmpty
+              ? trimmed
+              : AppStrings.networkUnexpectedError,
+          statusCode: 422,
+        );
+      case 429:
+        return trimmed.isNotEmpty
+            ? ApiException(message: trimmed, statusCode: 429)
+            : ApiException.tooManyRequests();
+      default:
+        if (status != null && status >= 500) {
+          return trimmed.isNotEmpty
+              ? ApiException(message: trimmed, statusCode: status)
+              : ApiException.server(statusCode: status);
+        }
+        return ApiException(
+          message: trimmed.isNotEmpty
+              ? trimmed
+              : AppStrings.networkUnexpectedError,
+          statusCode: status,
+        );
+    }
   }
 
   factory ApiException.server({int? statusCode}) {

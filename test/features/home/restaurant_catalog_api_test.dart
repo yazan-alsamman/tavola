@@ -156,7 +156,11 @@ void main() {
     );
 
     final RestaurantTableModel byId = await repository.fetchTableById('t1');
-    expect(byId.id, 't1');
+    expect(byId.tableId, 't1');
+    expect(byId.tableNumber, 'A1');
+    expect(byId.positionX, 10);
+    expect(byId.positionY, 20);
+    expect(byId.status.name, 'available');
     expect(hits, contains('/tables/t1'));
     expect(
       hits.any(

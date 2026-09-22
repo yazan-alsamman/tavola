@@ -545,24 +545,10 @@ class AuthRepository {
   }
 
   static ApiException _mapBareAuthStatus(int? status) {
-    switch (status) {
-      case 401:
-        return ApiException.credentialsRejected();
-      case 403:
-        return ApiException.forbidden();
-      case 404:
-        return ApiException.notFound();
-      case 429:
-        return ApiException.tooManyRequests();
-      default:
-        if (status != null && status >= 500) {
-          return ApiException.server(statusCode: status);
-        }
-        return ApiException(
-          message: AppStrings.networkUnexpectedError,
-          statusCode: status,
-        );
+    if (status == 401) {
+      return ApiException.credentialsRejected();
     }
+    return ApiException.fromStatusCode(status);
   }
 
   static Map<String, dynamic>? _asStringKeyedMap(Object? data) {

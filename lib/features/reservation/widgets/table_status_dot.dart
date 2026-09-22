@@ -28,12 +28,21 @@ class TableStatusDot extends StatelessWidget {
             shape: BoxShape.circle,
           ),
         );
-      case TableStatus.reserved:
+      case TableStatus.occupied:
         return Container(
           width: size,
           height: size,
           decoration: const BoxDecoration(
             color: AppColors.accent,
+            shape: BoxShape.circle,
+          ),
+        );
+      case TableStatus.disabled:
+        return Container(
+          width: size,
+          height: size,
+          decoration: const BoxDecoration(
+            color: AppColors.disabled,
             shape: BoxShape.circle,
           ),
         );

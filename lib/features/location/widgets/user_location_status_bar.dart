@@ -11,6 +11,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/app_dependency.dart';
 import '../controller/user_location_controller.dart';
+import '../location_prompt_preferences.dart';
 import '../model/location_permission_state.dart';
 
 /// Compact location status row for Home (and similar surfaces).
@@ -27,9 +28,38 @@ class UserLocationStatusBar extends StatefulWidget {
 }
 
 class _UserLocationStatusBarState extends State<UserLocationStatusBar> {
+  bool _promptResolved = LocationPromptPreferences.cachedOrNull != null;
+  bool _alreadyRequested = LocationPromptPreferences.cachedOrNull ?? false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_restorePromptState());
+  }
+
+  Future<void> _restorePromptState() async {
+    final bool alreadyRequested = await LocationPromptPreferences.hasRequested();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _alreadyRequested = alreadyRequested;
+      _promptResolved = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!Get.isRegistered<UserLocationController>()) {
+      if (!_promptResolved || _alreadyRequested) {
+        return _LocationStatusRow(
+          loading: true,
+          status: LocationPermissionState.unknown,
+          statusLabel: AppStrings.locationLoading,
+          actionLabel: null,
+          onPressed: null,
+        );
+      }
       return _LocationStatusRow(
         loading: false,
         status: LocationPermissionState.unknown,

@@ -119,6 +119,16 @@ void main() {
               .timeout(const Duration(seconds: 8));
           expect(floorPlan.floorPlanId, isNotEmpty);
           expect(floorPlan.branchId, branches.first.id);
+          for (final table in floorPlan.tables) {
+            expect(table.tableId, isNotEmpty);
+            expect(table.tableId, isNot(table.tableNumber));
+            if (table.hasRenderableGeometry) {
+              expect(table.positionX, isNotNull);
+              expect(table.positionY, isNotNull);
+              expect(table.width, isNotNull);
+              expect(table.height, isNotNull);
+            }
+          }
         } catch (_) {
           // 404 when no active floor plan — valid Discovery contract.
         }

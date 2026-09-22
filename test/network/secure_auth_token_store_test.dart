@@ -350,12 +350,51 @@ void main() {
         );
       },
     );
+
+    test('same tokens after a successful persist are not rewritten', () async {
+      final _MemoryVault vault = _MemoryVault();
+      final SecureAuthTokenStore store = SecureAuthTokenStore(vault: vault);
+
+      await store.updateSessionTokens(accessToken: 'a', refreshToken: 'r');
+      await store.flushPendingDiskWrites();
+      final int writes = vault.writeCount;
+
+      await store.updateSessionTokens(accessToken: 'a', refreshToken: 'r');
+      store.scheduleDiskPersist();
+      await store.flushPendingDiskWrites();
+
+      expect(vault.writeCount, writes);
+      expect(await store.readAccessToken(), 'a');
+    });
+
+    test('failed persist of the same tokens does not tight-loop', () async {
+      final _AlwaysFailVault vault = _AlwaysFailVault();
+      final SecureAuthTokenStore store = SecureAuthTokenStore(vault: vault);
+
+      await store.updateSessionTokens(accessToken: 'a', refreshToken: 'r');
+      await store.flushPendingDiskWrites();
+      for (int i = 0; i < 20; i++) {
+        await Future<void>.delayed(Duration.zero);
+        await store.flushPendingDiskWrites();
+        store.scheduleDiskPersist();
+      }
+
+      expect(
+        vault.writeCount,
+        lessThanOrEqualTo(
+          (AppDimensions.secureStoragePersistMaxRetries + 1) * 2,
+        ),
+      );
+      expect(await store.readAccessToken(), 'a');
+      expect(await store.readRefreshToken(), 'r');
+    });
   });
 }
 
 class _MemoryVault implements SecureKeyValueStore {
   final Map<String, String> values = <String, String>{};
   int readCount = 0;
+  int writeCount = 0;
 
   @override
   Future<String?> read(String key) async {
@@ -365,6 +404,7 @@ class _MemoryVault implements SecureKeyValueStore {
 
   @override
   Future<void> write(String key, String value) async {
+    writeCount++;
     values[key] = value;
   }
 
@@ -397,6 +437,23 @@ class _FailThenSucceedVault implements SecureKeyValueStore {
   Future<void> delete(String key) async {
     values.remove(key);
   }
+}
+
+/// Every write fails immediately — used to prove persist retries stay bounded.
+class _AlwaysFailVault implements SecureKeyValueStore {
+  int writeCount = 0;
+
+  @override
+  Future<String?> read(String key) async => null;
+
+  @override
+  Future<void> write(String key, String value) async {
+    writeCount++;
+    throw Exception('vault write failed');
+  }
+
+  @override
+  Future<void> delete(String key) async {}
 }
 
 /// Never completes — forces [AppDimensions.secureStorageTimeout] recovery path.

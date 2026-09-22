@@ -5,8 +5,18 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_fonts.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
+
+/// Splash wordmark always uses the English brand family (Playfair Display).
+///
+/// [AppTextStyles.splashBrandGlyph] goes through [AppFonts.heading], which
+/// switches to Amiri when [Get.locale] is Arabic. The lockup letters must
+/// stay Playfair on both locales.
+TextStyle get _splashBrandGlyphStyle => AppTextStyles.splashBrandGlyph.copyWith(
+  fontFamily: AppFonts.playfairDisplayFamily,
+);
 
 /// Branded Tavola splash lockup: elongated T stroke + lavender on the first A.
 class SplashTavolaMark extends StatelessWidget {
@@ -172,7 +182,7 @@ class _BrandMarkMetrics {
     final List<double> advances = <double>[];
     for (int i = 0; i < mark.length; i++) {
       final TextPainter letter = TextPainter(
-        text: TextSpan(text: mark[i], style: AppTextStyles.splashBrandGlyph),
+        text: TextSpan(text: mark[i], style: _splashBrandGlyphStyle),
         textDirection: TextDirection.ltr,
         maxLines: 1,
       )..layout();
@@ -191,7 +201,7 @@ class _BrandMarkMetrics {
     final double totalWidth = cursor;
 
     final TextPainter heightProbe = TextPainter(
-      text: TextSpan(text: mark, style: AppTextStyles.splashBrandGlyph),
+      text: TextSpan(text: mark, style: _splashBrandGlyphStyle),
       textDirection: TextDirection.ltr,
       maxLines: 1,
     )..layout();
@@ -288,7 +298,7 @@ class _RevealedBrandGlyph extends StatelessWidget {
         child: Transform.scale(
           scale: scale,
           alignment: Alignment.bottomCenter,
-          child: Text(glyph, style: AppTextStyles.splashBrandGlyph),
+          child: Text(glyph, style: _splashBrandGlyphStyle),
         ),
       ),
     );

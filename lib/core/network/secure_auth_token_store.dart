@@ -181,6 +181,11 @@ class SecureAuthTokenStore implements AuthTokenSession {
   bool _diskPersistRetryScheduled = false;
   String? _pendingDiskAccess;
   String? _pendingDiskRefresh;
+  String? _lastSuccessfulDiskAccess;
+  String? _lastSuccessfulDiskRefresh;
+  String? _failedPersistAccess;
+  String? _failedPersistRefresh;
+  int _diskPersistFailures = 0;
 
   /// Loads tokens from Secure Storage once per process.
   ///
@@ -286,6 +291,17 @@ class SecureAuthTokenStore implements AuthTokenSession {
     _hydrated = true;
     _pendingDiskAccess = accessCache;
     _pendingDiskRefresh = refreshCache;
+    if (_matchesLastSuccessfulDisk(accessCache, refreshCache)) {
+      // Same pair already on disk — do not rewrite or retry.
+      _diskDirty = false;
+      _diskPersistFailures = 0;
+      _log('updateSessionTokens memory', stopwatch);
+      return;
+    }
+    if (accessCache != _failedPersistAccess ||
+        refreshCache != _failedPersistRefresh) {
+      _diskPersistFailures = 0;
+    }
     _diskDirty = true;
     _log('updateSessionTokens memory', stopwatch);
     // Login passes persistToDisk: false so SharedPreferences SessionMode can
@@ -306,6 +322,14 @@ class SecureAuthTokenStore implements AuthTokenSession {
   /// API revoked the whole token family (refresh permanently dead).
   void scheduleDiskPersist() {
     if (!_diskDirty) {
+      return;
+    }
+    if (_matchesLastSuccessfulDisk(_pendingDiskAccess, _pendingDiskRefresh)) {
+      _diskDirty = false;
+      _diskPersistFailures = 0;
+      return;
+    }
+    if (_retriesExhaustedForPending()) {
       return;
     }
     final Future<void>? inFlight = _diskPersistInFlight;
@@ -340,8 +364,22 @@ class SecureAuthTokenStore implements AuthTokenSession {
     );
   }
 
+  bool _matchesLastSuccessfulDisk(String? access, String? refresh) {
+    return access == _lastSuccessfulDiskAccess &&
+        refresh == _lastSuccessfulDiskRefresh &&
+        (access != null || refresh != null);
+  }
+
+  bool _retriesExhaustedForPending() {
+    return _diskPersistFailures >= AppDimensions.secureStoragePersistMaxRetries &&
+        _pendingDiskAccess == _failedPersistAccess &&
+        _pendingDiskRefresh == _failedPersistRefresh;
+  }
+
   void _scheduleDiskPersistRetry() {
-    if (_diskPersistRetryScheduled || !_diskDirty) {
+    if (_diskPersistRetryScheduled ||
+        !_diskDirty ||
+        _retriesExhaustedForPending()) {
       return;
     }
     _diskPersistRetryScheduled = true;
@@ -366,6 +404,11 @@ class SecureAuthTokenStore implements AuthTokenSession {
     _refreshTokenCache = null;
     _pendingDiskAccess = null;
     _pendingDiskRefresh = null;
+    _lastSuccessfulDiskAccess = null;
+    _lastSuccessfulDiskRefresh = null;
+    _failedPersistAccess = null;
+    _failedPersistRefresh = null;
+    _diskPersistFailures = 0;
     _diskDirty = false;
     // Mark hydrated so a late vault snapshot cannot resurrect cleared tokens.
     _hydrated = true;
@@ -423,6 +466,11 @@ class SecureAuthTokenStore implements AuthTokenSession {
       // Clear dirty only when nothing newer arrived mid-write / clear.
       if (_pendingDiskAccess == access && _pendingDiskRefresh == refresh) {
         _diskDirty = false;
+        _lastSuccessfulDiskAccess = access;
+        _lastSuccessfulDiskRefresh = refresh;
+        _diskPersistFailures = 0;
+        _failedPersistAccess = null;
+        _failedPersistRefresh = null;
       }
       _log('disk persist ok', stopwatch);
     } catch (_) {
@@ -430,6 +478,14 @@ class SecureAuthTokenStore implements AuthTokenSession {
       // failure after clearSessionTokens would resurrect a disk write.
       if (_pendingDiskAccess == access && _pendingDiskRefresh == refresh) {
         _diskDirty = true;
+        if (access == _failedPersistAccess &&
+            refresh == _failedPersistRefresh) {
+          _diskPersistFailures += 1;
+        } else {
+          _failedPersistAccess = access;
+          _failedPersistRefresh = refresh;
+          _diskPersistFailures = 1;
+        }
       }
       _log('disk persist failed/timeout', stopwatch);
     }

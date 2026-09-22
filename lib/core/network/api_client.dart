@@ -643,16 +643,13 @@ class ApiClient {
             statusCode: response?.statusCode,
           );
         }
-        final int? status = response?.statusCode;
-        if (status == 401) {
-          return ApiException.unauthorized();
-        }
-        if (status != null && status >= 500) {
-          return ApiException.server(statusCode: status);
-        }
-        return ApiException.unexpected();
+        final String? plain = data is String ? data.trim() : null;
+        return ApiException.fromStatusCode(
+          response?.statusCode,
+          message: (plain != null && plain.isNotEmpty) ? plain : null,
+        );
       case DioExceptionType.cancel:
-        return ApiException.unexpected();
+        return ApiException.cancelled();
       case DioExceptionType.badCertificate:
       case DioExceptionType.unknown:
       case DioExceptionType.transformTimeout:

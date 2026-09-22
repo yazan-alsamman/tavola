@@ -265,45 +265,10 @@ class AppDimensions {
   static const double reservationChoiceWidth = 148.0;
 
   static const double floorPlanLegendDotSize = 12.0;
-  static const double floorPlanTableSize = 54.0;
-  static const double floorPlanLargeTableSize = 66.0;
-  static const double floorPlanTableMinSizeFactor = 0.7;
   static const double floorPlanTableRadius = 16.0;
-  static const double floorPlanMapWidth = 520.0;
-  static const double floorPlanMapHeight = 420.0;
-
-  // Onboarding / local Select Table preview layout (not API data).
-  static const int previewTableSeatsW1 = 12;
-  static const int previewTableSeatsR3 = 8;
-  static const int previewTableSeatsC2 = 6;
-  static const int previewTableSeatsA2 = 4;
-  static const int previewTableSeatsV5 = 2;
-  static const int previewTableSeatsB4 = 6;
-  static const int previewTableSeatsP6 = 10;
-  static const int previewTableSeatsM8 = 8;
-  static const int previewTableSeatsT7 = 4;
-  static const double previewTableMapXW1 = 228;
-  static const double previewTableMapYW1 = 62;
-  static const double previewTableMapXR3 = 234;
-  static const double previewTableMapYR3 = 188;
-  static const double previewTableMapXC2 = 234;
-  static const double previewTableMapYC2 = 322;
-  static const double previewTableMapXA2 = 158;
-  static const double previewTableMapYA2 = 168;
-  static const double previewTableMapXV5 = 158;
-  static const double previewTableMapYV5 = 252;
-  static const double previewTableMapXB4 = 348;
-  static const double previewTableMapYB4 = 168;
-  static const double previewTableMapXP6 = 348;
-  static const double previewTableMapYP6 = 252;
-  static const double previewTableMapXM8 = 448;
-  static const double previewTableMapYM8 = 210;
-  static const double previewTableMapXT7 = 448;
-  static const double previewTableMapYT7 = 322;
-  static const double floorPlanMapAspectRatio =
-      floorPlanMapHeight / floorPlanMapWidth;
+  static const double floorPlanCanvasPadding = 24.0;
   static const double floorPlanContainerHeight = 460.0;
-  static const double floorPlanMapMinScale = 1.0;
+  static const double floorPlanMapMinScale = 0.25;
   static const double floorPlanMapMaxScale = 2.4;
   static const double floorPlanAvailablePulseMin = 1.0;
   static const double floorPlanAvailablePulseMax = 1.045;
@@ -318,23 +283,6 @@ class AppDimensions {
   );
   static const double floorPlanSelectedShadowBlur = 18.0;
   static const double floorPlanMapInset = 10.0;
-  static const double floorPlanMapInnerPadding = 18.0;
-  static const double floorPlanWindowHeightFactor = 0.18;
-  static const double floorPlanDiningLineFactor = 0.34;
-  static const double floorPlanServiceLineFactor = 0.66;
-  static const double floorPlanServiceSplitFactor = 0.64;
-  static const double floorPlanZoneLabelXFactor = 0.42;
-  static const double floorPlanServiceLabelXFactor = 0.68;
-  static const double floorPlanEntranceXFactor = 0.5;
-  static const double floorPlanEntranceLabelXFactor = 0.445;
-  static const double floorPlanEntranceWidthFactor = 0.18;
-  static const double floorPlanEntranceHeight = 14.0;
-  static const double floorPlanEntranceBottomOffset = 16.0;
-  static const double floorPlanEntranceLabelBottomOffset = 28.0;
-  static const double floorPlanZoneLabelTop = 26.0;
-  static const double floorPlanZoneLabelOffsetY = 10.0;
-  static const double floorPlanZoneLabelMaxWidthFactor = 0.28;
-  static const double floorPlanHairlineStroke = 1.0;
   static const double tableDescriptionFieldMinHeight = 96.0;
   static const double dashedBorderStrokeWidth = 1.5;
   static const double dashedBorderDashLength = 4.0;
@@ -368,6 +316,10 @@ class AppDimensions {
 
   /// Caps Keychain / Secure Storage waits so login/guest never hang forever.
   static const Duration secureStorageTimeout = Duration(seconds: 3);
+
+  /// Auto-retries after a failed token disk write. Does not include the first
+  /// attempt — stops the microtask storm when Keychain keeps failing.
+  static const int secureStoragePersistMaxRetries = 2;
 
   /// Hard ceiling for an auth submit (login / sign-up / forgot-password) UI wait.
   static const Duration authSubmitTimeout = Duration(seconds: 25);

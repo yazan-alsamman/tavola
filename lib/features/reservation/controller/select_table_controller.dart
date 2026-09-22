@@ -82,6 +82,9 @@ class SelectTableController extends GetxController {
         selectedTableId.value = null;
       }
     } on ApiException catch (error) {
+      if (error.isCancelled) {
+        return;
+      }
       if (error.isUnauthorized) {
         await _recoverTablesAfterAuthFailure(error);
         return;
@@ -108,6 +111,9 @@ class SelectTableController extends GetxController {
           .fetchFloorPlan(restaurantId: reservation?.restaurantId.value);
       floorPlanTables.assignAll(fallback);
       tablesError.value = null;
+    } on ApiException catch (fallbackError) {
+      floorPlanTables.clear();
+      tablesError.value = fallbackError.message;
     } catch (_) {
       floorPlanTables.clear();
       tablesError.value = error.message == AppStrings.networkUnauthorizedError
@@ -142,7 +148,22 @@ class SelectTableController extends GetxController {
           restaurantId: reservation.restaurantId.value,
         );
       }
-      return _reservationRepository.searchAvailability(window);
+      final List<RestaurantTableModel> floorPlan = await _tableRepository
+          .fetchFloorPlan(restaurantId: reservation.restaurantId.value);
+      try {
+        final List<RestaurantTableModel> availability =
+            await _reservationRepository.searchAvailability(window);
+        return RestaurantTableModel.overlayAvailability(
+          floorPlan: floorPlan,
+          availability: availability,
+        );
+      } on ApiException catch (error) {
+        if (error.isCancelled || error.isUnauthorized) {
+          rethrow;
+        }
+        tablesError.value = error.message;
+        return floorPlan;
+      }
     }
 
     return _tableRepository.fetchFloorPlan(
@@ -168,7 +189,7 @@ class SelectTableController extends GetxController {
 
   bool get canConfirm =>
       selectedTable != null &&
-      selectedTable!.status == TableStatus.available &&
+      selectedTable!.isSelectable &&
       !isCreatingReservation.value;
 
   bool get showSelectedTableDetails => selectedTable != null;
@@ -184,7 +205,7 @@ class SelectTableController extends GetxController {
     }
     return floorPlanTables.isEmpty ||
         floorPlanTables.every(
-          (RestaurantTableModel table) => table.status != TableStatus.available,
+          (RestaurantTableModel table) => !table.isSelectable,
         );
   }
 
@@ -223,7 +244,7 @@ class SelectTableController extends GetxController {
         (RestaurantTableModel item) => item.id == fresh.id,
       );
       if (index >= 0) {
-        floorPlanTables[index] = fresh;
+        floorPlanTables[index] = floorPlanTables[index].overlayWith(fresh);
       }
       if (selectedTableId.value == tableId) {
         selectedTableId.value = fresh.id;
@@ -238,13 +259,20 @@ class SelectTableController extends GetxController {
       return table.description!;
     }
 
+    if (table.status == TableStatus.available &&
+        table.isAvailableForWindow == false) {
+      return AppStrings.tableUnavailableForSlotNote;
+    }
+
     switch (table.status) {
       case TableStatus.available:
         return AppStrings.availableTableDescription;
-      case TableStatus.reserved:
-        return AppStrings.reservedTableNote;
+      case TableStatus.occupied:
+        return AppStrings.occupiedTableNote;
       case TableStatus.cleaning:
         return AppStrings.cleaningTableNote;
+      case TableStatus.disabled:
+        return AppStrings.disabledTableNote;
     }
   }
 
@@ -316,8 +344,11 @@ class SelectTableController extends GetxController {
         Get.find<ProfileController>().refreshReservations();
       }
     } on ApiException catch (error) {
+      if (error.isCancelled) {
+        return;
+      }
       Get.snackbar(AppStrings.confirmReservation, error.message);
-      if (error.statusCode == 401 &&
+      if (error.isUnauthorized &&
           Get.isRegistered<AuthSessionController>()) {
         unawaited(
           Get.find<AuthSessionController>().requireSignInForProtectedAction(),
@@ -375,6 +406,9 @@ class SelectTableController extends GetxController {
       waitlistEntryId.value = entry.entryId;
       Get.snackbar(AppStrings.waitlistJoin, AppStrings.waitlistJoinSuccess);
     } on ApiException catch (error) {
+      if (error.isCancelled) {
+        return;
+      }
       Get.snackbar(AppStrings.waitlistJoin, error.message);
     } on StateError catch (error) {
       Get.snackbar(AppStrings.waitlistJoin, error.message);
@@ -396,6 +430,9 @@ class SelectTableController extends GetxController {
       waitlistEntryId.value = null;
       Get.snackbar(AppStrings.waitlistCancel, AppStrings.waitlistCancelSuccess);
     } on ApiException catch (error) {
+      if (error.isCancelled) {
+        return;
+      }
       Get.snackbar(AppStrings.waitlistCancel, error.message);
     } on StateError catch (error) {
       Get.snackbar(AppStrings.waitlistCancel, error.message);

@@ -10,10 +10,12 @@ extension TableStatusTheme on TableStatus {
     switch (this) {
       case TableStatus.available:
         return AppStrings.tableAvailable;
-      case TableStatus.reserved:
-        return AppStrings.tableReserved;
+      case TableStatus.occupied:
+        return AppStrings.tableOccupied;
       case TableStatus.cleaning:
         return AppStrings.tableCleaning;
+      case TableStatus.disabled:
+        return AppStrings.tableDisabled;
     }
   }
 
@@ -21,10 +23,12 @@ extension TableStatusTheme on TableStatus {
     switch (this) {
       case TableStatus.available:
         return AppColors.primaryDark;
-      case TableStatus.reserved:
+      case TableStatus.occupied:
         return AppColors.accent;
       case TableStatus.cleaning:
         return AppColors.surfaceAlt;
+      case TableStatus.disabled:
+        return AppColors.disabled;
     }
   }
 
@@ -32,9 +36,11 @@ extension TableStatusTheme on TableStatus {
     switch (this) {
       case TableStatus.available:
         return AppColors.textLight;
-      case TableStatus.reserved:
+      case TableStatus.occupied:
         return AppColors.textPrimary;
       case TableStatus.cleaning:
+        return AppColors.textSecondary;
+      case TableStatus.disabled:
         return AppColors.textSecondary;
     }
   }
@@ -43,10 +49,12 @@ extension TableStatusTheme on TableStatus {
     switch (this) {
       case TableStatus.available:
         return AppColors.primaryDark;
-      case TableStatus.reserved:
+      case TableStatus.occupied:
         return AppColors.accent;
       case TableStatus.cleaning:
         return AppColors.surface;
+      case TableStatus.disabled:
+        return AppColors.disabled;
     }
   }
 
@@ -54,9 +62,11 @@ extension TableStatusTheme on TableStatus {
     switch (this) {
       case TableStatus.available:
         return AppColors.primaryDark;
-      case TableStatus.reserved:
+      case TableStatus.occupied:
         return AppColors.accent;
       case TableStatus.cleaning:
+        return AppColors.border;
+      case TableStatus.disabled:
         return AppColors.border;
     }
   }
@@ -65,9 +75,11 @@ extension TableStatusTheme on TableStatus {
     switch (this) {
       case TableStatus.available:
         return AppTextStyles.floorPlanTableLabel;
-      case TableStatus.reserved:
+      case TableStatus.occupied:
         return AppTextStyles.floorPlanTableLabelOnAccent;
       case TableStatus.cleaning:
+        return AppTextStyles.floorPlanTableLabelMuted;
+      case TableStatus.disabled:
         return AppTextStyles.floorPlanTableLabelMuted;
     }
   }
@@ -76,9 +88,11 @@ extension TableStatusTheme on TableStatus {
     switch (this) {
       case TableStatus.available:
         return AppTextStyles.floorPlanSeatBadge;
-      case TableStatus.reserved:
+      case TableStatus.occupied:
         return AppTextStyles.floorPlanSeatBadgeOnAccent;
       case TableStatus.cleaning:
+        return AppTextStyles.floorPlanSeatBadgeMuted;
+      case TableStatus.disabled:
         return AppTextStyles.floorPlanSeatBadgeMuted;
     }
   }
