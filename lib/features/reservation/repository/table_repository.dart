@@ -7,6 +7,7 @@ import '../../branches/model/branch_model.dart';
 import '../../branches/repository/branch_repository.dart';
 import '../../discovery/model/discovery_floor_plan_model.dart';
 import '../../discovery/repository/discovery_repository.dart';
+import '../model/floor_plan_area_model.dart';
 import '../model/restaurant_table_model.dart';
 
 /// Table / floor-plan reads for Select Table via Discovery.
@@ -25,9 +26,24 @@ class TableRepository {
   final DiscoveryRepository? _discovery;
 
   List<RestaurantTableModel> _cachedTables = const <RestaurantTableModel>[];
+  List<FloorPlanAreaModel> _cachedAreas = const <FloorPlanAreaModel>[];
 
   List<RestaurantTableModel> getFloorPlan() {
     return List<RestaurantTableModel>.unmodifiable(_cachedTables);
+  }
+
+  List<FloorPlanAreaModel> getFloorPlanAreas() {
+    return List<FloorPlanAreaModel>.unmodifiable(_cachedAreas);
+  }
+
+  void _rememberFloorPlan(DiscoveryFloorPlanModel? floorPlan) {
+    if (floorPlan == null) {
+      _cachedTables = const <RestaurantTableModel>[];
+      _cachedAreas = const <FloorPlanAreaModel>[];
+      return;
+    }
+    _cachedTables = List<RestaurantTableModel>.unmodifiable(floorPlan.tables);
+    _cachedAreas = List<FloorPlanAreaModel>.unmodifiable(floorPlan.areas);
   }
 
   String getConfirmationReferenceCode() {
@@ -44,7 +60,7 @@ class TableRepository {
   }) async {
     final String id = restaurantId?.trim() ?? '';
     if (id.isEmpty) {
-      _cachedTables = const <RestaurantTableModel>[];
+      _rememberFloorPlan(null);
       return _cachedTables;
     }
 
@@ -52,18 +68,19 @@ class TableRepository {
       id,
     );
     if (branch == null || branch.id.isEmpty) {
+      _rememberFloorPlan(null);
       throw StateError(AppStrings.tablesNoBranchAvailable);
     }
 
     final DiscoveryRepository? discovery = _discovery;
     if (discovery == null) {
-      _cachedTables = const <RestaurantTableModel>[];
+      _rememberFloorPlan(null);
       return _cachedTables;
     }
 
     final DiscoveryFloorPlanModel floorPlan = await discovery
         .getActiveFloorPlan(restaurantId: id, branchId: branch.id);
-    _cachedTables = List<RestaurantTableModel>.unmodifiable(floorPlan.tables);
+    _rememberFloorPlan(floorPlan);
     return _cachedTables;
   }
 

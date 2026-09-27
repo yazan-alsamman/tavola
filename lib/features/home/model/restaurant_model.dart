@@ -1,6 +1,5 @@
 import '../../../core/constants/app_strings.dart';
 import '../../../core/network/api_exception.dart';
-import '../../../core/utils/media_url_resolver.dart';
 import '../../details/repository/working_hours_mapper.dart';
 
 class RestaurantModel {
@@ -325,24 +324,17 @@ class RestaurantModel {
     return null;
   }
 
+  /// Discovery cover only: `coverImageUrl` is a complete signed URL or null.
+  ///
+  /// The id fields are not download paths. A missing cover stays empty so the
+  /// card placeholder is used; logo and gallery are not substitutes.
   static String _readImageUrl(Map<String, dynamic> json) {
-    for (final Object? candidate in <Object?>[
+    final String cover = ApiException.coerceString(
       json[AppStrings.apiMediaCoverImageUrlField],
-      json[AppStrings.apiMediaImageUrlField],
-      json[AppStrings.apiMediaLogoUrlField],
-      json[AppStrings.apiMediaThumbnailUrlField],
-      json[AppStrings.apiMediaCoverImageField],
-      json[AppStrings.apiMediaLogoField],
-      json['image'],
-      json[AppStrings.apiMediaCoverImageIdField],
-      json[AppStrings.apiMediaLogoIdField],
-      json['imageId'],
-      json['restaurantImage'],
-    ]) {
-      final String resolved = MediaUrlResolver.resolve(candidate);
-      if (resolved.isNotEmpty) {
-        return resolved;
-      }
+    ).trim();
+    if (cover.startsWith(AppStrings.apiHttpSchemePrefix) ||
+        cover.startsWith(AppStrings.apiHttpsSchemePrefix)) {
+      return cover;
     }
     return '';
   }

@@ -680,9 +680,9 @@ class AppStrings {
 
   static String get selectYourTable => 'Select your table'.tr;
   static String get selectTableSubtitle =>
-      'Explore the dining room, choose an available table, and confirm your placement.'
-          .tr;
+      'Choose an available table and confirm your reservation.'.tr;
   static String get tableAvailable => 'AVAILABLE'.tr;
+  static String get tableUnavailable => 'UNAVAILABLE'.tr;
   static String get tableOccupied => 'OCCUPIED'.tr;
   static String get tableDisabled => 'DISABLED'.tr;
   static String get tableReserved => 'RESERVED'.tr;
@@ -744,42 +744,15 @@ class AppStrings {
   static String get timePeriodAm => 'AM'.tr;
   static String get timePeriodPm => 'PM'.tr;
   static String get restaurantMapHint =>
-      'Drag and pinch to explore the dining room'.tr;
+      'Drag and pinch to explore the tables'.tr;
   static String get windowSeating => 'WINDOW'.tr;
-  static String get mainDining => 'DINING'.tr;
-  static String get serviceArea => 'SERVICE'.tr;
-  static String get entrance => 'ENTRANCE'.tr;
-  static String get kitchen => 'KITCHEN'.tr;
-  static String get bar => 'BAR'.tr;
-  static String get reception => 'RECEPTION'.tr;
   static String get selectedTableLabel => 'SELECTED TABLE'.tr;
   static String get windowSeatBadge => 'WINDOW'.tr;
-  static String get tableDescriptionA2 =>
-      'Cozy corner table with soft ambient lighting — ideal for relaxed conversations.'
-          .tr;
-  static String get tableDescriptionV5 =>
-      'Intimate two-seat table near the host stand, perfect for a quiet dinner.'
-          .tr;
-  static String get tableDescriptionP6 =>
-      'Spacious booth with lounge seating and generous space for larger gatherings.'
-          .tr;
-  static String get tableDescriptionB4 =>
-      'Corner booth reserved for a birthday celebration — unavailable for new bookings.'
-          .tr;
-  static String get tableDescriptionM8 =>
-      'Large party table reserved for a corporate dinner event this evening.'
-          .tr;
-  static String get tableDescriptionT7 =>
-      'Compact table being reset after lunch service — available again shortly.'
-          .tr;
   static String get categoryExample => 'EXAMPLE'.tr;
   static const String textEllipsis = '…';
   static String get seatsSuffix => ' SEATS'.tr;
   static String get availableTableDescription =>
       'Premium window seating with panoramic city views, natural daylight, and a quiet atmosphere — ideal for intimate dining and special occasions.'
-          .tr;
-  static String get reservedTableNote =>
-      'Currently held for an arriving party. Please choose another available table.'
           .tr;
   static String get occupiedTableNote =>
       'This table is currently occupied. Please choose another available table.'

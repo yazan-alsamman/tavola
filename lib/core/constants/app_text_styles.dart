@@ -555,20 +555,6 @@ class AppTextStyles {
     color: AppColors.textPrimary,
   );
 
-  static TextStyle get floorPlanZoneLabel => AppFonts.heading(
-    fontSize: 10,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 1.2,
-    color: AppColors.textSecondary,
-  );
-
-  static TextStyle get floorPlanZonePillLabel => AppFonts.ui(
-    fontSize: 10,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 1.1,
-    color: AppColors.textSecondary,
-  );
-
   static TextStyle get floorPlanTableLabel => AppFonts.ui(
     fontSize: 12,
     fontWeight: FontWeight.w700,

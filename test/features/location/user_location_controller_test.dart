@@ -169,6 +169,139 @@ void main() {
     expect(service.openAppSettingsCalls, 1);
   });
 
+  test('startup asks once when permission is not determined', () async {
+    final _FakeLocationService service = _FakeLocationService(
+      permission: LocationPermissionState.denied,
+    );
+    final UserLocationController controller = UserLocationController(
+      locationService: service,
+    );
+
+    await controller.ensureReady();
+    expect(service.requestPermissionCalls, 1);
+    expect(service.checkPermissionCalls, 1);
+    expect(controller.permissionStatus, LocationPermissionState.denied);
+    expect(await LocationPromptPreferences.hasRequested(), isTrue);
+    expect(controller.primaryActionLabel, isNull);
+
+    await controller.ensureReady();
+    await controller.refreshStatus();
+    expect(service.requestPermissionCalls, 1);
+  });
+
+  test('startup with granted permission fetches coordinates and does not prompt', () async {
+    final _FakeLocationService service = _FakeLocationService(
+      permission: LocationPermissionState.granted,
+      latitude: 25.2,
+      longitude: 55.3,
+    );
+    final UserLocationController controller = UserLocationController(
+      locationService: service,
+    );
+
+    await controller.ensureReady();
+    expect(service.requestPermissionCalls, 0);
+    expect(service.getCurrentLocationCalls, 1);
+    expect(controller.latitude, 25.2);
+    expect(controller.longitude, 55.3);
+    expect(controller.canProvideRecommendations, isTrue);
+    expect(await LocationPromptPreferences.hasRequested(), isFalse);
+
+    await controller.ensureReady();
+    expect(service.getCurrentLocationCalls, 1);
+  });
+
+  test('startup does not prompt again after a previous denial', () async {
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      AppStrings.locationPromptRequestedKey: true,
+    });
+    await LocationPromptPreferences.hasRequested();
+    final _FakeLocationService service = _FakeLocationService(
+      permission: LocationPermissionState.denied,
+    );
+    final UserLocationController controller = UserLocationController(
+      locationService: service,
+    );
+
+    await controller.ensureReady();
+    expect(service.requestPermissionCalls, 0);
+    expect(controller.permissionStatus, LocationPermissionState.denied);
+    expect(controller.canProvideRecommendations, isFalse);
+    expect(controller.primaryActionLabel, isNull);
+  });
+
+  test('startup does not prompt when permission is permanently denied', () async {
+    final _FakeLocationService service = _FakeLocationService(
+      permission: LocationPermissionState.deniedForever,
+    );
+    final UserLocationController controller = UserLocationController(
+      locationService: service,
+    );
+
+    await controller.ensureReady();
+    expect(service.requestPermissionCalls, 0);
+    expect(controller.permissionStatus, LocationPermissionState.deniedForever);
+    expect(controller.primaryActionLabel, AppStrings.locationOpenSettings);
+    expect(controller.canProvideRecommendations, isFalse);
+
+    await controller.handlePrimaryAction();
+    expect(service.openAppSettingsCalls, 1);
+    expect(service.requestPermissionCalls, 0);
+  });
+
+  test('startup treats location services off as unavailable', () async {
+    final _FakeLocationService service = _FakeLocationService(
+      serviceEnabled: false,
+      permission: LocationPermissionState.granted,
+      latitude: 25.2,
+      longitude: 55.3,
+    );
+    final UserLocationController controller = UserLocationController(
+      locationService: service,
+    );
+
+    await controller.ensureReady();
+    expect(service.requestPermissionCalls, 0);
+    expect(service.getCurrentLocationCalls, 0);
+    expect(controller.permissionStatus, LocationPermissionState.serviceDisabled);
+    expect(controller.canProvideRecommendations, isFalse);
+    expect(controller.latitude, isNull);
+  });
+
+  test('overlapping startup and refresh share one permission request', () async {
+    final _FakeLocationService service = _FakeLocationService(
+      permission: LocationPermissionState.denied,
+    );
+    final UserLocationController controller = UserLocationController(
+      locationService: service,
+    );
+
+    await Future.wait(<Future<void>>[
+      controller.ensureReady(),
+      controller.refreshStatus(),
+      controller.requestPermissionAndLocate(),
+    ]);
+    expect(service.requestPermissionCalls, 1);
+  });
+
+  test('startup granted then a later refresh reads the OS again without prompting', () async {
+    final _FakeLocationService service = _FakeLocationService(
+      permission: LocationPermissionState.granted,
+      latitude: 25.2,
+      longitude: 55.3,
+    );
+    final UserLocationController controller = UserLocationController(
+      locationService: service,
+    );
+
+    await controller.ensureReady();
+    await controller.refreshStatus();
+    expect(service.requestPermissionCalls, 0);
+    expect(service.getCurrentLocationCalls, 2);
+    expect(controller.latitude, 25.2);
+    expect(controller.longitude, 55.3);
+  });
+
   test('location services off comes from the real service check', () async {
     SharedPreferences.setMockInitialValues(<String, Object>{
       AppStrings.locationPromptRequestedKey: true,

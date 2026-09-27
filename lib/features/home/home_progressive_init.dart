@@ -29,7 +29,7 @@ import 'controller/home_controller.dart';
 /// 5. Preferences
 /// 6. Favorites
 /// 7. Notifications badge
-/// 8. Location stack
+/// 8. Location permission, current position, then nearby offers
 class HomeProgressiveInit {
   HomeProgressiveInit(this._home);
 

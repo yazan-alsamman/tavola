@@ -656,7 +656,7 @@ class HomeController extends GetxController {
     try {
       if (Get.isRegistered<UserLocationController>()) {
         try {
-          await Get.find<UserLocationController>().refreshStatus().timeout(
+          await Get.find<UserLocationController>().ensureReady().timeout(
             AppDimensions.homeCatalogLoadTimeout,
           );
         } catch (_) {

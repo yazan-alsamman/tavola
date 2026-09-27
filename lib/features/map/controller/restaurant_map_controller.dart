@@ -69,6 +69,11 @@ class RestaurantMapController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Join the Home location resolution. Does not register the stack and
+    // does not start a second permission request.
+    if (Get.isRegistered<UserLocationController>()) {
+      unawaited(Get.find<UserLocationController>().ensureReady());
+    }
     // Sync seed only — never start favorites/API on the Binding frame.
     reloadLocalizedData();
     if (restaurantLocations.isNotEmpty) {

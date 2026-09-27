@@ -9,6 +9,8 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../../waitlist/widgets/waitlist_full_tables_card.dart';
 import '../controller/select_table_controller.dart';
+import '../model/floor_plan_geometry.dart';
+import '../widgets/floor_plan_live_time_badge.dart';
 import '../widgets/restaurant_floor_map.dart';
 import '../widgets/reservation_confirmation_overlay.dart';
 import '../widgets/restaurant_table_detail_panel.dart';
@@ -34,16 +36,19 @@ class SelectTableScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(AppDimensions.pagePadding),
                       child: Column(
                         children: [
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: IconButton(
-                              onPressed: Get.back,
-                              icon: const Icon(
-                                Symbols.arrow_back_ios_new,
-                                color: AppColors.primary,
-                                size: AppDimensions.mediumIconSize,
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: Get.back,
+                                icon: const Icon(
+                                  Symbols.arrow_back_ios_new,
+                                  color: AppColors.primary,
+                                  size: AppDimensions.mediumIconSize,
+                                ),
                               ),
-                            ),
+                              const Spacer(),
+                              const FloorPlanLiveTimeBadge(),
+                            ],
                           ),
                           const SizedBox(height: AppDimensions.smallSpacing),
                           Text(
@@ -62,7 +67,7 @@ class SelectTableScreen extends StatelessWidget {
                             width: double.infinity,
                             clipBehavior: Clip.antiAlias,
                             decoration: BoxDecoration(
-                              color: AppColors.floorPlanCanvas,
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(
                                 AppDimensions.cardRadius,
                               ),
@@ -196,8 +201,38 @@ class SelectTableScreen extends StatelessWidget {
                                           );
                                         }
 
-                                        return RestaurantFloorMap(
-                                          controller: controller,
+                                        final Size canvas =
+                                            FloorPlanGeometry.canvasSize(
+                                              controller.floorPlanTables.toList(
+                                                growable: false,
+                                              ),
+                                              areas: controller.floorPlanAreas
+                                                  .toList(growable: false),
+                                            );
+                                        return LayoutBuilder(
+                                          builder:
+                                              (
+                                                BuildContext context,
+                                                BoxConstraints constraints,
+                                              ) {
+                                                final double width =
+                                                    constraints.maxWidth;
+                                                final double height =
+                                                    canvas.width <= 0 ||
+                                                        canvas.height <= 0
+                                                    ? AppDimensions
+                                                          .floorPlanContainerHeight
+                                                    : width *
+                                                          (canvas.height /
+                                                              canvas.width);
+                                                return SizedBox(
+                                                  width: width,
+                                                  height: height,
+                                                  child: RestaurantFloorMap(
+                                                    controller: controller,
+                                                  ),
+                                                );
+                                              },
                                         );
                                       }),
                                     ),
@@ -225,6 +260,9 @@ class SelectTableScreen extends StatelessWidget {
                       final bool busy = controller.isCreatingReservation.value;
                       final bool waitlistBusy =
                           controller.isJoiningWaitlist.value;
+                      final bool statusOnly =
+                          controller.selectedTable != null &&
+                          !controller.canConfirm;
                       // Touch Rx used by waitlist getters so Obx rebuilds.
                       controller.floorPlanTables.length;
                       controller.waitlistEntryId.value;
@@ -248,7 +286,7 @@ class SelectTableScreen extends StatelessWidget {
                               width: double.infinity,
                               child: HoverableButton(
                                 child: ElevatedButton(
-                                  onPressed: busy
+                                  onPressed: busy || statusOnly
                                       ? null
                                       : controller.confirmReservation,
                                   style: AppButtonStyles.filledHover(
@@ -258,8 +296,8 @@ class SelectTableScreen extends StatelessWidget {
                                       textStyle: AppTextStyles
                                           .confirmReservationButton,
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: AppDimensions
-                                            .buttonVerticalPadding,
+                                        vertical:
+                                            AppDimensions.buttonVerticalPadding,
                                       ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(

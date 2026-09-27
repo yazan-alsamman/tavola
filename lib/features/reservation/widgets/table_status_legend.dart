@@ -5,6 +5,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../model/table_status.dart';
+import '../model/table_status_theme.dart';
 import 'table_status_dot.dart';
 
 class TableStatusLegend extends StatelessWidget {
@@ -23,9 +24,13 @@ class TableStatusLegend extends StatelessWidget {
       label: AppStrings.tableAvailable,
     ),
     _LegendItem(status: TableStatus.occupied, label: AppStrings.tableOccupied),
-    _LegendItem(status: TableStatus.reserved, label: AppStrings.tableReserved),
     _LegendItem(status: TableStatus.cleaning, label: AppStrings.tableCleaning),
     _LegendItem(status: TableStatus.disabled, label: AppStrings.tableDisabled),
+    _LegendItem(
+      label: SlotUnavailablePresentation.label,
+      color: SlotUnavailablePresentation.tableColor,
+      borderColor: SlotUnavailablePresentation.borderColor,
+    ),
   ];
 
   @override
@@ -45,7 +50,20 @@ class TableStatusLegend extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TableStatusDot(status: item.status),
+            item.status == null
+                ? Container(
+                    width: AppDimensions.floorPlanLegendDotSize,
+                    height: AppDimensions.floorPlanLegendDotSize,
+                    decoration: BoxDecoration(
+                      color: item.color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: item.borderColor ?? AppColors.border,
+                        width: AppDimensions.cardBorderWidth,
+                      ),
+                    ),
+                  )
+                : TableStatusDot(status: item.status!),
             const SizedBox(width: AppDimensions.smallSpacing),
             Text(item.label, style: AppTextStyles.tableStatusLegendLabel),
           ],
@@ -135,8 +153,15 @@ class TableStatusLegend extends StatelessWidget {
 }
 
 class _LegendItem {
-  const _LegendItem({required this.status, required this.label});
+  const _LegendItem({
+    required this.label,
+    this.status,
+    this.color,
+    this.borderColor,
+  });
 
-  final TableStatus status;
+  final TableStatus? status;
   final String label;
+  final Color? color;
+  final Color? borderColor;
 }

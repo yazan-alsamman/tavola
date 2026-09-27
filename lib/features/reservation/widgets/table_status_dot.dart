@@ -22,7 +22,6 @@ class TableStatusDot extends StatelessWidget {
     switch (status) {
       case TableStatus.available:
       case TableStatus.occupied:
-      case TableStatus.reserved:
       case TableStatus.disabled:
         return Container(
           width: size,

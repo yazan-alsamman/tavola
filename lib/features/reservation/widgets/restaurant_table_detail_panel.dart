@@ -55,11 +55,11 @@ class RestaurantTableDetailPanel extends StatelessWidget {
                 children: [
                   _InfoChip(
                     label: table.label,
-                    background: table.status.badgeColor,
-                    foreground: table.status.foregroundColor,
+                    background: table.presentedBadgeColor,
+                    foreground: table.presentedForegroundColor,
                   ),
                   _InfoChip(
-                    label: table.status.label,
+                    label: table.presentedStatusLabel,
                     background: AppColors.surfaceAlt,
                     foreground: AppColors.textPrimary,
                     bordered: true,

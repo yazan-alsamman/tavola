@@ -1,13 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tavla/features/reservation/model/restaurant_table_model.dart';
+import 'package:tavla/features/reservation/model/table_shape.dart';
 import 'package:tavla/features/reservation/model/table_status.dart';
 
 import 'floor_plan_test_fixtures.dart';
 
 void main() {
   test('maps Backend geometry and keeps tableId distinct from tableNumber', () {
-    final RestaurantTableModel table = RestaurantTableModel.fromJson(liveT5Json);
+    final RestaurantTableModel table = RestaurantTableModel.fromJson(
+      liveT5Json,
+    );
 
     expect(table.tableId, 'efd1304e-dfb5-45a8-9bc7-631321451a5d');
     expect(table.id, table.tableId);
@@ -21,6 +24,7 @@ void main() {
     expect(table.height, 72);
     expect(table.rotation, 0);
     expect(table.shape, 'Rectangle');
+    expect(table.floorPlanId, '7d3e4037-76d7-4e9c-912b-c38e6017f716');
     expect(table.hasExplicitStatus, isFalse);
     expect(table.status, TableStatus.available);
     expect(table.isAvailableForWindow, isNull);
@@ -71,17 +75,17 @@ void main() {
     expect(table.isSelectable, isFalse);
   });
 
-  test('maps operational statuses from Backend status field', () {
+  test('maps operational statuses and does not invent Reserved', () {
     expect(
-      TableStatus.values,
-      <TableStatus>[
-        TableStatus.available,
-        TableStatus.occupied,
-        TableStatus.reserved,
-        TableStatus.cleaning,
-        TableStatus.disabled,
-      ],
+      TableStatus.values.map((TableStatus status) => status.name),
+      isNot(contains('reserved')),
     );
+    expect(TableStatus.values, <TableStatus>[
+      TableStatus.available,
+      TableStatus.occupied,
+      TableStatus.cleaning,
+      TableStatus.disabled,
+    ]);
 
     expect(
       RestaurantTableModel.fromJson(<String, dynamic>{
@@ -89,13 +93,6 @@ void main() {
         'status': 'Occupied',
       }).status,
       TableStatus.occupied,
-    );
-    expect(
-      RestaurantTableModel.fromJson(<String, dynamic>{
-        'tableId': '1',
-        'status': 'reserved',
-      }).status,
-      TableStatus.reserved,
     );
     expect(
       RestaurantTableModel.fromJson(<String, dynamic>{
@@ -111,7 +108,64 @@ void main() {
       }).status,
       TableStatus.disabled,
     );
+    expect(
+      RestaurantTableModel.fromJson(<String, dynamic>{
+        'tableId': '1',
+        'status': 'reserved',
+      }).status,
+      TableStatus.disabled,
+    );
   });
+
+  test(
+    'maps backend shape, flags, and tableNumber without inventing geometry',
+    () {
+      final RestaurantTableModel circle =
+          RestaurantTableModel.fromJson(<String, dynamic>{
+            'tableId': 'id-circle',
+            'tableNumber': 'T2',
+            'shape': 'Circle',
+            'positionX': 10,
+            'positionY': 20,
+            'width': 80,
+            'height': 80,
+            'rotation': 90,
+            'indoor': false,
+            'vip': true,
+            'smoking': false,
+          });
+      expect(circle.tableNumber, 'T2');
+      expect(circle.tableId, isNot(circle.tableNumber));
+      expect(circle.tableShape, TableShape.circle);
+      expect(circle.rotation, 90);
+      expect(circle.indoor, isFalse);
+      expect(circle.vip, isTrue);
+      expect(circle.smoking, isFalse);
+      expect(circle.isWindowSeat, isFalse);
+
+      expect(
+        RestaurantTableModel.fromJson(<String, dynamic>{
+          'tableId': '1',
+          'shape': 'Oval',
+        }).tableShape,
+        TableShape.oval,
+      );
+      expect(
+        RestaurantTableModel.fromJson(<String, dynamic>{
+          'tableId': '1',
+          'shape': 'Square',
+        }).tableShape,
+        TableShape.square,
+      );
+      expect(
+        RestaurantTableModel.fromJson(<String, dynamic>{
+          'tableId': '1',
+          'shape': 'Rectangle',
+        }).tableShape,
+        TableShape.rectangle,
+      );
+    },
+  );
 
   test('updated Dashboard geometry remaps without leftover coordinates', () {
     final RestaurantTableModel before = RestaurantTableModel.fromJson(
@@ -134,16 +188,17 @@ void main() {
   });
 
   test('overlayAvailability keeps floor-plan geometry and uses tableId', () {
-    final RestaurantTableModel floor = RestaurantTableModel.fromJson(liveT5Json);
-    final RestaurantTableModel availability = RestaurantTableModel.fromJson(
-      <String, dynamic>{
-        'tableId': liveT5Json['tableId'],
-        'tableNumber': 'T5',
-        'isAvailable': false,
-        'positionX': 0,
-        'positionY': 0,
-      },
+    final RestaurantTableModel floor = RestaurantTableModel.fromJson(
+      liveT5Json,
     );
+    final RestaurantTableModel availability =
+        RestaurantTableModel.fromJson(<String, dynamic>{
+          'tableId': liveT5Json['tableId'],
+          'tableNumber': 'T5',
+          'isAvailable': false,
+          'positionX': 0,
+          'positionY': 0,
+        });
 
     final List<RestaurantTableModel> merged =
         RestaurantTableModel.overlayAvailability(
@@ -162,15 +217,16 @@ void main() {
   });
 
   test('overlayWith preserves geometry when get-by-id omits it', () {
-    final RestaurantTableModel floor = RestaurantTableModel.fromJson(liveT5Json);
-    final RestaurantTableModel fresh = RestaurantTableModel.fromJson(
-      <String, dynamic>{
-        'tableId': liveT5Json['tableId'],
-        'tableNumber': 'T5',
-        'status': 'Occupied',
-        'capacity': 6,
-      },
+    final RestaurantTableModel floor = RestaurantTableModel.fromJson(
+      liveT5Json,
     );
+    final RestaurantTableModel fresh =
+        RestaurantTableModel.fromJson(<String, dynamic>{
+          'tableId': liveT5Json['tableId'],
+          'tableNumber': 'T5',
+          'status': 'Occupied',
+          'capacity': 6,
+        });
 
     final RestaurantTableModel merged = floor.overlayWith(fresh);
     expect(merged.positionX, 592);

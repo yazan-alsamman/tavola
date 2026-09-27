@@ -1,4 +1,5 @@
 import '../../../core/constants/app_strings.dart';
+import 'table_shape.dart';
 import 'table_status.dart';
 
 class RestaurantTableModel {
@@ -13,7 +14,12 @@ class RestaurantTableModel {
     this.height,
     this.rotation,
     this.shape,
+    this.floorPlanId,
+    this.floorPlanAreaId,
     this.description,
+    this.indoor,
+    this.vip = false,
+    this.smoking = false,
     this.isWindowSeat = false,
     this.isAvailableForWindow,
     this.hasExplicitStatus = false,
@@ -40,7 +46,25 @@ class RestaurantTableModel {
   final double? height;
   final double? rotation;
   final String? shape;
+
+  /// Backend floor-plan id when the table row includes `floorPlanId`.
+  final String? floorPlanId;
+
+  /// Backend dining-area id when the table row includes `floorPlanAreaId`.
+  final String? floorPlanAreaId;
+
   final String? description;
+
+  /// Backend `indoor`. Null when the payload omits it.
+  final bool? indoor;
+
+  /// Backend `vip`.
+  final bool vip;
+
+  /// Backend `smoking`.
+  final bool smoking;
+
+  /// Explicit backend `isWindowSeat` only. `indoor` does not imply a window zone.
   final bool isWindowSeat;
 
   /// From `GET /reservations/availability` `isAvailable` for a booking window.
@@ -57,9 +81,13 @@ class RestaurantTableModel {
       positionX != null &&
       positionY != null &&
       width != null &&
-      height != null;
+      height != null &&
+      width! > 0 &&
+      height! > 0;
 
-  bool get isRound => (shape ?? '').trim().toLowerCase() == 'round';
+  TableShape? get tableShape => TableShapeApi.fromApi(shape);
+
+  bool get isRound => tableShape == TableShape.circle;
 
   bool get isSelectable =>
       status == TableStatus.available && (isAvailableForWindow ?? true);
@@ -75,7 +103,12 @@ class RestaurantTableModel {
     double? height,
     double? rotation,
     String? shape,
+    String? floorPlanId,
+    String? floorPlanAreaId,
     String? description,
+    bool? indoor,
+    bool? vip,
+    bool? smoking,
     bool? isWindowSeat,
     bool? isAvailableForWindow,
     bool? hasExplicitStatus,
@@ -92,7 +125,12 @@ class RestaurantTableModel {
       height: height ?? this.height,
       rotation: rotation ?? this.rotation,
       shape: shape ?? this.shape,
+      floorPlanId: floorPlanId ?? this.floorPlanId,
+      floorPlanAreaId: floorPlanAreaId ?? this.floorPlanAreaId,
       description: description ?? this.description,
+      indoor: indoor ?? this.indoor,
+      vip: vip ?? this.vip,
+      smoking: smoking ?? this.smoking,
       isWindowSeat: isWindowSeat ?? this.isWindowSeat,
       isAvailableForWindow: keepAvailability
           ? (isAvailableForWindow ?? this.isAvailableForWindow)
@@ -126,10 +164,11 @@ class RestaurantTableModel {
     required List<RestaurantTableModel> floorPlan,
     required List<RestaurantTableModel> availability,
   }) {
-    final Map<String, RestaurantTableModel> byId = <String, RestaurantTableModel>{
-      for (final RestaurantTableModel table in availability)
-        if (table.id.isNotEmpty) table.id: table,
-    };
+    final Map<String, RestaurantTableModel> byId =
+        <String, RestaurantTableModel>{
+          for (final RestaurantTableModel table in availability)
+            if (table.id.isNotEmpty) table.id: table,
+        };
     return floorPlan
         .map((RestaurantTableModel table) {
           final RestaurantTableModel? match = byId[table.id];
@@ -154,7 +193,8 @@ class RestaurantTableModel {
     final bool hasExplicitStatus = rawStatus.isNotEmpty;
 
     return RestaurantTableModel(
-      id: (json['tableId'] as String?)?.trim() ??
+      id:
+          (json['tableId'] as String?)?.trim() ??
           (json['id'] as String?)?.trim() ??
           '',
       label:
@@ -165,9 +205,7 @@ class RestaurantTableModel {
           (json['capacity'] as num?)?.toInt() ??
           (json['seatCount'] as num?)?.toInt() ??
           0,
-      status: hasExplicitStatus
-          ? _mapStatus(rawStatus)
-          : TableStatus.available,
+      status: hasExplicitStatus ? _mapStatus(rawStatus) : TableStatus.available,
       hasExplicitStatus: hasExplicitStatus,
       positionX: _readDouble(json, 'positionX'),
       positionY: _readDouble(json, 'positionY'),
@@ -175,12 +213,25 @@ class RestaurantTableModel {
       height: _readDouble(json, 'height'),
       rotation: _readDouble(json, 'rotation'),
       shape: (json['shape'] as String?)?.trim(),
-      isWindowSeat: json['indoor'] == false || json['isWindowSeat'] == true,
+      floorPlanId: _readId(json['floorPlanId']),
+      floorPlanAreaId: _readId(json['floorPlanAreaId']),
+      indoor: json['indoor'] is bool ? json['indoor'] as bool : null,
+      vip: json['vip'] == true,
+      smoking: json['smoking'] == true,
+      isWindowSeat: json['isWindowSeat'] == true,
       description: (json['description'] as String?)?.trim(),
       isAvailableForWindow: json.containsKey('isAvailable')
           ? json['isAvailable'] == true
           : null,
     );
+  }
+
+  static String? _readId(Object? value) {
+    if (value is! String) {
+      return null;
+    }
+    final String trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   static double? _readDouble(Map<String, dynamic> json, String key) {
@@ -197,8 +248,6 @@ class RestaurantTableModel {
         return TableStatus.available;
       case AppStrings.apiTableStatusOccupied:
         return TableStatus.occupied;
-      case AppStrings.apiTableStatusReserved:
-        return TableStatus.reserved;
       case AppStrings.apiTableStatusCleaning:
         return TableStatus.cleaning;
       case AppStrings.apiTableStatusDisabled:

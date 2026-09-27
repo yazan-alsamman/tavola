@@ -28,8 +28,10 @@ class LocationService {
     return _mapPermission(permission);
   }
 
-  /// Explicitly requests permission. Never call without a user-driven action
-  /// unless permission was already granted and only a refresh is needed.
+  /// Asks the OS for permission when it is still `denied` or undetermined.
+  ///
+  /// Does not prompt for `deniedForever`. Callers must not invoke this on
+  /// every launch after the user has already answered.
   Future<LocationPermissionState> requestPermission() async {
     final bool enabled = await isServiceEnabled();
     if (!enabled) {

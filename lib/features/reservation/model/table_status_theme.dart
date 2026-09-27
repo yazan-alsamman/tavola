@@ -3,7 +3,55 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
+import 'restaurant_table_model.dart';
 import 'table_status.dart';
+
+/// Visual state for a table that is operationally available but not bookable
+/// for the selected window. Map, legend, and the status under the plan share it.
+class SlotUnavailablePresentation {
+  const SlotUnavailablePresentation._();
+
+  static Color get tableColor => AppColors.surfaceAlt;
+  static Color get borderColor => AppColors.border;
+  static Color get chairColor => AppColors.disabled;
+  static Color get badgeColor => AppColors.surfaceAlt;
+  static Color get foregroundColor => AppColors.textPrimary;
+  static String get label => AppStrings.tableUnavailable;
+  static TextStyle get labelStyle => AppTextStyles.floorPlanTableLabelOnLight;
+}
+
+extension RestaurantTableStatusPresentation on RestaurantTableModel {
+  /// Operational `available` plus a closed booking window.
+  bool get isSlotUnavailable =>
+      status == TableStatus.available && isAvailableForWindow == false;
+
+  String get presentedStatusLabel =>
+      isSlotUnavailable ? SlotUnavailablePresentation.label : status.label;
+
+  Color get presentedTableColor => isSlotUnavailable
+      ? SlotUnavailablePresentation.tableColor
+      : status.tableBackgroundColor;
+
+  Color get presentedBorderColor => isSlotUnavailable
+      ? SlotUnavailablePresentation.borderColor
+      : status.tableBorderColor;
+
+  Color get presentedChairColor => isSlotUnavailable
+      ? SlotUnavailablePresentation.chairColor
+      : status.chairColor;
+
+  Color get presentedBadgeColor => isSlotUnavailable
+      ? SlotUnavailablePresentation.badgeColor
+      : status.badgeColor;
+
+  Color get presentedForegroundColor => isSlotUnavailable
+      ? SlotUnavailablePresentation.foregroundColor
+      : status.foregroundColor;
+
+  TextStyle get presentedLabelStyle => isSlotUnavailable
+      ? SlotUnavailablePresentation.labelStyle
+      : status.tableLabelStyle;
+}
 
 extension TableStatusTheme on TableStatus {
   String get label {
@@ -12,8 +60,6 @@ extension TableStatusTheme on TableStatus {
         return AppStrings.tableAvailable;
       case TableStatus.occupied:
         return AppStrings.tableOccupied;
-      case TableStatus.reserved:
-        return AppStrings.tableReserved;
       case TableStatus.cleaning:
         return AppStrings.tableCleaning;
       case TableStatus.disabled:
@@ -27,8 +73,6 @@ extension TableStatusTheme on TableStatus {
         return AppColors.primaryDark;
       case TableStatus.occupied:
         return AppColors.accent;
-      case TableStatus.reserved:
-        return AppColors.bronze;
       case TableStatus.cleaning:
         return AppColors.surfaceAlt;
       case TableStatus.disabled:
@@ -42,8 +86,6 @@ extension TableStatusTheme on TableStatus {
         return AppColors.textLight;
       case TableStatus.occupied:
         return AppColors.textPrimary;
-      case TableStatus.reserved:
-        return AppColors.textLight;
       case TableStatus.cleaning:
         return AppColors.textSecondary;
       case TableStatus.disabled:
@@ -57,8 +99,6 @@ extension TableStatusTheme on TableStatus {
         return AppColors.primaryDark;
       case TableStatus.occupied:
         return AppColors.accent;
-      case TableStatus.reserved:
-        return AppColors.bronze;
       case TableStatus.cleaning:
         return AppColors.surface;
       case TableStatus.disabled:
@@ -72,8 +112,6 @@ extension TableStatusTheme on TableStatus {
         return AppColors.primaryDark;
       case TableStatus.occupied:
         return AppColors.accent;
-      case TableStatus.reserved:
-        return AppColors.bronze;
       case TableStatus.cleaning:
         return AppColors.border;
       case TableStatus.disabled:
@@ -87,8 +125,6 @@ extension TableStatusTheme on TableStatus {
         return AppColors.primaryDark;
       case TableStatus.occupied:
         return AppColors.accent;
-      case TableStatus.reserved:
-        return AppColors.bronze;
       case TableStatus.cleaning:
         return AppColors.border;
       case TableStatus.disabled:
@@ -102,8 +138,6 @@ extension TableStatusTheme on TableStatus {
         return AppTextStyles.floorPlanTableLabel;
       case TableStatus.occupied:
         return AppTextStyles.floorPlanTableLabelOnAccent;
-      case TableStatus.reserved:
-        return AppTextStyles.floorPlanTableLabel;
       case TableStatus.cleaning:
         return AppTextStyles.floorPlanTableLabelMuted;
       case TableStatus.disabled:
@@ -117,8 +151,6 @@ extension TableStatusTheme on TableStatus {
         return AppTextStyles.floorPlanSeatBadge;
       case TableStatus.occupied:
         return AppTextStyles.floorPlanSeatBadgeOnAccent;
-      case TableStatus.reserved:
-        return AppTextStyles.floorPlanSeatBadge;
       case TableStatus.cleaning:
         return AppTextStyles.floorPlanSeatBadgeMuted;
       case TableStatus.disabled:

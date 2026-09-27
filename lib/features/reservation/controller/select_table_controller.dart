@@ -14,6 +14,7 @@ import '../../waitlist/model/waitlist_entry_model.dart';
 import '../../waitlist/model/waitlist_join_request_model.dart';
 import '../../waitlist/repository/waitlist_repository.dart';
 import '../model/customer_reservation_model.dart';
+import '../model/floor_plan_area_model.dart';
 import '../model/restaurant_table_model.dart';
 import '../model/table_status.dart';
 import '../model/reservation_confirmation_model.dart';
@@ -34,6 +35,7 @@ class SelectTableController extends GetxController {
       Rxn<ReservationConfirmationModel>();
   final RxList<RestaurantTableModel> floorPlanTables =
       <RestaurantTableModel>[].obs;
+  final RxList<FloorPlanAreaModel> floorPlanAreas = <FloorPlanAreaModel>[].obs;
   final RxBool isLoadingTables = false.obs;
   final RxBool isCreatingReservation = false.obs;
   final RxBool isJoiningWaitlist = false.obs;
@@ -63,6 +65,7 @@ class SelectTableController extends GetxController {
     }
     final String? selectedId = selectedTableId.value;
     floorPlanTables.assignAll(_tableRepository.getFloorPlan());
+    floorPlanAreas.assignAll(_tableRepository.getFloorPlanAreas());
     if (selectedId != null) {
       selectedTableId.value = selectedId;
     }
@@ -74,6 +77,7 @@ class SelectTableController extends GetxController {
     try {
       final List<RestaurantTableModel> tables = await _loadTablesForContext();
       floorPlanTables.assignAll(tables);
+      floorPlanAreas.assignAll(_tableRepository.getFloorPlanAreas());
       final String? selectedId = selectedTableId.value;
       if (selectedId != null &&
           floorPlanTables.every(
@@ -90,12 +94,15 @@ class SelectTableController extends GetxController {
         return;
       }
       floorPlanTables.clear();
+      floorPlanAreas.clear();
       tablesError.value = error.message;
     } on StateError catch (error) {
       floorPlanTables.clear();
+      floorPlanAreas.clear();
       tablesError.value = error.message;
     } catch (_) {
       floorPlanTables.clear();
+      floorPlanAreas.clear();
       tablesError.value = AppStrings.networkUnexpectedError;
     } finally {
       isLoadingTables.value = false;
@@ -110,12 +117,15 @@ class SelectTableController extends GetxController {
       final List<RestaurantTableModel> fallback = await _tableRepository
           .fetchFloorPlan(restaurantId: reservation?.restaurantId.value);
       floorPlanTables.assignAll(fallback);
+      floorPlanAreas.assignAll(_tableRepository.getFloorPlanAreas());
       tablesError.value = null;
     } on ApiException catch (fallbackError) {
       floorPlanTables.clear();
+      floorPlanAreas.clear();
       tablesError.value = fallbackError.message;
     } catch (_) {
       floorPlanTables.clear();
+      floorPlanAreas.clear();
       tablesError.value = error.message == AppStrings.networkUnauthorizedError
           ? AppStrings.authSignInRequired
           : error.message;
@@ -269,8 +279,6 @@ class SelectTableController extends GetxController {
         return AppStrings.availableTableDescription;
       case TableStatus.occupied:
         return AppStrings.occupiedTableNote;
-      case TableStatus.reserved:
-        return AppStrings.reservedTableNote;
       case TableStatus.cleaning:
         return AppStrings.cleaningTableNote;
       case TableStatus.disabled:
@@ -291,10 +299,7 @@ class SelectTableController extends GetxController {
 
     if (!hasBookingContext) {
       // Onboarding / preview only — never create a real reservation.
-      _showLocalConfirmation(
-        table,
-        AppStrings.onboardingPreviewReferenceLabel,
-      );
+      _showLocalConfirmation(table, AppStrings.onboardingPreviewReferenceLabel);
       return;
     }
 
@@ -350,8 +355,7 @@ class SelectTableController extends GetxController {
         return;
       }
       Get.snackbar(AppStrings.confirmReservation, error.message);
-      if (error.isUnauthorized &&
-          Get.isRegistered<AuthSessionController>()) {
+      if (error.isUnauthorized && Get.isRegistered<AuthSessionController>()) {
         unawaited(
           Get.find<AuthSessionController>().requireSignInForProtectedAction(),
         );

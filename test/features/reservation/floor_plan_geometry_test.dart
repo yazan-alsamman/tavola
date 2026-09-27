@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:tavla/features/discovery/model/discovery_floor_plan_model.dart';
+import 'package:tavla/features/reservation/model/floor_plan_area_model.dart';
 import 'package:tavla/features/reservation/model/floor_plan_geometry.dart';
 import 'package:tavla/features/reservation/model/restaurant_table_model.dart';
 
@@ -8,7 +10,9 @@ import 'floor_plan_test_fixtures.dart';
 
 void main() {
   test('tableRect uses Backend positionX/Y/width/height unchanged', () {
-    final RestaurantTableModel table = RestaurantTableModel.fromJson(liveT5Json);
+    final RestaurantTableModel table = RestaurantTableModel.fromJson(
+      liveT5Json,
+    );
     final Rect? rect = FloorPlanGeometry.tableRect(table);
 
     expect(rect, isNotNull);
@@ -50,7 +54,9 @@ void main() {
   });
 
   test('zoom matrix does not mutate stored geometry', () {
-    final RestaurantTableModel table = RestaurantTableModel.fromJson(liveT5Json);
+    final RestaurantTableModel table = RestaurantTableModel.fromJson(
+      liveT5Json,
+    );
     final Matrix4 zoomed = Matrix4.identity()..scaleByDouble(1.5, 1.5, 1, 1);
     expect(zoomed.getMaxScaleOnAxis(), 1.5);
     expect(table.positionX, 592);
@@ -63,7 +69,9 @@ void main() {
   });
 
   test('fit-to-viewport is a render transform only', () {
-    final RestaurantTableModel table = RestaurantTableModel.fromJson(liveT5Json);
+    final RestaurantTableModel table = RestaurantTableModel.fromJson(
+      liveT5Json,
+    );
     final Size canvas = FloorPlanGeometry.canvasSize(<RestaurantTableModel>[
       table,
     ]);
@@ -97,5 +105,124 @@ void main() {
     expect(before.top, 368);
     expect(after.left, 700);
     expect(after.top, 300);
+  });
+
+  test('area bounds follow member tables and keep the API name and color', () {
+    final DiscoveryFloorPlanModel plan = DiscoveryFloorPlanModel.fromJsonRaw(
+      <String, dynamic>{
+        'floorPlan': <String, dynamic>{
+          'floorPlanId': 'plan-1',
+          'branchId': 'branch-1',
+          'name': 'Hhh',
+        },
+        'areas': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'floorPlanAreaId': 'area-terrace',
+            'name': 'التراس',
+            'color': '#9D174D',
+            'sortOrder': 2,
+          },
+          <String, dynamic>{
+            'floorPlanAreaId': 'area-vip',
+            'name': 'غرفة VIP',
+            'color': '#6D28D9',
+            'sortOrder': 1,
+          },
+        ],
+        'tables': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'tableId': 't-vip',
+            'tableNumber': 'T8',
+            'floorPlanAreaId': 'area-vip',
+            'positionX': 400,
+            'positionY': 80,
+            'width': 80,
+            'height': 80,
+          },
+          <String, dynamic>{
+            'tableId': 't-terrace',
+            'tableNumber': 'T11',
+            'floorPlanAreaId': 'area-terrace',
+            'positionX': 112,
+            'positionY': 528,
+            'width': 96,
+            'height': 64,
+          },
+        ],
+      },
+    );
+
+    expect(plan.areas.first.name, 'غرفة VIP');
+    expect(
+      FloorPlanAreaModel.translationKeyFor('الصالة الرئيسية'),
+      'Main Hall',
+    );
+    expect(FloorPlanAreaModel.translationKeyFor('غرفة VIP'), 'VIP');
+    expect(FloorPlanAreaModel.translationKeyFor('التراس'), 'Terrace');
+    expect(FloorPlanAreaModel.translationKeyFor('Terrace'), 'Terrace');
+    expect(FloorPlanAreaModel.translationKeyFor('Chef Table'), isNull);
+    expect(plan.areas.first.colorValue, const Color(0xFF6D28D9));
+    expect(plan.tables.first.floorPlanAreaId, 'area-vip');
+
+    final Rect vip = FloorPlanGeometry.areaRect(
+      plan.areas[0],
+      plan.tables,
+      areas: plan.areas,
+    )!;
+    final Rect terrace = FloorPlanGeometry.areaRect(
+      plan.areas[1],
+      plan.tables,
+      areas: plan.areas,
+    )!;
+    expect(vip.overlaps(terrace), isFalse);
+    expect(vip.contains(const Offset(440, 120)), isTrue);
+    expect(terrace.contains(const Offset(160, 560)), isTrue);
+    expect(vip.width, greaterThan(80 + 48));
+    expect(terrace.width, greaterThan(96 + 48));
+  });
+
+  test('explicit API area bounds are used unchanged', () {
+    final DiscoveryFloorPlanModel plan = DiscoveryFloorPlanModel.fromJsonRaw(
+      <String, dynamic>{
+        'floorPlan': <String, dynamic>{
+          'floorPlanId': 'plan-1',
+          'branchId': 'branch-1',
+          'name': 'Hall',
+        },
+        'areas': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'floorPlanAreaId': 'area-vip',
+            'name': 'غرفة VIP',
+            'color': '#6D28D9',
+            'sortOrder': 0,
+            'positionX': 10,
+            'positionY': 20,
+            'width': 300,
+            'height': 150,
+          },
+        ],
+        'tables': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'tableId': 't-vip',
+            'tableNumber': 'T8',
+            'floorPlanAreaId': 'area-vip',
+            'positionX': 40,
+            'positionY': 40,
+            'width': 80,
+            'height': 80,
+          },
+        ],
+      },
+    );
+
+    final Rect vip = FloorPlanGeometry.areaRect(
+      plan.areas.single,
+      plan.tables,
+      areas: plan.areas,
+    )!;
+    expect(vip.left, 10);
+    expect(vip.top, 20);
+    expect(vip.width, 300);
+    expect(vip.height, 150);
   });
 }

@@ -68,7 +68,7 @@ void main() {
   );
 
   testWidgets(
-    'Enable requests permission when controller is already registered',
+    'registered controller asks once at startup and does not show Enable again',
     (tester) async {
       final _FakeLocationService locationService = _FakeLocationService();
       Get.put<LocationService>(locationService, permanent: true);
@@ -80,17 +80,15 @@ void main() {
       await tester.pumpWidget(
         const GetMaterialApp(home: Scaffold(body: UserLocationStatusBar())),
       );
-      // Drain prefs restore + onInit refreshStatus post-frame work.
       await tester.pump();
       await tester.pump();
       await tester.pump();
 
-      locationService.requestPermissionCalls = 0;
-      await tester.tap(find.text(AppStrings.locationEnableAction));
-      await tester.pump();
-      await tester.pump();
+      expect(locationService.requestPermissionCalls, 1);
+      expect(find.text(AppStrings.locationEnableAction), findsNothing);
 
-      expect(locationService.requestPermissionCalls, greaterThanOrEqualTo(1));
+      await tester.pump();
+      expect(locationService.requestPermissionCalls, 1);
     },
   );
 }

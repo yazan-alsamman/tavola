@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
 import '../../../core/constants/app_strings.dart';
@@ -19,6 +18,11 @@ class UserLocationController extends GetxController {
   }
 
   final LocationService _locationService;
+
+  /// Startup resolution. Later callers join it instead of starting another
+  /// permission or position request.
+  Future<void>? _inFlight;
+  bool _startupStarted = false;
 
   void _hydrateActivationPromptFromCache() {
     final bool? cached = LocationPromptPreferences.cachedOrNull;
@@ -50,20 +54,42 @@ class UserLocationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Restore the ask-flag first, then read the real OS status. Never request
-    // permission here — that stays user-driven via [handlePrimaryAction].
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (!isClosed) {
-        unawaited(_bootstrap());
-      }
-    });
+    // One resolution for Home, Discovery, and Map. OS permission is the
+    // source of truth; the stored ask-flag only prevents a repeat dialog.
+    unawaited(ensureReady());
   }
 
-  Future<void> _bootstrap() async {
-    await _restoreActivationPromptState();
-    if (!isClosed) {
-      await refreshStatus();
+  /// Checks the OS once per controller lifetime.
+  ///
+  /// Granted permission fetches the current position. A not-yet-asked
+  /// permission prompts once. Denied, permanently denied, restricted, and
+  /// location-services-off do not prompt again.
+  Future<void> ensureReady() {
+    if (_startupStarted) {
+      return _inFlight ?? Future<void>.value();
     }
+    _startupStarted = true;
+    return _singleFlight(_initialize);
+  }
+
+  Future<void> _initialize() async {
+    if (!isClosed) {
+      await _resolve(allowPrompt: true);
+    }
+  }
+
+  Future<void> _singleFlight(Future<void> Function() body) {
+    final Future<void>? current = _inFlight;
+    if (current != null) {
+      return current;
+    }
+    final Future<void> run = body();
+    _inFlight = run;
+    return run.whenComplete(() {
+      if (identical(_inFlight, run)) {
+        _inFlight = null;
+      }
+    });
   }
 
   Future<void> _restoreActivationPromptState() async {
@@ -84,8 +110,17 @@ class UserLocationController extends GetxController {
     return hasRequestedActivation.value;
   }
 
-  /// Reads service + permission without requesting access or coordinates.
-  Future<void> refreshStatus() async {
+  /// Re-reads OS service + permission without showing the permission dialog.
+  ///
+  /// Joins [ensureReady] when that resolution is still running.
+  Future<void> refreshStatus() {
+    if (_inFlight != null) {
+      return _inFlight!;
+    }
+    return _singleFlight(() => _resolve(allowPrompt: false));
+  }
+
+  Future<void> _resolve({required bool allowPrompt}) async {
     isLoading.value = true;
     errorMessage.value = null;
     try {
@@ -100,8 +135,33 @@ class UserLocationController extends GetxController {
 
       final LocationPermissionState permission = await _locationService
           .checkPermission();
+      if (permission == LocationPermissionState.serviceDisabled) {
+        location.value = const UserLocationModel(
+          permissionStatus: LocationPermissionState.serviceDisabled,
+          isServiceEnabled: false,
+        );
+        return;
+      }
+
       if (permission == LocationPermissionState.granted) {
         await _fetchCoordinates();
+        return;
+      }
+
+      if (allowPrompt) {
+        await _restoreActivationPromptState();
+        if (isClosed) {
+          return;
+        }
+      }
+
+      final bool mayPrompt =
+          allowPrompt &&
+          !_suppressActivationPrompt &&
+          (permission == LocationPermissionState.denied ||
+              permission == LocationPermissionState.unknown);
+      if (mayPrompt) {
+        await _requestPermissionBody();
         return;
       }
 
@@ -119,8 +179,15 @@ class UserLocationController extends GetxController {
     }
   }
 
-  /// User-driven: request permission (if needed) then fetch coordinates.
-  Future<void> requestPermissionAndLocate() async {
+  /// User-driven, or the single startup ask: request permission then fetch.
+  Future<void> requestPermissionAndLocate() {
+    if (_inFlight != null) {
+      return _inFlight!;
+    }
+    return _singleFlight(_requestPermissionBody);
+  }
+
+  Future<void> _requestPermissionBody() async {
     await _markActivationRequested();
     isLoading.value = true;
     errorMessage.value = null;
@@ -154,6 +221,10 @@ class UserLocationController extends GetxController {
 
   /// Re-fetch coordinates when permission is already granted.
   Future<void> refreshCoordinates() async {
+    if (_inFlight != null) {
+      await _inFlight;
+      return;
+    }
     if (permissionStatus != LocationPermissionState.granted &&
         permissionStatus != LocationPermissionState.unknown) {
       await requestPermissionAndLocate();

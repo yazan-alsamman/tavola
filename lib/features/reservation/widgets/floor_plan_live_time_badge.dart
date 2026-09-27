@@ -52,13 +52,6 @@ class _FloorPlanLiveTimeBadgeState extends State<FloorPlanLiveTimeBadge> {
           color: AppColors.border,
           width: AppDimensions.cardBorderWidth,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.primaryDark10,
-            blurRadius: AppDimensions.floorPlanIdleShadowBlur,
-            offset: Offset(0, AppDimensions.tinySpacing),
-          ),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

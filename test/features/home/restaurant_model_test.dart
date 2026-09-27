@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:tavla/core/constants/app_urls.dart';
 import 'package:tavla/features/home/model/restaurant_model.dart';
 
 void main() {
@@ -40,7 +39,9 @@ void main() {
     expect(restaurant.availabilityLabel, 'Booked');
   });
 
-  test('RestaurantModel.fromDiscoveryJson maps occasion tags and media', () {
+  test('discovery cover uses the signed coverImageUrl unchanged', () {
+    const String signed =
+        'https://media.example.com/object?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=scope&X-Amz-Date=20260927T120000Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=abc';
     final RestaurantModel restaurant = RestaurantModel.fromDiscoveryJson(
       <String, dynamic>{
         'restaurantId': 'rest-9',
@@ -53,7 +54,9 @@ void main() {
           <String, dynamic>{'name': 'Anniversary'},
           <String, dynamic>{'name': 'Business'},
         ],
-        'coverImageId': '11111111-1111-1111-1111-111111111111',
+        'coverImageId': 'aa6da0ad-e204-4fc8-b4a4-90dc957d729d',
+        'coverImageUrl': signed,
+        'logoId': 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
         'city': 'Abu Dhabi',
         'workingHours': <dynamic>[
           <String, dynamic>{
@@ -70,23 +73,33 @@ void main() {
     expect(restaurant.cuisine, 'Seafood');
     expect(restaurant.hoursLabel, '09:00 – 23:00');
     expect(restaurant.workingHours, isNotNull);
-    expect(
-      restaurant.imageUrl,
-      '${AppUrls.apiBaseUrl}${AppUrls.mediaFilePath('11111111-1111-1111-1111-111111111111')}',
-    );
+    expect(restaurant.imageUrl, signed);
+    expect(restaurant.imageUrl.contains('/files/'), isFalse);
   });
 
-  test('RestaurantModel.fromDiscoveryJson resolves relative media paths', () {
-    final RestaurantModel restaurant = RestaurantModel.fromDiscoveryJson(
-      <String, dynamic>{
-        'restaurantId': 'rest-10',
-        'name': 'Path Spot',
-        'status': 'Active',
-        'coverImageUrl': '/uploads/cover.jpg',
-      },
-    );
+  test('null coverImageUrl stays empty even when coverImageId is set', () {
+    final RestaurantModel restaurant =
+        RestaurantModel.fromDiscoveryJson(<String, dynamic>{
+          'restaurantId': 'rest-10',
+          'name': 'No Cover',
+          'status': 'Active',
+          'coverImageId': '11111111-1111-4111-8111-111111111111',
+          'coverImageUrl': null,
+          'logoId': '22222222-2222-4222-8222-222222222222',
+        });
 
-    expect(restaurant.imageUrl.startsWith('https://'), isTrue);
-    expect(restaurant.imageUrl.endsWith('/uploads/cover.jpg'), isTrue);
+    expect(restaurant.imageUrl, isEmpty);
+  });
+
+  test('a non-absolute coverImageUrl is not rewritten into an API path', () {
+    final RestaurantModel restaurant =
+        RestaurantModel.fromDiscoveryJson(<String, dynamic>{
+          'restaurantId': 'rest-11',
+          'name': 'Path Spot',
+          'status': 'Active',
+          'coverImageUrl': '/uploads/cover.jpg',
+        });
+
+    expect(restaurant.imageUrl, isEmpty);
   });
 }

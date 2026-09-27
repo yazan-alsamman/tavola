@@ -123,6 +123,7 @@ class AppTranslations extends Translations {
     'AUG': 'AUG',
     'August': 'August',
     'AVAILABLE': 'AVAILABLE',
+    'UNAVAILABLE': 'UNAVAILABLE',
     'AVAILABLE TIME SLOTS': 'AVAILABLE TIME SLOTS',
     'BBQ': 'BBQ',
     'Being refreshed for the next service. This table will be ready shortly.':
@@ -254,8 +255,8 @@ class AppTranslations extends Translations {
     'Dinner': 'Dinner',
     'Directions': 'Directions',
     'DISMISS': 'DISMISS',
-    'Drag and pinch to explore the dining room':
-        'Drag and pinch to explore the dining room',
+    'Drag and pinch to explore the tables':
+        'Drag and pinch to explore the tables',
     'Dry-aged cut finished over cedar smoke.':
         'Dry-aged cut finished over cedar smoke.',
     'Early access to peak tables': 'Early access to peak tables',
@@ -306,8 +307,8 @@ class AppTranslations extends Translations {
     'EXPERIENCE DURATION': 'EXPERIENCE DURATION',
     'Explore': 'Explore',
     'Explore more restaurants': 'Explore more restaurants',
-    'Explore the dining room, choose an available table, and confirm your placement.':
-        'Explore the dining room, choose an available table, and confirm your placement.',
+    'Choose an available table and confirm your reservation.':
+        'Choose an available table and confirm your reservation.',
     'EXPLORE THE GILDED OLIVE': 'EXPLORE THE GILDED OLIVE',
     'Family-friendly seating': 'Family-friendly seating',
     'Family': 'Family',
@@ -325,6 +326,9 @@ class AppTranslations extends Translations {
         'Find me an intimate table for two tonight.',
     'Fine System Configurations': 'Fine System Configurations',
     'FLOOR PLAN': 'FLOOR PLAN',
+    'Main Hall': 'Main Hall',
+    'Terrace': 'Terrace',
+    'VIP': 'VIP',
     'Forgot password?': 'Forgot password?',
     'French': 'French',
     'Friends': 'Friends',
@@ -962,6 +966,7 @@ class AppTranslations extends Translations {
     'AUG': 'أغس',
     'August': 'أغسطس',
     'AVAILABLE': 'متاحة',
+    'UNAVAILABLE': 'غير متاحة',
     'AVAILABLE TIME SLOTS': 'الأوقات المتاحة',
     'BBQ': 'مشاوي',
     'Being refreshed for the next service. This table will be ready shortly.':
@@ -1087,8 +1092,7 @@ class AppTranslations extends Translations {
     'Dinner': 'عشاء',
     'Directions': 'الاتجاهات',
     'DISMISS': 'إغلاق',
-    'Drag and pinch to explore the dining room':
-        'اسحب وقرّب لاستكشاف قاعة الطعام',
+    'Drag and pinch to explore the tables': 'اسحب وقرّب لاستكشاف الطاولات',
     'Dry-aged cut finished over cedar smoke.':
         'قطعة معتّقة جافًا تُنهى على دخان خشب السيدار.',
     'Early access to peak tables': 'وصول مبكر للطاولات في أوقات الذروة',
@@ -1138,8 +1142,8 @@ class AppTranslations extends Translations {
     'EXPERIENCE DURATION': 'مدة التجربة',
     'Explore': 'استكشف',
     'Explore more restaurants': 'استكشف المزيد من المطاعم',
-    'Explore the dining room, choose an available table, and confirm your placement.':
-        'استكشف قاعة الطعام، اختر طاولة متاحة، وأكّد مقعدك.',
+    'Choose an available table and confirm your reservation.':
+        'اختر طاولة متاحة وأكّد حجزك.',
     'EXPLORE THE GILDED OLIVE': 'استكشف The Gilded Olive',
     'Family-friendly seating': 'مقاعد مناسبة للعائلات',
     'Favorite': 'المفضلة',
@@ -1155,6 +1159,9 @@ class AppTranslations extends Translations {
         'ابحث لي عن طاولة حميمة لشخصين الليلة.',
     'Fine System Configurations': 'إعدادات النظام الدقيقة',
     'FLOOR PLAN': 'مخطط القاعة',
+    'Main Hall': 'الصالة الرئيسية',
+    'Terrace': 'التراس',
+    'VIP': 'غرفة VIP',
     'Forgot password?': 'هل نسيت كلمة المرور؟',
     'French': 'فرنسي',
     'FRI': 'جم',
