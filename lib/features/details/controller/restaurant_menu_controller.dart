@@ -105,11 +105,15 @@ class RestaurantMenuController extends GetxController {
     }
   }
 
-  void retry() {
+  Future<void> reloadMenu() async {
     final RestaurantModel? current = _restaurant;
     if (current != null) {
-      loadMenu(current);
+      await loadMenu(current);
     }
+  }
+
+  void retry() {
+    reloadMenu();
   }
 
   void goBack() => Get.back();

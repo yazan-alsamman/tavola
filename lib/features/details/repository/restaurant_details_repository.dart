@@ -1,4 +1,5 @@
 import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../branches/model/branch_model.dart';
@@ -19,8 +20,6 @@ class RestaurantDetailsRepository {
     : _apiClient = apiClient;
 
   final DiscoveryRepository _discovery;
-  // Retained for constructor/DI compatibility; hours come from discovery.
-  // ignore: unused_field
   final ApiClient _apiClient;
 
   final Map<String, RestaurantDetailModel> _detailsById =
@@ -64,6 +63,7 @@ class RestaurantDetailsRepository {
     final String rating = averageRating == null
         ? AppStrings.ratingUnavailable
         : averageRating.toStringAsFixed(1);
+    final List<String> galleryImageUrls = await _loadGalleryImageUrls(id);
 
     final RestaurantDetailModel detail = RestaurantDetailModel(
       restaurantId: restaurant.id,
@@ -78,15 +78,81 @@ class RestaurantDetailsRepository {
       openingHours: openingHours,
       menuItems: const <MenuItemModel>[],
       locationNote: primary?.locationLabel ?? '',
-      galleryImageUrls: restaurant.imageUrl.isEmpty
-          ? const <String>[]
-          : <String>[restaurant.imageUrl],
+      galleryImageUrls: galleryImageUrls,
       todayHoursLabel: todayHoursLabel,
       isOpenNow: isOpenNow,
       hasWorkingHours: hasWorkingHours,
     );
     _detailsById[id] = detail;
     return detail;
+  }
+
+  /// Public `GET /restaurants/:id/gallery`, including a guest with no token.
+  ///
+  /// Signed `imageUrl` values are kept unchanged. An empty gallery, null
+  /// URLs, and API errors leave the hero on the cover.
+  Future<List<String>> _loadGalleryImageUrls(String restaurantId) async {
+    try {
+      final response = await _apiClient.get<List<String>>(
+        AppUrls.restaurantGalleryPath(restaurantId),
+        parseData: parseGalleryImageUrls,
+        options: ApiClient.skipAuthOptions(),
+      );
+      return response.data;
+    } on ApiException {
+      return const <String>[];
+    } catch (_) {
+      return const <String>[];
+    }
+  }
+
+  /// Absolute `imageUrl` values from `RestaurantGalleryListResponseDto`,
+  /// ordered by `sortOrder`.
+  static List<String> parseGalleryImageUrls(Object? raw) {
+    final Map<String, dynamic>? payload = _asMap(raw);
+    final Object? itemsRaw = payload?[AppStrings.apiGalleryItemsField];
+    if (itemsRaw is! List) {
+      return const <String>[];
+    }
+    final List<Map<String, dynamic>> items = <Map<String, dynamic>>[];
+    for (final Object? item in itemsRaw) {
+      final Map<String, dynamic>? map = _asMap(item);
+      if (map != null) {
+        items.add(map);
+      }
+    }
+    items.sort((Map<String, dynamic> a, Map<String, dynamic> b) {
+      return _sortOrder(a).compareTo(_sortOrder(b));
+    });
+    final List<String> urls = <String>[];
+    for (final Map<String, dynamic> item in items) {
+      final String url = ApiException.coerceString(
+        item[AppStrings.apiMediaImageUrlField],
+      ).trim();
+      if (url.startsWith(AppStrings.apiHttpSchemePrefix) ||
+          url.startsWith(AppStrings.apiHttpsSchemePrefix)) {
+        urls.add(url);
+      }
+    }
+    return List<String>.unmodifiable(urls);
+  }
+
+  static int _sortOrder(Map<String, dynamic> item) {
+    final Object? raw = item[AppStrings.apiGallerySortOrderField];
+    if (raw is num) {
+      return raw.round();
+    }
+    return int.tryParse(ApiException.coerceString(raw)) ?? 0;
+  }
+
+  static Map<String, dynamic>? _asMap(Object? raw) {
+    if (raw is Map<String, dynamic>) {
+      return raw;
+    }
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return null;
   }
 
   /// Drops cached details so the next visit reloads discovery hours.

@@ -144,7 +144,8 @@ void main() {
 
     expect(Get.isRegistered<HomeController>(), isTrue);
     expect(Get.isRegistered<FavoritesRepository>(), isFalse);
-    expect(Get.isRegistered<UserLocationController>(), isFalse);
+    // The position fix starts on the first frame so Home is not stuck searching.
+    expect(Get.isRegistered<UserLocationController>(), isTrue);
 
     await _pumpProgressiveStages(tester);
 

@@ -642,10 +642,9 @@ class HomeController extends GetxController {
     );
   }
 
-  /// Loads one published offer for the Home Special Offer card.
+  /// Loads one published offer for a restaurant Discovery marked `hasActiveOffer`.
   ///
-  /// Prefers `GET /discovery/restaurants/nearby` + offers; falls back to catalog
-  /// restaurants with `hasActiveOffer` (or probes catalog when the flag is absent).
+  /// Restaurants with the flag false are not probed and the card stays hidden.
   Future<void> loadSpecialOfferPromo() async {
     if (isClosed || _specialOfferLoadInFlight) {
       return;
@@ -657,7 +656,7 @@ class HomeController extends GetxController {
       if (Get.isRegistered<UserLocationController>()) {
         try {
           await Get.find<UserLocationController>().ensureReady().timeout(
-            AppDimensions.homeCatalogLoadTimeout,
+            AppDimensions.locationFixTimeout,
           );
         } catch (_) {
           // Location is optional; catalog fallback still applies.
@@ -688,7 +687,7 @@ class HomeController extends GetxController {
           .where((RestaurantModel item) => item.hasActiveOffer)
           .toList(growable: false);
       final RestaurantOfferModel? fromFlagged = await _firstPublishedOffer(
-        flagged.isNotEmpty ? flagged : catalog,
+        flagged,
       );
       if (fromFlagged != null) {
         return;
@@ -732,7 +731,7 @@ class HomeController extends GetxController {
       final List<RestaurantModel> flagged = nearby
           .where((RestaurantModel item) => item.hasActiveOffer)
           .toList(growable: false);
-      return flagged.isNotEmpty ? flagged : nearby;
+      return flagged;
     } catch (_) {
       return const <RestaurantModel>[];
     }
@@ -743,7 +742,7 @@ class HomeController extends GetxController {
   ) async {
     final int limit = AppDimensions.homeOfferCandidateProbeLimit;
     for (final RestaurantModel restaurant in candidates.take(limit)) {
-      if (restaurant.id.trim().isEmpty) {
+      if (restaurant.id.trim().isEmpty || !restaurant.hasActiveOffer) {
         continue;
       }
       try {
@@ -778,6 +777,15 @@ class HomeController extends GetxController {
 
   void openMenu(RestaurantModel restaurant) {
     RestaurantMenuController.open(restaurant);
+  }
+
+  Future<void> refreshHome() {
+    return Future.wait<void>(<Future<void>>[
+      loadCuisineCategories(),
+      loadOccasionCategories(),
+      loadRestaurants(),
+      loadSpecialOfferPromo(),
+    ]);
   }
 
   void handleBottomNavigation(int index) {

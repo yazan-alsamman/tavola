@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/auth_token_reader.dart';
+import '../../../core/utils/app_dependency.dart';
+import '../../discovery/repository/discovery_repository.dart';
 import '../../home/model/restaurant_model.dart';
 import '../../users/repository/users_repository.dart';
 
@@ -76,7 +79,7 @@ class FavoritesRepository extends GetxService {
     try {
       final List<RestaurantModel> items = await _usersRepository
           .fetchFavoriteRestaurants();
-      favoriteSummaries.assignAll(items);
+      favoriteSummaries.assignAll(await _withDiscoveryCovers(items));
       favoriteStates
         ..clear()
         ..addEntries(
@@ -153,6 +156,43 @@ class FavoritesRepository extends GetxService {
       _notifyFavoriteListeners();
       rethrow;
     }
+  }
+
+  /// Favorite list items have no `coverImageUrl`. Cards read [RestaurantModel.imageUrl],
+  /// so each missing cover is filled from the public discovery restaurant.
+  Future<List<RestaurantModel>> _withDiscoveryCovers(
+    List<RestaurantModel> items,
+  ) async {
+    if (items.every((RestaurantModel item) => item.imageUrl.trim().isNotEmpty)) {
+      return items;
+    }
+    if (!Get.isRegistered<DiscoveryRepository>()) {
+      if (!Get.isRegistered<ApiClient>()) {
+        return items;
+      }
+      AppDependency.ensureDiscoveryRepository();
+    }
+    if (!Get.isRegistered<DiscoveryRepository>()) {
+      return items;
+    }
+    final DiscoveryRepository discovery = Get.find<DiscoveryRepository>();
+    final List<RestaurantModel> covered = <RestaurantModel>[];
+    for (final RestaurantModel item in items) {
+      if (item.imageUrl.trim().isNotEmpty || item.id.trim().isEmpty) {
+        covered.add(item);
+        continue;
+      }
+      try {
+        final RestaurantModel discovered = await discovery.getRestaurantById(
+          item.id,
+        );
+        final String cover = discovered.imageUrl.trim();
+        covered.add(cover.isEmpty ? item : item.copyWith(imageUrl: cover));
+      } catch (_) {
+        covered.add(item);
+      }
+    }
+    return covered;
   }
 
   /// Favorites for Profile / Favorites screens from `GET /users/me/favorites`.

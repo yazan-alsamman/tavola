@@ -10,6 +10,8 @@ import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/api_response.dart';
 import '../../../core/network/auth_token_reader.dart';
+import '../../../core/utils/app_dependency.dart';
+import '../../discovery/repository/discovery_repository.dart';
 import '../model/customer_reservation_model.dart';
 import '../model/reservation_availability_slot_model.dart';
 import '../model/restaurant_table_model.dart';
@@ -237,9 +239,12 @@ class ReservationRepository {
           },
           parseData: _parseReservationItems,
         );
-    upcomingReservations.assignAll(response.data);
-    _mergeIntoMyReservations(response.data);
-    return response.data;
+    final List<CustomerReservationModel> covered = await _withDiscoveryCovers(
+      response.data,
+    );
+    upcomingReservations.assignAll(covered);
+    _mergeIntoMyReservations(covered);
+    return covered;
   }
 
   /// `GET /reservations/my/history`
@@ -257,9 +262,12 @@ class ReservationRepository {
           },
           parseData: _parseReservationItems,
         );
-    historyReservationsList.assignAll(response.data);
-    _mergeIntoMyReservations(response.data);
-    return response.data;
+    final List<CustomerReservationModel> covered = await _withDiscoveryCovers(
+      response.data,
+    );
+    historyReservationsList.assignAll(covered);
+    _mergeIntoMyReservations(covered);
+    return covered;
   }
 
   /// Loads upcoming + history for Profile tabs (parallel).
@@ -653,6 +661,69 @@ class ReservationRepository {
       buffer.write(random.nextInt(256).toRadixString(16).padLeft(2, '0'));
     }
     return buffer.toString();
+  }
+
+  /// `restaurantImage` on `/reservations/my*` is a cover file id, not a signed
+  /// URL. Last Reservations (and upcoming cards) need the public discovery cover.
+  Future<List<CustomerReservationModel>> _withDiscoveryCovers(
+    List<CustomerReservationModel> items,
+  ) async {
+    final List<int> missing = <int>[];
+    for (int index = 0; index < items.length; index++) {
+      if (_needsPublicCover(items[index])) {
+        missing.add(index);
+      }
+    }
+    if (missing.isEmpty) {
+      return items;
+    }
+    if (!Get.isRegistered<DiscoveryRepository>()) {
+      if (!Get.isRegistered<ApiClient>()) {
+        return items;
+      }
+      AppDependency.ensureDiscoveryRepository();
+    }
+    if (!Get.isRegistered<DiscoveryRepository>()) {
+      return items;
+    }
+    final DiscoveryRepository discovery = Get.find<DiscoveryRepository>();
+    final Map<String, String> covers = <String, String>{};
+    final List<CustomerReservationModel> covered =
+        List<CustomerReservationModel>.of(items);
+    for (final int index in missing) {
+      final CustomerReservationModel item = covered[index];
+      final String restaurantId = item.restaurantId.trim();
+      if (!covers.containsKey(restaurantId)) {
+        try {
+          final discovered = await discovery.getRestaurantById(restaurantId);
+          covers[restaurantId] = discovered.imageUrl.trim();
+        } catch (_) {
+          covers[restaurantId] = '';
+        }
+      }
+      final String cover = covers[restaurantId] ?? '';
+      if (cover.isNotEmpty) {
+        covered[index] = item.copyWith(imageUrl: cover);
+      }
+    }
+    return covered;
+  }
+
+  bool _needsPublicCover(CustomerReservationModel item) {
+    if (item.restaurantId.trim().isEmpty) {
+      return false;
+    }
+    final String url = item.imageUrl.trim();
+    if (url.isEmpty) {
+      return true;
+    }
+    final bool absolute =
+        url.startsWith(AppStrings.apiHttpSchemePrefix) ||
+        url.startsWith(AppStrings.apiHttpsSchemePrefix);
+    if (!absolute) {
+      return true;
+    }
+    return url.contains('${AppUrls.mediaFilesPath}/');
   }
 
   Future<void> _ensureAuthenticated() async {

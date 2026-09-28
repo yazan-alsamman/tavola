@@ -8,6 +8,7 @@ class MenuCategoryModel {
     required this.name,
     this.description = '',
     this.displayOrder = 0,
+    this.imageUrl = '',
     this.items = const <MenuItemModel>[],
   });
 
@@ -15,6 +16,9 @@ class MenuCategoryModel {
   final String name;
   final String description;
   final int displayOrder;
+
+  /// Signed category `imageUrl` from the public menu tree, or empty when null.
+  final String imageUrl;
   final List<MenuItemModel> items;
 
   factory MenuCategoryModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +46,7 @@ class MenuCategoryModel {
       name: name,
       description: ApiException.coerceString(json['description']),
       displayOrder: _readOrder(json['displayOrder']),
+      imageUrl: MenuItemModel.absoluteImageUrl(json['imageUrl']),
       items: List<MenuItemModel>.unmodifiable(
         ranked.map((e) => e.$2).toList(growable: false),
       ),

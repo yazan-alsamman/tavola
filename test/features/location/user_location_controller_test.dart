@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:tavla/core/constants/app_dimensions.dart';
 import 'package:tavla/core/constants/app_strings.dart';
 import 'package:tavla/core/services/location_service.dart';
 import 'package:tavla/features/location/controller/user_location_controller.dart';
@@ -205,10 +208,35 @@ void main() {
     expect(controller.latitude, 25.2);
     expect(controller.longitude, 55.3);
     expect(controller.canProvideRecommendations, isTrue);
+    expect(controller.statusLabel, AppStrings.locationNearYou);
     expect(await LocationPromptPreferences.hasRequested(), isFalse);
 
     await controller.ensureReady();
     expect(service.getCurrentLocationCalls, 1);
+  });
+
+  test('a hung position read stops searching inside the location budget', () async {
+    final _FakeLocationService service = _FakeLocationService(
+      permission: LocationPermissionState.granted,
+      latitude: 25.2,
+      longitude: 55.3,
+    )..hangOnCurrentLocation = true;
+    final UserLocationController controller = UserLocationController(
+      locationService: service,
+    );
+
+    final Stopwatch watch = Stopwatch()..start();
+    await controller.ensureReady();
+
+    expect(
+      watch.elapsed,
+      lessThan(
+        AppDimensions.locationFixTimeout + const Duration(milliseconds: 800),
+      ),
+    );
+    expect(controller.isLoading.value, isFalse);
+    expect(controller.latitude, isNull);
+    expect(controller.statusLabel, isNot(AppStrings.locationLoading));
   });
 
   test('startup does not prompt again after a previous denial', () async {
@@ -347,6 +375,7 @@ class _FakeLocationService extends LocationService {
   int getCurrentLocationCalls = 0;
   int openAppSettingsCalls = 0;
   int openLocationSettingsCalls = 0;
+  bool hangOnCurrentLocation = false;
 
   @override
   Future<bool> isServiceEnabled() async => serviceEnabled;
@@ -372,6 +401,9 @@ class _FakeLocationService extends LocationService {
   @override
   Future<UserLocationModel> getCurrentLocation() async {
     getCurrentLocationCalls += 1;
+    if (hangOnCurrentLocation) {
+      return Completer<UserLocationModel>().future;
+    }
     return UserLocationModel(
       latitude: latitude,
       longitude: longitude,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../common/widgets/circle_back_button.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
@@ -64,7 +65,7 @@ class CompareRestaurantsScreen extends GetView<CompareController> {
                   final String? catalogError = controller.catalogError.value;
                   final String? compareError = controller.compareError.value;
 
-                  return RefreshIndicator(
+                  return TavolaRefresh(
                     onRefresh: () async {
                       await controller.loadCatalog(forceRefresh: true);
                       if (controller.hasBothSides) {
@@ -72,6 +73,7 @@ class CompareRestaurantsScreen extends GetView<CompareController> {
                       }
                     },
                     child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(AppDimensions.pagePadding),
                       children: [
                         Text(

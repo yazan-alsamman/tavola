@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../common/widgets/circle_back_button.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
@@ -33,30 +34,29 @@ class RestaurantMenuScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       CircleBackButton(onPressed: controller.goBack),
-                      const SizedBox(width: AppDimensions.smallSpacing),
                       Expanded(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               AppStrings.menu,
+                              textAlign: TextAlign.center,
                               style: AppTextStyles.detailsMenuTitle,
                             ),
-                            Text(
-                              controller.restaurant.name,
-                              style: AppTextStyles.compactRestaurantTitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            if (controller.restaurant.name.trim().isNotEmpty)
+                              Text(
+                                controller.restaurant.name,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.compactRestaurantTitle
+                                    .copyWith(color: AppColors.textSecondary),
+                              ),
                           ],
                         ),
                       ),
+                      const SizedBox(width: AppDimensions.circleBackButtonSize),
                     ],
                   ),
-                ),
-                const Divider(
-                  height: AppDimensions.dividerHeight,
-                  color: AppColors.border,
                 ),
                 Expanded(child: _buildBody(controller)),
               ],
@@ -83,11 +83,7 @@ class RestaurantMenuScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              error,
-              style: AppTextStyles.body,
-              textAlign: TextAlign.center,
-            ),
+            Text(error, style: AppTextStyles.body, textAlign: TextAlign.center),
             const SizedBox(height: AppDimensions.regularSpacing),
             TextButton(
               onPressed: controller.retry,
@@ -98,12 +94,17 @@ class RestaurantMenuScreen extends StatelessWidget {
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.pagePadding),
-      child: DetailsMenuSection(
-        menuItems: controller.menuItems,
-        categories: controller.categories,
-        menuTitle: controller.menu?.name,
+    return TavolaRefresh(
+      onRefresh: controller.reloadMenu,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppDimensions.pagePadding),
+        child: DetailsMenuSection(
+          menuItems: controller.menuItems,
+          categories: controller.categories,
+          menuTitle: controller.menu?.name,
+          showHeading: false,
+        ),
       ),
     );
   }

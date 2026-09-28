@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../common/widgets/circle_back_button.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../common/widgets/hoverable_button.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -58,7 +59,7 @@ class NotificationsScreen extends StatelessWidget {
             );
           }
 
-          return RefreshIndicator(
+          return TavolaRefresh(
             onRefresh: controller.reload,
             child: NotificationListener<ScrollNotification>(
               onNotification: (ScrollNotification notification) {
@@ -92,7 +93,7 @@ class NotificationsScreen extends StatelessWidget {
                   final NotificationItemModel item = controller.items[index];
                   return NotificationListTile(
                     item: item,
-                    onTap: () => controller.markRead(item),
+                    onTap: () => controller.openItem(item),
                   );
                 },
               ),
@@ -111,15 +112,15 @@ class _NotificationsHeader extends StatelessWidget
   final NotificationsController controller;
 
   @override
-  Size get preferredSize => const Size.fromHeight(
-        AppDimensions.notificationsHeaderHeightWithAction,
-      );
+  Size get preferredSize =>
+      const Size.fromHeight(AppDimensions.notificationsHeaderHeightWithAction);
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       final bool busy = controller.isMarkingAll.value;
-      final bool showMarkAll = !controller.requiresSignIn.value &&
+      final bool showMarkAll =
+          !controller.requiresSignIn.value &&
           controller.items.any((NotificationItemModel item) => !item.isRead);
 
       return Material(
@@ -156,7 +157,8 @@ class _NotificationsHeader extends StatelessWidget
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: AppDimensions.circleBackButtonSize +
+                            horizontal:
+                                AppDimensions.circleBackButtonSize +
                                 AppDimensions.smallSpacing,
                           ),
                           child: Text(

@@ -154,6 +154,74 @@ void main() {
     expect(controller.featuredOfferRestaurant.value?.hasActiveOffer, isTrue);
     expect(controller.isLoadingSpecialOffer.value, isFalse);
   });
+
+  testWidgets('a restaurant with hasActiveOffer false does not show the card', (
+    WidgetTester tester,
+  ) async {
+    final List<RequestOptions> requests = <RequestOptions>[];
+    final Dio dio = Dio(
+      BaseOptions(
+        baseUrl: AppUrls.apiBaseUrl,
+        validateStatus: (int? status) =>
+            status != null && status >= 200 && status < 300,
+      ),
+    );
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
+          requests.add(options);
+          handler.resolve(
+            Response<dynamic>(
+              requestOptions: options,
+              statusCode: 200,
+              data: <String, dynamic>{
+                'success': true,
+                'message': 'ok',
+                'data': <String, dynamic>{
+                  'items': <dynamic>[
+                    <String, dynamic>{
+                      'restaurantId': 'rest-plain',
+                      'name': 'No Offer Bistro',
+                      'status': 'Active',
+                      'description': 'French',
+                      'hasActiveOffer': false,
+                    },
+                  ],
+                },
+              },
+            ),
+          );
+        },
+      ),
+    );
+
+    Get.put<AuthTokenReader>(const EmptyAuthTokenReader());
+    final ApiClient api = ApiClient(
+      dio: dio,
+      tokenReader: Get.find<AuthTokenReader>(),
+    );
+    Get.put(api);
+    Get.put(UsersRepository(api));
+    Get.put(FavoritesRepository(usersRepository: Get.find<UsersRepository>()));
+    Get.put(TaxonomyRepository(api));
+    Get.put(DiscoveryRepository(api));
+    Get.put<LocationService>(_FakeLocationService(), permanent: true);
+    Get.put(UserLocationController(), permanent: true);
+
+    await tester.pumpWidget(const GetMaterialApp(home: SizedBox.shrink()));
+    final HomeController controller = Get.put(HomeController());
+    controller.cancelProgressiveInit();
+
+    await tester.runAsync(controller.loadSpecialOfferPromo);
+
+    expect(
+      requests.where((RequestOptions item) => item.path.contains('/offers')),
+      isEmpty,
+    );
+    expect(controller.featuredOffer.value, isNull);
+    expect(controller.featuredOfferRestaurant.value, isNull);
+    expect(controller.isLoadingSpecialOffer.value, isFalse);
+  });
 }
 
 class _FakeLocationService extends LocationService {

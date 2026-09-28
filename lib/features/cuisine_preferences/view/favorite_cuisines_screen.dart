@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../common/widgets/hoverable_button.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
@@ -104,53 +105,60 @@ class FavoriteCuisinesScreen extends StatelessWidget {
                         );
                       }
 
-                      return SingleChildScrollView(
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: AppDimensions.favoriteCuisinesChipSpacing,
-                          runSpacing: AppDimensions.favoriteCuisinesChipSpacing,
-                          children: controller.occasionOptions.map((occasion) {
-                            final String name = occasion.name;
-                            final bool selected = controller.isSelected(name);
-                            return GestureDetector(
-                              onTap: () => controller.toggleOccasion(name),
-                              child: AnimatedContainer(
-                                duration: AppDimensions.hoverDuration,
-                                curve: Curves.easeOutCubic,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppDimensions
-                                      .favoriteCuisinesChipHorizontalPadding,
-                                  vertical: AppDimensions
-                                      .favoriteCuisinesChipVerticalPadding,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: selected
-                                      ? AppColors.primaryDark
-                                      : AppColors.surface,
-                                  borderRadius: BorderRadius.circular(
-                                    AppDimensions.pillRadius,
+                      return TavolaRefresh(
+                        onRefresh: controller.loadOccasionCategories,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: AppDimensions.favoriteCuisinesChipSpacing,
+                            runSpacing:
+                                AppDimensions.favoriteCuisinesChipSpacing,
+                            children: controller.occasionOptions.map((
+                              occasion,
+                            ) {
+                              final String name = occasion.name;
+                              final bool selected = controller.isSelected(name);
+                              return GestureDetector(
+                                onTap: () => controller.toggleOccasion(name),
+                                child: AnimatedContainer(
+                                  duration: AppDimensions.hoverDuration,
+                                  curve: Curves.easeOutCubic,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppDimensions
+                                        .favoriteCuisinesChipHorizontalPadding,
+                                    vertical: AppDimensions
+                                        .favoriteCuisinesChipVerticalPadding,
                                   ),
-                                  border: Border.all(
+                                  decoration: BoxDecoration(
                                     color: selected
                                         ? AppColors.primaryDark
-                                        : AppColors.border,
+                                        : AppColors.surface,
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimensions.pillRadius,
+                                    ),
+                                    border: Border.all(
+                                      color: selected
+                                          ? AppColors.primaryDark
+                                          : AppColors.border,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    AppStrings.localizeUiLabel(
+                                      name,
+                                      alternate: occasion.slug,
+                                    ),
+                                    style: AppTextStyles.favoriteCuisineChip
+                                        .copyWith(
+                                          color: selected
+                                              ? AppColors.textLight
+                                              : AppColors.textPrimary,
+                                        ),
                                   ),
                                 ),
-                                child: Text(
-                                  AppStrings.localizeUiLabel(
-                                    name,
-                                    alternate: occasion.slug,
-                                  ),
-                                  style: AppTextStyles.favoriteCuisineChip
-                                      .copyWith(
-                                        color: selected
-                                            ? AppColors.textLight
-                                            : AppColors.textPrimary,
-                                      ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                              );
+                            }).toList(),
+                          ),
                         ),
                       );
                     }),

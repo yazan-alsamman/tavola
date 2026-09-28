@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../common/widgets/circle_back_button.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../common/widgets/hoverable_button.dart';
 import '../../../common/widgets/hoverable_card.dart';
 import '../../../core/constants/app_colors.dart';
@@ -78,7 +79,7 @@ class ActiveSessionsScreen extends StatelessWidget {
                   );
                 }
 
-                return RefreshIndicator(
+                return TavolaRefresh(
                   onRefresh: controller.loadSessions,
                   child: ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -110,7 +111,8 @@ class ActiveSessionsScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(AppDimensions.pagePadding),
               child: Obx(() {
-                final bool busy = controller.isLoggingOutAll.value ||
+                final bool busy =
+                    controller.isLoggingOutAll.value ||
                     controller.revokingSessionId.value != null;
                 final Widget button = ElevatedButton(
                   onPressed: busy ? null : controller.logOutAllDevices,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../common/widgets/hoverable_button.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
@@ -32,220 +33,238 @@ class SelectTableScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppDimensions.pagePadding),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: Get.back,
-                                icon: const Icon(
-                                  Symbols.arrow_back_ios_new,
-                                  color: AppColors.primary,
-                                  size: AppDimensions.mediumIconSize,
-                                ),
-                              ),
-                              const Spacer(),
-                              const FloorPlanLiveTimeBadge(),
-                            ],
-                          ),
-                          const SizedBox(height: AppDimensions.smallSpacing),
-                          Text(
-                            AppStrings.selectYourTable,
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.selectTableTitle,
-                          ),
-                          const SizedBox(height: AppDimensions.regularSpacing),
-                          Text(
-                            AppStrings.selectTableSubtitle,
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.selectTableSubtitle,
-                          ),
-                          const SizedBox(height: AppDimensions.sectionSpacing),
-                          Container(
-                            width: double.infinity,
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(
-                                AppDimensions.cardRadius,
-                              ),
-                              border: Border.all(
-                                color: AppColors.border,
-                                width: AppDimensions.cardBorderWidth,
-                              ),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: AppColors.primaryDark10,
-                                  blurRadius: AppDimensions.shadowBlur,
-                                  offset: Offset(
-                                    0,
-                                    AppDimensions.shadowOffsetY,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                    child: TavolaRefresh(
+                      onRefresh: controller.loadTables,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(
+                          AppDimensions.pagePadding,
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
                               children: [
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(
-                                    AppDimensions.contentPadding,
-                                    AppDimensions.contentPadding,
-                                    AppDimensions.contentPadding,
-                                    AppDimensions.smallSpacing,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        AppStrings.floorPlan,
-                                        style: AppTextStyles
-                                            .reservationSectionLabel,
-                                      ),
-                                      const SizedBox(
-                                        width: AppDimensions.smallSpacing,
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          AppStrings.restaurantMapHint,
-                                          textAlign: TextAlign.end,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: AppTextStyles.floorPlanMapHint,
-                                        ),
-                                      ),
-                                    ],
+                                IconButton(
+                                  onPressed: Get.back,
+                                  icon: const Icon(
+                                    Symbols.arrow_back_ios_new,
+                                    color: AppColors.primary,
+                                    size: AppDimensions.mediumIconSize,
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(
-                                    AppDimensions.smallSpacing,
-                                    0,
-                                    AppDimensions.smallSpacing,
-                                    AppDimensions.smallSpacing,
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(
-                                      AppDimensions.regularSpacing,
-                                    ),
-                                    child: SizedBox(
-                                      height: AppDimensions
-                                          .floorPlanContainerHeight,
-                                      width: double.infinity,
-                                      child: Obx(() {
-                                        if (controller.isLoadingTables.value) {
-                                          return const Center(
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: AppDimensions
-                                                  .progressIndicatorStrokeWidth,
-                                            ),
-                                          );
-                                        }
-
-                                        final String? tablesError =
-                                            controller.tablesError.value;
-                                        if (tablesError != null) {
-                                          return Center(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(
-                                                AppDimensions.contentPadding,
-                                              ),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    tablesError,
-                                                    textAlign: TextAlign.center,
-                                                    style: AppTextStyles
-                                                        .selectTableSubtitle,
-                                                  ),
-                                                  const SizedBox(
-                                                    height: AppDimensions
-                                                        .regularSpacing,
-                                                  ),
-                                                  TextButton(
-                                                    onPressed:
-                                                        controller.loadTables,
-                                                    style: TextButton.styleFrom(
-                                                      textStyle: AppTextStyles
-                                                          .authLinkEmphasis,
-                                                    ),
-                                                    child: Text(
-                                                      AppStrings.retry,
-                                                      style: AppTextStyles
-                                                          .authLinkEmphasis,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        }
-
-                                        if (controller
-                                            .floorPlanTables
-                                            .isEmpty) {
-                                          return Center(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(
-                                                AppDimensions.contentPadding,
-                                              ),
-                                              child: Text(
-                                                AppStrings.tablesEmpty,
-                                                textAlign: TextAlign.center,
-                                                style: AppTextStyles
-                                                    .selectTableSubtitle,
-                                              ),
-                                            ),
-                                          );
-                                        }
-
-                                        final Size canvas =
-                                            FloorPlanGeometry.canvasSize(
-                                              controller.floorPlanTables.toList(
-                                                growable: false,
-                                              ),
-                                              areas: controller.floorPlanAreas
-                                                  .toList(growable: false),
-                                            );
-                                        return LayoutBuilder(
-                                          builder:
-                                              (
-                                                BuildContext context,
-                                                BoxConstraints constraints,
-                                              ) {
-                                                final double width =
-                                                    constraints.maxWidth;
-                                                final double height =
-                                                    canvas.width <= 0 ||
-                                                        canvas.height <= 0
-                                                    ? AppDimensions
-                                                          .floorPlanContainerHeight
-                                                    : width *
-                                                          (canvas.height /
-                                                              canvas.width);
-                                                return SizedBox(
-                                                  width: width,
-                                                  height: height,
-                                                  child: RestaurantFloorMap(
-                                                    controller: controller,
-                                                  ),
-                                                );
-                                              },
-                                        );
-                                      }),
-                                    ),
-                                  ),
-                                ),
-                                RestaurantTableDetailPanel(
-                                  controller: controller,
-                                ),
+                                const Spacer(),
+                                const FloorPlanLiveTimeBadge(),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: AppDimensions.sectionSpacing),
-                        ],
+                            const SizedBox(height: AppDimensions.smallSpacing),
+                            Text(
+                              AppStrings.selectYourTable,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.selectTableTitle,
+                            ),
+                            const SizedBox(
+                              height: AppDimensions.regularSpacing,
+                            ),
+                            Text(
+                              AppStrings.selectTableSubtitle,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.selectTableSubtitle,
+                            ),
+                            const SizedBox(
+                              height: AppDimensions.sectionSpacing,
+                            ),
+                            Container(
+                              width: double.infinity,
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.cardRadius,
+                                ),
+                                border: Border.all(
+                                  color: AppColors.border,
+                                  width: AppDimensions.cardBorderWidth,
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: AppColors.primaryDark10,
+                                    blurRadius: AppDimensions.shadowBlur,
+                                    offset: Offset(
+                                      0,
+                                      AppDimensions.shadowOffsetY,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                          AppDimensions.contentPadding,
+                                          AppDimensions.contentPadding,
+                                          AppDimensions.contentPadding,
+                                          AppDimensions.smallSpacing,
+                                        ),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          AppStrings.floorPlan,
+                                          style: AppTextStyles
+                                              .reservationSectionLabel,
+                                        ),
+                                        const SizedBox(
+                                          width: AppDimensions.smallSpacing,
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            AppStrings.restaurantMapHint,
+                                            textAlign: TextAlign.end,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style:
+                                                AppTextStyles.floorPlanMapHint,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                          AppDimensions.smallSpacing,
+                                          0,
+                                          AppDimensions.smallSpacing,
+                                          AppDimensions.smallSpacing,
+                                        ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.regularSpacing,
+                                      ),
+                                      child: SizedBox(
+                                        height: AppDimensions
+                                            .floorPlanContainerHeight,
+                                        width: double.infinity,
+                                        child: Obx(() {
+                                          if (controller
+                                              .isLoadingTables
+                                              .value) {
+                                            return const Center(
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: AppDimensions
+                                                    .progressIndicatorStrokeWidth,
+                                              ),
+                                            );
+                                          }
+
+                                          final String? tablesError =
+                                              controller.tablesError.value;
+                                          if (tablesError != null) {
+                                            return Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                  AppDimensions.contentPadding,
+                                                ),
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      tablesError,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: AppTextStyles
+                                                          .selectTableSubtitle,
+                                                    ),
+                                                    const SizedBox(
+                                                      height: AppDimensions
+                                                          .regularSpacing,
+                                                    ),
+                                                    TextButton(
+                                                      onPressed:
+                                                          controller.loadTables,
+                                                      style: TextButton.styleFrom(
+                                                        textStyle: AppTextStyles
+                                                            .authLinkEmphasis,
+                                                      ),
+                                                      child: Text(
+                                                        AppStrings.retry,
+                                                        style: AppTextStyles
+                                                            .authLinkEmphasis,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          }
+
+                                          if (controller
+                                              .floorPlanTables
+                                              .isEmpty) {
+                                            return Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                  AppDimensions.contentPadding,
+                                                ),
+                                                child: Text(
+                                                  AppStrings.tablesEmpty,
+                                                  textAlign: TextAlign.center,
+                                                  style: AppTextStyles
+                                                      .selectTableSubtitle,
+                                                ),
+                                              ),
+                                            );
+                                          }
+
+                                          final Size canvas =
+                                              FloorPlanGeometry.canvasSize(
+                                                controller.floorPlanTables
+                                                    .toList(growable: false),
+                                                areas: controller.floorPlanAreas
+                                                    .toList(growable: false),
+                                              );
+                                          return LayoutBuilder(
+                                            builder:
+                                                (
+                                                  BuildContext context,
+                                                  BoxConstraints constraints,
+                                                ) {
+                                                  final double width =
+                                                      constraints.maxWidth;
+                                                  final double height =
+                                                      canvas.width <= 0 ||
+                                                          canvas.height <= 0
+                                                      ? AppDimensions
+                                                            .floorPlanContainerHeight
+                                                      : width *
+                                                            (canvas.height /
+                                                                canvas.width);
+                                                  return SizedBox(
+                                                    width: width,
+                                                    height: height,
+                                                    child: RestaurantFloorMap(
+                                                      controller: controller,
+                                                    ),
+                                                  );
+                                                },
+                                          );
+                                        }),
+                                      ),
+                                    ),
+                                  ),
+                                  RestaurantTableDetailPanel(
+                                    controller: controller,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: AppDimensions.sectionSpacing,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

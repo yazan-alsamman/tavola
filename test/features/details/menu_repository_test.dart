@@ -5,6 +5,8 @@ import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:tavla/core/constants/app_urls.dart';
 import 'package:tavla/core/network/api_client.dart';
 import 'package:tavla/core/network/auth_token_reader.dart';
+import 'package:tavla/features/details/model/menu_category_model.dart';
+import 'package:tavla/features/details/model/menu_item_model.dart';
 import 'package:tavla/features/details/repository/menu_repository.dart';
 
 void main() {
@@ -39,6 +41,8 @@ void main() {
                       'id': 'cat-1',
                       'name': 'Starters',
                       'displayOrder': 0,
+                      'imageUrl':
+                          'https://media.example.com/starters.jpg?X-Amz-Signature=abc',
                       'items': <dynamic>[
                         <String, dynamic>{
                           'id': 'item-1',
@@ -47,6 +51,9 @@ void main() {
                           'price': 14,
                           'currency': null,
                           'displayOrder': 0,
+                          'imageUrl':
+                              'https://media.example.com/shrimp.jpg?X-Amz-Expires=3600',
+                          'isFeatured': true,
                         },
                       ],
                     },
@@ -68,7 +75,49 @@ void main() {
     expect(menu.categories.first.name, 'Starters');
     expect(menu.flatItems.single.name, 'Shrimp Cocktail');
     expect(menu.flatItems.single.price, '14');
+    expect(
+      menu.categories.first.imageUrl,
+      'https://media.example.com/starters.jpg?X-Amz-Signature=abc',
+    );
+    expect(menu.flatItems.single.isFeatured, isTrue);
+    expect(
+      menu.flatItems.single.imageUrl,
+      'https://media.example.com/shrimp.jpg?X-Amz-Expires=3600',
+    );
   });
+
+  test(
+    'menu images stay empty and featured stays false unless the API says so',
+    () {
+      final item = MenuItemModel.fromJson(<String, dynamic>{
+        'id': 'item-2',
+        'name': 'Plain dish',
+        'price': 10,
+        'imageUrl': null,
+        'isFeatured': null,
+      });
+      expect(item.imageUrl, isEmpty);
+      expect(item.isFeatured, isFalse);
+
+      final relative = MenuItemModel.fromJson(<String, dynamic>{
+        'id': 'item-3',
+        'name': 'Relative',
+        'price': 8,
+        'imageUrl': '/files/not-signed',
+        'isFeatured': false,
+      });
+      expect(relative.imageUrl, isEmpty);
+      expect(relative.isFeatured, isFalse);
+
+      final category = MenuCategoryModel.fromJson(<String, dynamic>{
+        'id': 'cat-2',
+        'name': 'Mains',
+        'imageUrl': null,
+        'items': <dynamic>[],
+      });
+      expect(category.imageUrl, isEmpty);
+    },
+  );
 
   test('listMenus parses summary array', () async {
     Get.testMode = true;
@@ -108,98 +157,102 @@ void main() {
     expect(menus.single.isDefault, isTrue);
   });
 
-  test('getCategoryById and getItemById hit Postman category/item paths', () async {
-    Get.testMode = true;
-    String? categoryPath;
-    String? itemPath;
-    final Dio dio = Dio(BaseOptions(baseUrl: AppUrls.apiBaseUrl));
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
-          if (options.path.contains('/categories/') &&
-              !options.path.contains('/items/')) {
-            categoryPath = options.path;
-            handler.resolve(
-              Response<dynamic>(
-                requestOptions: options,
-                statusCode: 200,
-                data: <String, dynamic>{
-                  'success': true,
-                  'message': 'ok',
-                  'data': <String, dynamic>{
-                    'id': 'cat-1',
-                    'name': 'Starters',
-                    'displayOrder': 0,
-                    'items': <dynamic>[],
-                  },
-                },
-              ),
-            );
-            return;
-          }
-          if (options.path.contains('/items/')) {
-            itemPath = options.path;
-            handler.resolve(
-              Response<dynamic>(
-                requestOptions: options,
-                statusCode: 200,
-                data: <String, dynamic>{
-                  'success': true,
-                  'message': 'ok',
-                  'data': <String, dynamic>{
-                    'id': 'item-1',
-                    'name': 'Shrimp Cocktail',
-                    'description': 'Chilled shrimp',
-                    'price': 14,
-                  },
-                },
-              ),
-            );
-            return;
-          }
-          handler.reject(
-            DioException(
-              requestOptions: options,
-              type: DioExceptionType.badResponse,
-            ),
-          );
-        },
-      ),
-    );
-    final MenuRepository repo = MenuRepository(
-      ApiClient(dio: dio, tokenReader: const EmptyAuthTokenReader()),
-    );
+  test(
+    'getCategoryById and getItemById hit Postman category/item paths',
+    () async {
+      Get.testMode = true;
+      String? categoryPath;
+      String? itemPath;
+      final Dio dio = Dio(BaseOptions(baseUrl: AppUrls.apiBaseUrl));
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest:
+              (RequestOptions options, RequestInterceptorHandler handler) {
+                if (options.path.contains('/categories/') &&
+                    !options.path.contains('/items/')) {
+                  categoryPath = options.path;
+                  handler.resolve(
+                    Response<dynamic>(
+                      requestOptions: options,
+                      statusCode: 200,
+                      data: <String, dynamic>{
+                        'success': true,
+                        'message': 'ok',
+                        'data': <String, dynamic>{
+                          'id': 'cat-1',
+                          'name': 'Starters',
+                          'displayOrder': 0,
+                          'items': <dynamic>[],
+                        },
+                      },
+                    ),
+                  );
+                  return;
+                }
+                if (options.path.contains('/items/')) {
+                  itemPath = options.path;
+                  handler.resolve(
+                    Response<dynamic>(
+                      requestOptions: options,
+                      statusCode: 200,
+                      data: <String, dynamic>{
+                        'success': true,
+                        'message': 'ok',
+                        'data': <String, dynamic>{
+                          'id': 'item-1',
+                          'name': 'Shrimp Cocktail',
+                          'description': 'Chilled shrimp',
+                          'price': 14,
+                        },
+                      },
+                    ),
+                  );
+                  return;
+                }
+                handler.reject(
+                  DioException(
+                    requestOptions: options,
+                    type: DioExceptionType.badResponse,
+                  ),
+                );
+              },
+        ),
+      );
+      final MenuRepository repo = MenuRepository(
+        ApiClient(dio: dio, tokenReader: const EmptyAuthTokenReader()),
+      );
 
-    final category = await repo.getCategoryById(
-      restaurantId: 'rest-1',
-      menuId: 'menu-1',
-      categoryId: 'cat-1',
-    );
-    final item = await repo.getItemById(
-      restaurantId: 'rest-1',
-      menuId: 'menu-1',
-      categoryId: 'cat-1',
-      itemId: 'item-1',
-    );
-
-    expect(
-      categoryPath,
-      AppUrls.restaurantMenuCategoryPath(
+      final category = await repo.getCategoryById(
         restaurantId: 'rest-1',
         menuId: 'menu-1',
         categoryId: 'cat-1',
-      ),
-    );
-    expect(
-      itemPath,
-      AppUrls.restaurantMenuItemPath(
+      );
+      final item = await repo.getItemById(
         restaurantId: 'rest-1',
         menuId: 'menu-1',
         categoryId: 'cat-1',
         itemId: 'item-1',
-      ),
-    );
-    expect(category.name, 'Starters');
-    expect(item.id, 'item-1');
-  });
+      );
+
+      expect(
+        categoryPath,
+        AppUrls.restaurantMenuCategoryPath(
+          restaurantId: 'rest-1',
+          menuId: 'menu-1',
+          categoryId: 'cat-1',
+        ),
+      );
+      expect(
+        itemPath,
+        AppUrls.restaurantMenuItemPath(
+          restaurantId: 'rest-1',
+          menuId: 'menu-1',
+          categoryId: 'cat-1',
+          itemId: 'item-1',
+        ),
+      );
+      expect(category.name, 'Starters');
+      expect(item.id, 'item-1');
+    },
+  );
 }

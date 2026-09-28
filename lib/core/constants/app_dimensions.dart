@@ -45,6 +45,11 @@ class AppDimensions {
   static const Duration homeOccasionScrollDuration = Duration(
     milliseconds: 900,
   );
+  static const double homeScrollToTopRevealDistance = 120.0;
+  static const double homeScrollToTopButtonSize = 48.0;
+  static const double homeScrollToTopIconSize = 24.0;
+  static const double homeScrollToTopElevation = 4.0;
+  static const Duration homeScrollToTopDuration = Duration(milliseconds: 550);
   static const double reservationCardHeight = 136.0;
   static const double reservationImageWidth = 130.0;
 
@@ -197,6 +202,14 @@ class AppDimensions {
   static const double headerProfileBorderWidth = 1.0;
 
   static const double conciergeContentMaxWidth = 720.0;
+
+  /// Distance from the latest message that still follows a quiet reload.
+  static const double conciergeNearBottomSlop = 120.0;
+
+  /// Repeat `GET /conversations/:id/messages` only while that restaurant thread is open.
+  static const Duration conciergeActiveThreadRefreshInterval = Duration(
+    seconds: 1,
+  );
   static const double conciergeStatusDotSize = 9.0;
   static const double conciergeMessageWidthFactor = 0.82;
   static const double conciergeComposerRadius = 26.0;
@@ -220,6 +233,9 @@ class AppDimensions {
   /// User location (geolocator) configuration.
   static const Duration locationRequestTimeout = Duration(seconds: 15);
   static const Duration locationServiceCheckTimeout = Duration(seconds: 8);
+
+  /// Ceiling for a Home location fix so "Near you" does not stay on searching.
+  static const Duration locationFixTimeout = Duration(seconds: 2);
 
   /// Meters — `0` means every movement update is eligible.
   static const int locationDistanceFilterMeters = 0;
@@ -288,6 +304,11 @@ class AppDimensions {
   static const double dashedBorderGapLength = 3.0;
   static const double dividerHeight = 1.0;
 
+  static const Duration detailsGalleryInterval = Duration(seconds: 2);
+  static const Duration detailsGallerySlideDuration = Duration(
+    milliseconds: 450,
+  );
+  static const double detailsGalleryDotSize = 6.0;
   static const double detailsHeroHeight = 380.0;
   static const double detailsHeroBlurSigma = 18.0;
   static const double detailsHeroOverlayHeight = 220.0;
@@ -297,6 +318,8 @@ class AppDimensions {
   static const double detailsAmenityMinHeight = 34.0;
   static const double detailsAmenityRadius = 12.0;
   static const double detailsMenuPriceMinWidth = 56.0;
+  static const double detailsMenuItemImageSize = 104.0;
+  static const double detailsMenuCategoryImageHeight = 196.0;
   static const double detailsLocationIconSize = 28.0;
   static const double restaurantCardActionVerticalPadding = 12.0;
   static const double restaurantCardActionHorizontalPadding = 20.0;

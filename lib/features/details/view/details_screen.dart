@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../common/widgets/hoverable_button.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../common/widgets/restaurant_card_action_buttons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -76,94 +77,100 @@ class DetailsScreen extends StatelessWidget {
       );
     }
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Obx(() {
-            controller.watchFavorites();
-            return DetailsHeroHeader(
-              restaurant: controller.restaurant,
-              detail: controller.detail,
-              ratingLabel: controller.ratingLabel(controller.detail.rating),
-              isFavorite: controller.isFavorite(controller.restaurant.id),
-              onFavoritePressed: controller.toggleFavorite,
-            );
-          }),
-          if (controller.isLoadingDetails)
-            const LinearProgressIndicator(
-              minHeight: AppDimensions.progressIndicatorStrokeWidth,
+    return TavolaRefresh(
+      onRefresh: controller.retryLoadDetails,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Obx(() {
+              controller.watchFavorites();
+              return DetailsHeroHeader(
+                restaurant: controller.restaurant,
+                detail: controller.detail,
+                ratingLabel: controller.ratingLabel(controller.detail.rating),
+                isFavorite: controller.isFavorite(controller.restaurant.id),
+                onFavoritePressed: controller.toggleFavorite,
+              );
+            }),
+            if (controller.isLoadingDetails)
+              const LinearProgressIndicator(
+                minHeight: AppDimensions.progressIndicatorStrokeWidth,
+              ),
+            Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: AppDimensions.pagePadding,
+                end: AppDimensions.pagePadding,
+                top: AppDimensions.restaurantCardActionTopSpacing,
+              ),
+              child: RestaurantCardActionButtons(
+                onReservationPressed: controller.openReservation,
+                onMenuPressed: controller.openMenu,
+                onChatPressed: controller.openChat,
+              ),
             ),
-          Padding(
-            padding: const EdgeInsetsDirectional.only(
-              start: AppDimensions.pagePadding,
-              end: AppDimensions.pagePadding,
-              top: AppDimensions.restaurantCardActionTopSpacing,
-            ),
-            child: RestaurantCardActionButtons(
-              onReservationPressed: controller.openReservation,
-              onMenuPressed: controller.openMenu,
-              onChatPressed: controller.openChat,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.pagePadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DetailsAboutSection(about: controller.detail.about),
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                DetailsAmenitiesSection(amenities: controller.detail.amenities),
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                DetailsInfoBox(
-                  openingHours: controller.detail.openingHours,
-                  onComparePressed: controller.openCompare,
-                ),
-                if (controller.showMenu) ...[
+            Padding(
+              padding: const EdgeInsets.all(AppDimensions.pagePadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DetailsAboutSection(about: controller.detail.about),
                   const SizedBox(height: AppDimensions.sectionSpacing),
-                  DetailsMenuSection(menuItems: controller.detail.menuItems),
-                ],
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                DetailsLocationFooter(
-                  locationNote: controller.detail.locationNote,
-                ),
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                DetailsReviewsSection(controller: controller),
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                SizedBox(
-                  width: double.infinity,
-                  child: HoverableButton(
-                    child: ElevatedButton(
-                      onPressed: controller.openReservation,
-                      style: AppButtonStyles.filledHover(
-                        ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryDark,
-                          foregroundColor: AppColors.textLight,
-                          textStyle: AppTextStyles.confirmReservationButton,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppDimensions.buttonVerticalPadding,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.cardRadius,
+                  DetailsAmenitiesSection(
+                    amenities: controller.detail.amenities,
+                  ),
+                  const SizedBox(height: AppDimensions.sectionSpacing),
+                  DetailsInfoBox(
+                    openingHours: controller.detail.openingHours,
+                    onComparePressed: controller.openCompare,
+                  ),
+                  if (controller.showMenu) ...[
+                    const SizedBox(height: AppDimensions.sectionSpacing),
+                    DetailsMenuSection(menuItems: controller.detail.menuItems),
+                  ],
+                  const SizedBox(height: AppDimensions.sectionSpacing),
+                  DetailsLocationFooter(
+                    locationNote: controller.detail.locationNote,
+                  ),
+                  const SizedBox(height: AppDimensions.sectionSpacing),
+                  DetailsReviewsSection(controller: controller),
+                  const SizedBox(height: AppDimensions.sectionSpacing),
+                  SizedBox(
+                    width: double.infinity,
+                    child: HoverableButton(
+                      child: ElevatedButton(
+                        onPressed: controller.openReservation,
+                        style: AppButtonStyles.filledHover(
+                          ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryDark,
+                            foregroundColor: AppColors.textLight,
+                            textStyle: AppTextStyles.confirmReservationButton,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppDimensions.buttonVerticalPadding,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.cardRadius,
+                              ),
                             ),
                           ),
+                          idleBackground: AppColors.primaryDark,
                         ),
-                        idleBackground: AppColors.primaryDark,
-                      ),
-                      child: Text(
-                        AppStrings.reserveTable,
-                        style: AppTextStyles.confirmReservationButton,
+                        child: Text(
+                          AppStrings.reserveTable,
+                          style: AppTextStyles.confirmReservationButton,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: AppDimensions.sectionSpacing),
-                SizedBox(height: MediaQuery.paddingOf(context).bottom),
-              ],
+                  const SizedBox(height: AppDimensions.sectionSpacing),
+                  SizedBox(height: MediaQuery.paddingOf(context).bottom),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

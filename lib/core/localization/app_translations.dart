@@ -175,6 +175,8 @@ class AppTranslations extends Translations {
     'Choose a restaurant': 'Choose a restaurant',
     'Close chat': 'Close chat',
     'All chats': 'All chats',
+    'Do you want to end this conversation?':
+        'Do you want to end this conversation?',
     'This conversation is closed.': 'This conversation is closed.',
     'You can start a new chat with another restaurant anytime.':
         'You can start a new chat with another restaurant anytime.',
@@ -251,6 +253,7 @@ class AppTranslations extends Translations {
     'Details Screen': 'Details Screen',
     'DINE AND EARN': 'DINE AND EARN',
     'DINING': 'DINING',
+    'Back to top': 'Back to top',
     'BAR': 'BAR',
     'Dinner': 'Dinner',
     'Directions': 'Directions',
@@ -316,6 +319,7 @@ class AppTranslations extends Translations {
     'Favorite Cuisines': 'Favorite Cuisines',
     'Favorite Occasions': 'Favorite Occasions',
     'Favorite dining selections': 'Favorite dining selections',
+    'Featured': 'Featured',
     'Favorites': 'Favorites',
     'Favorites Screen': 'Favorites Screen',
     'February': 'February',
@@ -1015,6 +1019,7 @@ class AppTranslations extends Translations {
     'Choose a restaurant': 'اختر مطعماً',
     'Close chat': 'إغلاق المحادثة',
     'All chats': 'كل المحادثات',
+    'Do you want to end this conversation?': 'هل تريد إنهاء المحادثة؟',
     'This conversation is closed.': 'هذه المحادثة مغلقة.',
     'You can start a new chat with another restaurant anytime.':
         'يمكنك بدء محادثة جديدة مع مطعم آخر في أي وقت.',
@@ -1088,6 +1093,7 @@ class AppTranslations extends Translations {
     'Details Screen': 'شاشة التفاصيل',
     'DINE AND EARN': 'تناول الطعام واكسب',
     'DINING': 'طعام',
+    'Back to top': 'العودة إلى الأعلى',
     'BAR': 'البار',
     'Dinner': 'عشاء',
     'Directions': 'الاتجاهات',
@@ -1150,6 +1156,7 @@ class AppTranslations extends Translations {
     'Favorite Cuisines': 'المأكولات المفضلة',
     'Favorite Occasions': 'المناسبات المفضلة',
     'Favorite dining selections': 'اختيارات الطعام المفضلة',
+    'Featured': 'مميز',
     'Favorites': 'المفضلة',
     'Favorites Screen': 'شاشة المفضلة',
     'February': 'فبراير',

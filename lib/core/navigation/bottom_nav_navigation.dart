@@ -14,6 +14,8 @@ class BottomNavNavigation {
       return;
     }
 
+    AppNavigation.prepareShellDirection(fromRight: index > currentIndex);
+
     if (index == homeIndex) {
       AppNavigation.goShell(AppRoutes.home);
       return;

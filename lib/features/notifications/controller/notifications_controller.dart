@@ -8,7 +8,9 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/navigation/app_navigation.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/auth_token_reader.dart';
+import '../../../core/utils/app_dependency.dart';
 import '../../../core/utils/post_frame_work.dart';
+import '../../concierge/controller/concierge_controller.dart';
 import '../model/notification_item_model.dart';
 import '../model/notifications_page_model.dart';
 import '../repository/notifications_repository.dart';
@@ -106,6 +108,30 @@ class NotificationsController extends GetxController {
     } finally {
       isLoadingMore.value = false;
     }
+  }
+
+  /// Marks the row read, then opens the matching chat when `data` identifies one.
+  Future<void> openItem(NotificationItemModel item) async {
+    if (!item.isRead) {
+      await markRead(item);
+    }
+    final String conversationId = item.conversationId.trim();
+    final String restaurantId = item.restaurantId.trim();
+    if (conversationId.isEmpty && restaurantId.isEmpty) {
+      return;
+    }
+    AppDependency.ensureConciergeDependencies();
+    final ConciergeController chat = AppDependency.putPermanentIfAbsent(
+      ConciergeController.new,
+    );
+    final bool opened = await chat.openFromNotification(
+      conversationId: conversationId,
+      restaurantId: restaurantId,
+    );
+    if (!opened || isClosed) {
+      return;
+    }
+    AppNavigation.goShell(AppRoutes.concierge);
   }
 
   Future<void> markRead(NotificationItemModel item) async {

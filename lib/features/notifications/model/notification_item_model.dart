@@ -7,6 +7,8 @@ class NotificationItemModel {
     required this.title,
     required this.body,
     required this.isRead,
+    this.type = '',
+    this.data = const <String, String>{},
     this.createdAt,
   });
 
@@ -14,13 +16,27 @@ class NotificationItemModel {
   final String title;
   final String body;
   final bool isRead;
+
+  /// `NotificationResponseDto.type`.
+  final String type;
+
+  /// String values from `NotificationResponseDto.data`.
+  final Map<String, String> data;
   final DateTime? createdAt;
+
+  /// Present only when the payload `data` object includes `conversationId`.
+  String get conversationId => data['conversationId'] ?? '';
+
+  /// Present only when the payload `data` object includes `restaurantId`.
+  String get restaurantId => data['restaurantId'] ?? '';
 
   NotificationItemModel copyWith({
     String? id,
     String? title,
     String? body,
     bool? isRead,
+    String? type,
+    Map<String, String>? data,
     DateTime? createdAt,
   }) {
     return NotificationItemModel(
@@ -28,6 +44,8 @@ class NotificationItemModel {
       title: title ?? this.title,
       body: body ?? this.body,
       isRead: isRead ?? this.isRead,
+      type: type ?? this.type,
+      data: data ?? this.data,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -62,10 +80,30 @@ class NotificationItemModel {
       title: title,
       body: body,
       isRead: isRead,
+      type: ApiException.coerceString(json['type']),
+      data: _readData(json['data']),
       createdAt: _asDateTime(
         json['createdAt'] ?? json['created_at'] ?? json['timestamp'],
       ),
     );
+  }
+
+  static Map<String, String> _readData(Object? raw) {
+    if (raw is! Map) {
+      return const <String, String>{};
+    }
+    final Map<String, String> values = <String, String>{};
+    for (final Object? key in raw.keys) {
+      if (key is! String || key.trim().isEmpty) {
+        continue;
+      }
+      final String? value = ApiException.coerceOptionalString(raw[key]);
+      if (value == null) {
+        continue;
+      }
+      values[key.trim()] = value;
+    }
+    return Map<String, String>.unmodifiable(values);
   }
 
   static String _firstNonEmpty(List<Object?> candidates) {

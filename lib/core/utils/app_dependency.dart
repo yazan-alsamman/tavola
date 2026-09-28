@@ -253,6 +253,7 @@ class AppDependency {
 
   /// Profile tab: history, favorites, users, notifications badge.
   static void ensureProfileDependencies() {
+    ensureDiscoveryRepository();
     ensureProfileRepository();
     ensureFavoritesRepository();
     ensureUsersRepository();
@@ -271,8 +272,9 @@ class AppDependency {
     ensureFavoritesRepository();
   }
 
-  /// Favorites tab.
+  /// Favorites tab. Discovery supplies the public cover the favorites DTO omits.
   static void ensureFavoritesScreenDependencies() {
+    ensureDiscoveryRepository();
     ensureFavoritesRepository();
   }
 

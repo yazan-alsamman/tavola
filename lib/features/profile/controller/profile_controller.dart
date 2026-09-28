@@ -269,6 +269,15 @@ class ProfileController extends GetxController {
     return _reservationRepository.activeReservations;
   }
 
+  Future<void> refreshProfile() {
+    return Future.wait<void>(<Future<void>>[
+      loadUserProfile(),
+      loadUserPreferences(),
+      loadReservations(),
+      loadMyReviews(),
+    ]);
+  }
+
   /// Rebuild Profile reservation tabs after create / cancel / reschedule.
   void refreshReservations() {
     unawaited(loadReservations());

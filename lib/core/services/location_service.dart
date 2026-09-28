@@ -71,15 +71,15 @@ class LocationService {
       );
     }
 
-    // LocationSettings.timeLimit is not reliable on every iOS build — also
-    // apply a Dart ceiling so Stage-7 Home location cannot hang forever.
-    final Position position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: AppDimensions.locationDistanceFilterMeters,
-        timeLimit: AppDimensions.locationRequestTimeout,
-      ),
-    ).timeout(AppDimensions.locationRequestTimeout);
+    final Position? position = await _positionWithin(
+      AppDimensions.locationFixTimeout,
+    );
+    if (position == null) {
+      return const UserLocationModel(
+        permissionStatus: LocationPermissionState.granted,
+        isServiceEnabled: true,
+      );
+    }
 
     return UserLocationModel(
       latitude: position.latitude,
@@ -87,6 +87,54 @@ class LocationService {
       permissionStatus: LocationPermissionState.granted,
       isServiceEnabled: true,
     );
+  }
+
+  /// Last known fix or a medium-accuracy reading, whichever arrives first.
+  ///
+  /// High-accuracy [Geolocator.getCurrentPosition] can sit on "Finding your
+  /// location" until the map screen. This budget keeps Home to two seconds.
+  Future<Position?> _positionWithin(Duration budget) {
+    final Completer<Position?> completer = Completer<Position?>();
+    final Timer timer = Timer(budget, () {
+      if (!completer.isCompleted) {
+        completer.complete(null);
+      }
+    });
+    completer.future.whenComplete(timer.cancel);
+
+    unawaited(_offerLastKnown(completer));
+    unawaited(_offerCurrent(completer, budget));
+    return completer.future;
+  }
+
+  Future<void> _offerLastKnown(Completer<Position?> completer) async {
+    try {
+      final Position? last = await Geolocator.getLastKnownPosition();
+      if (last != null && !completer.isCompleted) {
+        completer.complete(last);
+      }
+    } catch (_) {
+      // A fresh reading can still win the same budget.
+    }
+  }
+
+  Future<void> _offerCurrent(
+    Completer<Position?> completer,
+    Duration budget,
+  ) async {
+    try {
+      final Position current = await Geolocator.getCurrentPosition(
+        locationSettings: LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: budget,
+        ),
+      );
+      if (!completer.isCompleted) {
+        completer.complete(current);
+      }
+    } catch (_) {
+      // Timeout or a platform denial: the budget timer ends the wait.
+    }
   }
 
   Future<bool> openAppSettings() => Geolocator.openAppSettings();

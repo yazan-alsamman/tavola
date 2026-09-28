@@ -475,6 +475,7 @@ class AppStrings {
   static String get exploreMoreRestaurants => 'Explore more restaurants'.tr;
   static String get explore => 'Explore'.tr;
   static String get searchHint => 'Search restaurants'.tr;
+  static String get backToTop => 'Back to top'.tr;
   static String get restaurantsNearYou => 'Restaurants near you'.tr;
   static String get cuisines => 'Cuisines'.tr;
   static String get occasions => 'Occasions'.tr;
@@ -729,6 +730,8 @@ class AppStrings {
   static const String apiMediaLogoUrlField = 'logoUrl';
   static const String apiMediaThumbnailUrlField = 'thumbnailUrl';
   static const String apiMediaImageUrlField = 'imageUrl';
+  static const String apiGalleryItemsField = 'items';
+  static const String apiGallerySortOrderField = 'sortOrder';
 
   static const String apiReviewReservationIdField = 'reservationId';
   static const String apiReviewRatingField = 'rating';
@@ -838,6 +841,8 @@ class AppStrings {
   static String get conversationsChooseRestaurant => 'Choose a restaurant'.tr;
   static String get conversationsCloseAction => 'Close chat'.tr;
   static String get conversationsBackToList => 'All chats'.tr;
+  static String get endConversationPrompt =>
+      'Do you want to end this conversation?'.tr;
   static String get conversationsClosedBanner =>
       'This conversation is closed.'.tr;
   static String get conversationsClosedHint =>
@@ -865,6 +870,7 @@ class AppStrings {
   static String get viewDetails => 'View Details'.tr;
   static String get viewDetailsViewLine => 'View'.tr;
   static String get menu => 'Menu'.tr;
+  static String get menuFeatured => 'Featured'.tr;
   static String get save => 'Save'.tr;
   static String get saved => 'Saved'.tr;
   static const String restaurantSummarySeparator = ' · ';

@@ -22,24 +22,23 @@ class HomeSpecialOfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final bool loading = controller.isLoadingSpecialOffer.value;
       final RestaurantOfferModel? offer = controller.featuredOffer.value;
       final RestaurantModel? restaurant =
           controller.featuredOfferRestaurant.value;
 
-      if (!loading && offer == null) {
+      if (offer == null || restaurant == null || !restaurant.hasActiveOffer) {
         return const SizedBox.shrink();
       }
 
-      final String title = offer?.title.trim().isNotEmpty == true
-          ? offer!.title.trim()
+      final String title = offer.title.trim().isNotEmpty
+          ? offer.title.trim()
           : AppStrings.specialOffer;
-      final String description = offer?.description.trim().isNotEmpty == true
-          ? offer!.description.trim()
-          : (loading ? '' : AppStrings.specialOfferDescription);
-      final String imagePath = offer?.imageUrl.trim().isNotEmpty == true
-          ? offer!.imageUrl.trim()
-          : (restaurant?.imageUrl.trim() ?? '');
+      final String description = offer.description.trim().isNotEmpty
+          ? offer.description.trim()
+          : AppStrings.specialOfferDescription;
+      final String imagePath = offer.imageUrl.trim().isNotEmpty
+          ? offer.imageUrl.trim()
+          : restaurant.imageUrl.trim();
 
       return HoverableCard(
         child: SizedBox(
@@ -73,25 +72,12 @@ class HomeSpecialOfferCard extends StatelessWidget {
                       Text(title, style: AppTextStyles.promoTitle),
                       const SizedBox(height: AppDimensions.smallSpacing),
                       Flexible(
-                        child: loading && description.isEmpty
-                            ? const Align(
-                                alignment: AlignmentDirectional.centerStart,
-                                child: SizedBox(
-                                  width: AppDimensions.iconButtonSize,
-                                  height: AppDimensions.iconButtonSize,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: AppDimensions
-                                        .progressIndicatorStrokeWidth,
-                                    color: AppColors.textLight,
-                                  ),
-                                ),
-                              )
-                            : Text(
-                                description,
-                                style: AppTextStyles.promoBody,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                        child: Text(
+                          description,
+                          style: AppTextStyles.promoBody,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const SizedBox(height: AppDimensions.smallSpacing),
                       FittedBox(
@@ -101,9 +87,7 @@ class HomeSpecialOfferCard extends StatelessWidget {
                           height: AppDimensions.iconButtonSize,
                           child: HoverableButton(
                             child: ElevatedButton(
-                              onPressed: offer == null
-                                  ? null
-                                  : controller.openFeaturedOfferReservation,
+                              onPressed: controller.openFeaturedOfferReservation,
                               style: AppButtonStyles.filledHover(
                                 ElevatedButton.styleFrom(
                                   textStyle:

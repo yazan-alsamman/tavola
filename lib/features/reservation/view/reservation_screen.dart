@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../common/widgets/hoverable_button.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
@@ -27,43 +28,50 @@ class ReservationScreen extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppDimensions.pagePadding),
-                child: Column(
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: IconButton(
-                        onPressed: Get.back,
-                        icon: const Icon(
-                          Symbols.arrow_back_ios_new,
-                          color: AppColors.primary,
-                          size: AppDimensions.mediumIconSize,
+              child: TavolaRefresh(
+                onRefresh: () async {
+                  await controller.ensureBranchResolved();
+                  await controller.loadAvailabilitySlots();
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(AppDimensions.pagePadding),
+                  child: Column(
+                    children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: IconButton(
+                          onPressed: Get.back,
+                          icon: const Icon(
+                            Symbols.arrow_back_ios_new,
+                            color: AppColors.primary,
+                            size: AppDimensions.mediumIconSize,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: AppDimensions.smallSpacing),
-                    Text(
-                      AppStrings.reservationPreferences,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.reservationPreferencesTitle,
-                    ),
-                    const SizedBox(height: AppDimensions.regularSpacing),
-                    Text(
-                      AppStrings.reservationPreferencesSubtitle,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.reservationPreferencesSubtitle,
-                    ),
-                    const SizedBox(height: AppDimensions.sectionSpacing),
-                    ReservationDinersPanel(controller: controller),
-                    const SizedBox(height: AppDimensions.sectionSpacing),
-                    ReservationTimeSlotsPanel(controller: controller),
-                    const SizedBox(height: AppDimensions.sectionSpacing),
-                    ReservationDurationPanel(controller: controller),
-                    const SizedBox(height: AppDimensions.sectionSpacing),
-                    ReservationCalendarPanel(controller: controller),
-                    const SizedBox(height: AppDimensions.sectionSpacing),
-                  ],
+                      const SizedBox(height: AppDimensions.smallSpacing),
+                      Text(
+                        AppStrings.reservationPreferences,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.reservationPreferencesTitle,
+                      ),
+                      const SizedBox(height: AppDimensions.regularSpacing),
+                      Text(
+                        AppStrings.reservationPreferencesSubtitle,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.reservationPreferencesSubtitle,
+                      ),
+                      const SizedBox(height: AppDimensions.sectionSpacing),
+                      ReservationDinersPanel(controller: controller),
+                      const SizedBox(height: AppDimensions.sectionSpacing),
+                      ReservationTimeSlotsPanel(controller: controller),
+                      const SizedBox(height: AppDimensions.sectionSpacing),
+                      ReservationDurationPanel(controller: controller),
+                      const SizedBox(height: AppDimensions.sectionSpacing),
+                      ReservationCalendarPanel(controller: controller),
+                      const SizedBox(height: AppDimensions.sectionSpacing),
+                    ],
+                  ),
                 ),
               ),
             ),

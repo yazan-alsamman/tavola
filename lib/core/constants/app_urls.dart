@@ -111,6 +111,12 @@ class AppUrls {
       '$waitlistPath/${entryId.trim()}/cancel';
 
   /// Public restaurant menus (Postman folder **Menu**).
+  /// Public gallery list (`GET /restaurants/:id/gallery`).
+  ///
+  /// No access token. Each item `imageUrl` is a signed URL.
+  static String restaurantGalleryPath(String restaurantId) =>
+      '/restaurants/${restaurantId.trim()}/gallery';
+
   static String restaurantMenusPath(String restaurantId) =>
       '/restaurants/${restaurantId.trim()}/menus';
 

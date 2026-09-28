@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 
+import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/services/location_service.dart';
 import '../location_prompt_preferences.dart';
@@ -327,7 +328,10 @@ class UserLocationController extends GetxController {
 
   Future<void> _fetchCoordinates() async {
     final UserLocationModel result = await _locationService
-        .getCurrentLocation();
+        .getCurrentLocation()
+        .timeout(
+          AppDimensions.locationFixTimeout + const Duration(milliseconds: 500),
+        );
     location.value = result;
     if (!result.hasCoordinates &&
         result.permissionStatus == LocationPermissionState.granted) {

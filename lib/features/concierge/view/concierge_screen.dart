@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../common/widgets/bottom_nav_bar.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../common/widgets/hoverable_button.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -17,14 +18,34 @@ import '../widgets/concierge_composer.dart';
 import '../widgets/concierge_message_card.dart';
 import '../widgets/concierge_start_conversation_sheet.dart';
 
-class ConciergeScreen extends StatelessWidget {
+class ConciergeScreen extends StatefulWidget {
   const ConciergeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final ConciergeController controller = Get.isRegistered<ConciergeController>()
+  State<ConciergeScreen> createState() => _ConciergeScreenState();
+}
+
+class _ConciergeScreenState extends State<ConciergeScreen> {
+  late final ConciergeController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.isRegistered<ConciergeController>()
         ? Get.find<ConciergeController>()
         : AppDependency.putPermanentIfAbsent(ConciergeController.new);
+    _controller.onChatRouteOpened();
+  }
+
+  @override
+  void dispose() {
+    _controller.onChatRouteClosed();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ConciergeController controller = _controller;
     final bool isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return Scaffold(
@@ -154,9 +175,10 @@ class _ConversationsListBody extends StatelessWidget {
                       ConciergeStartConversationSheet.open(controller),
                 );
               }
-              return RefreshIndicator(
+              return TavolaRefresh(
                 onRefresh: controller.reload,
                 child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: controller.conversations.length + 1,
                   separatorBuilder: (_, _) =>
                       const SizedBox(height: AppDimensions.smallSpacing),
@@ -231,44 +253,47 @@ class _ConversationThreadBody extends StatelessWidget {
             title: active.displayTitle,
             statusLabel: active.displayStatus,
             isOpen: online,
-            onBack: controller.showAllConversations,
-            onClose: active.isOpen
-                ? controller.closeActiveConversation
-                : null,
+            onBack: controller.leaveConversationFromBack,
+            onClose: active.isOpen ? controller.closeActiveConversation : null,
             onRestaurant: canOpenRestaurant
                 ? controller.openActiveRestaurantDetails
                 : null,
           ),
           Expanded(
-            child: controller.isLoadingMessages.value &&
+            child:
+                controller.isLoadingMessages.value &&
                     controller.messages.isEmpty
                 ? const Center(
                     child: CircularProgressIndicator(
                       strokeWidth: AppDimensions.progressIndicatorStrokeWidth,
                     ),
                   )
-                : ListView.builder(
-                    controller: controller.messagesScrollController,
-                    padding: const EdgeInsets.fromLTRB(
-                      AppDimensions.pagePadding,
-                      AppDimensions.regularSpacing,
-                      AppDimensions.pagePadding,
-                      AppDimensions.sectionSpacing,
+                : TavolaRefresh(
+                    onRefresh: controller.refreshActiveThread,
+                    child: ListView.builder(
+                      controller: controller.messagesScrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppDimensions.pagePadding,
+                        AppDimensions.regularSpacing,
+                        AppDimensions.pagePadding,
+                        AppDimensions.sectionSpacing,
+                      ),
+                      itemCount: controller.messages.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final ConversationMessageModel message =
+                            controller.messages[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppDimensions.smallSpacing,
+                          ),
+                          child: ConciergeMessageCard(
+                            message: message.body,
+                            isFromCustomer: message.isFromCustomer,
+                          ),
+                        );
+                      },
                     ),
-                    itemCount: controller.messages.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final ConversationMessageModel message =
-                          controller.messages[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppDimensions.smallSpacing,
-                        ),
-                        child: ConciergeMessageCard(
-                          message: message.body,
-                          isFromCustomer: message.isFromCustomer,
-                        ),
-                      );
-                    },
                   ),
           ),
         ],

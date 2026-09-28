@@ -48,7 +48,18 @@ class HomeProgressiveInit {
       return;
     }
     _started = true;
+    // The position fix starts on the first Home frame. Waiting until stage 8
+    // left the chip on "Finding your location" until another screen opened.
+    _beginLocationFix();
     _stagePersistSession();
+  }
+
+  void _beginLocationFix() {
+    if (_cancelled || _home.isClosed) {
+      return;
+    }
+    AppDependency.ensureLocationStack();
+    _home.shellLocationReady.value = true;
   }
 
   /// Guest → authenticated (or Logout → Login) on a permanent [HomeController].

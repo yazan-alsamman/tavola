@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../common/widgets/bottom_nav_bar.dart';
+import '../../../common/widgets/tavola_refresh.dart';
 import '../../../common/widgets/custom_app_bar.dart';
 import '../../../common/widgets/hoverable_button.dart';
 import '../../../common/widgets/search_bar.dart';
@@ -90,10 +91,23 @@ class RestaurantMapScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CustomSearchBar(
-                      controller: controller.searchController,
-                      hintText: AppStrings.mapSearchHint,
-                      onChanged: controller.updateSearch,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomSearchBar(
+                            controller: controller.searchController,
+                            hintText: AppStrings.mapSearchHint,
+                            onChanged: controller.updateSearch,
+                          ),
+                        ),
+                        const SizedBox(width: AppDimensions.smallSpacing),
+                        Obx(
+                          () => TavolaRefreshButton(
+                            loading: controller.isLoadingLocations.value,
+                            onPressed: controller.loadMapLocations,
+                          ),
+                        ),
+                      ],
                     ),
                     Obx(() {
                       if (!controller.isLoadingLocations.value) {
