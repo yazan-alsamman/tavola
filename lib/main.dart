@@ -10,6 +10,7 @@ import 'app/theme/app_theme.dart';
 import 'core/constants/app_strings.dart';
 import 'core/localization/app_translations.dart';
 import 'core/localization/locale_controller.dart';
+import 'core/navigation/app_navigation.dart';
 import 'core/utils/app_dependency.dart';
 import 'core/utils/locale_preferences.dart';
 import 'features/auth/controller/auth_session_controller.dart';
@@ -76,6 +77,9 @@ class TavolaApp extends StatelessWidget {
       fallbackLocale: const Locale('en'),
       initialRoute: AppRoutes.initial,
       getPages: AppRoutes.routes,
+      navigatorObservers: <NavigatorObserver>[
+        AppNavigation.shellRouteTracker,
+      ],
       localizationsDelegates: const [
         CountryLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

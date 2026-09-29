@@ -72,6 +72,12 @@ class ReservationController extends GetxController {
     } else if (restaurantName.value.isEmpty) {
       restaurantName.value = _availabilityRepository.getDefaultRestaurantName();
     }
+    if (args is ReservationRouteArgs) {
+      final int? bookedGuests = args.guests;
+      if (bookedGuests != null && bookedGuests >= minDiners) {
+        dinerCount.value = bookedGuests;
+      }
+    }
     durationOptions.assignAll(_availabilityRepository.getDurationOptions());
     _dayWorker = ever<DateTime>(selectedDay, (_) {
       unawaited(loadAvailabilitySlots());

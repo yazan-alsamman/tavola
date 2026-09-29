@@ -93,10 +93,7 @@ class CustomerReservationModel {
       );
     }
 
-    final int guests =
-        _readInt(json['partySize']) ??
-        _readInt(json['guests']) ??
-        0;
+    final int guests = partySizeFromJson(json);
 
     final String notesRaw = ApiException.coerceString(
       json['specialRequest'] ?? json['notes'],
@@ -118,6 +115,62 @@ class CustomerReservationModel {
       notes: notesRaw.isEmpty ? null : notesRaw,
       imageUrl: parsedImage.isNotEmpty ? parsedImage : imageUrl,
     );
+  }
+
+  /// Booked party size. `guests` is the create/detail field and `partySize`
+  /// is the list field. `table.capacity` is how many seats the table has,
+  /// and is never the party size.
+  static int partySizeFromJson(Map<String, dynamic> json) {
+    final int? guests = _positiveInt(json['guests']);
+    final int? party = _positiveInt(json['partySize']);
+    final int? capacity = _tableCapacity(json['table']);
+    if (guests != null && party != null && guests != party) {
+      if (capacity != null && party == capacity && guests != capacity) {
+        return guests;
+      }
+      if (capacity != null && guests == capacity && party != capacity) {
+        return party;
+      }
+      return guests;
+    }
+    return guests ?? party ?? 0;
+  }
+
+  /// Keeps the party the customer chose when the response is empty or only
+  /// echoes the table's seat count.
+  static int partySizeFromReservation({
+    required int requested,
+    required int returned,
+    int? tableCapacity,
+  }) {
+    if (requested <= 0) {
+      return returned > 0 ? returned : 0;
+    }
+    if (returned <= 0) {
+      return requested;
+    }
+    if (tableCapacity != null &&
+        tableCapacity > 0 &&
+        returned == tableCapacity &&
+        requested != tableCapacity) {
+      return requested;
+    }
+    return returned;
+  }
+
+  static int? _tableCapacity(Object? raw) {
+    if (raw is! Map) {
+      return null;
+    }
+    return _positiveInt(Map<String, dynamic>.from(raw)['capacity']);
+  }
+
+  static int? _positiveInt(Object? raw) {
+    final int? value = _readInt(raw);
+    if (value == null || value <= 0) {
+      return null;
+    }
+    return value;
   }
 
   static int? _readInt(Object? raw) {

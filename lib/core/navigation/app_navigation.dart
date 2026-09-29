@@ -3,9 +3,42 @@ import 'package:get/get.dart';
 
 import '../../app/routes/app_routes.dart';
 
+/// Records root-navigator routes so tab cleanup can see what sits under a
+/// shell page. [NavigatorState.removeRouteBelow] asserts, while the navigator
+/// is locked, when the anchor is already the base route.
+class ShellRouteTracker extends NavigatorObserver {
+  final List<Route<dynamic>> routes = <Route<dynamic>>[];
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    routes.add(route);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    routes.remove(route);
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    routes.remove(route);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    final int index = oldRoute == null ? -1 : routes.indexOf(oldRoute);
+    if (index >= 0 && newRoute != null) {
+      routes[index] = newRoute;
+    }
+  }
+}
+
 /// Stack-safe navigation helpers shared across shell tabs and drill-down flows.
 class AppNavigation {
   AppNavigation._();
+
+  /// Installed on the root [GetMaterialApp] navigator.
+  static final ShellRouteTracker shellRouteTracker = ShellRouteTracker();
 
   static bool _shellInFlight = false;
   static bool _pushInFlight = false;
@@ -138,12 +171,49 @@ class AppNavigation {
     _activeShellSlide = null;
     _previousCustomTransition = null;
     final NavigatorState? navigator = Get.key.currentState;
-    if (navigator == null || !navigator.mounted || !shellRoute.isCurrent) {
+    if (navigator == null || !navigator.mounted || !shellRoute.isActive) {
       return;
     }
-    for (int i = 0; i < 12 && navigator.canPop(); i++) {
-      navigator.removeRouteBelow(shellRoute);
+    // Drop every route under this tab, including when a drill-down was pushed
+    // on top during the transition. Routes above [shellRoute] stay put.
+    removeRoutesBelow(navigator, shellRoute);
+  }
+
+  /// Removes routes strictly under [anchor]. Stops when [anchor] is the
+  /// bottom route. Does not pop routes above [anchor].
+  @visibleForTesting
+  static void removeRoutesBelow(
+    NavigatorState navigator,
+    Route<dynamic> anchor,
+  ) {
+    if (!anchor.isActive) {
+      return;
     }
+    final List<Route<dynamic>> tracked = shellRouteTracker.routes;
+    final bool trackedHere = tracked.contains(anchor);
+    for (int i = 0; i < 12; i++) {
+      if (trackedHere) {
+        final int index = tracked.indexOf(anchor);
+        if (index <= 0) {
+          return;
+        }
+        final Route<dynamic> below = tracked[index - 1];
+        if (!below.isActive) {
+          tracked.remove(below);
+          continue;
+        }
+      } else if (!anchor.isCurrent || !navigator.canPop()) {
+        // No stack record, and either a page sits above this tab or this tab
+        // is already the base route. Do not call removeRouteBelow in that case.
+        return;
+      }
+      navigator.removeRouteBelow(anchor);
+    }
+  }
+
+  @visibleForTesting
+  static void resetShellRouteTracker() {
+    shellRouteTracker.routes.clear();
   }
 
   /// Drill-down push: never stacks the same named route on top of itself.

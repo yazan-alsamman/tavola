@@ -63,4 +63,69 @@ void main() {
     expect(model.restaurantName, 'Cached Name');
     expect(model.imageUrl, 'cached.png');
   });
+
+  test('party size stays the booked guests when partySize echoes table capacity', () {
+    final CustomerReservationModel model = CustomerReservationModel.fromJson(
+      <String, dynamic>{
+        'reservationId': 'r3',
+        'guests': 3,
+        'partySize': 8,
+        'table': <String, dynamic>{
+          'tableId': 't1',
+          'tableNumber': 'T1',
+          'capacity': 8,
+        },
+      },
+    );
+
+    expect(model.guests, 3);
+  });
+
+  test('party size stays partySize when guests echoes table capacity', () {
+    final CustomerReservationModel model = CustomerReservationModel.fromJson(
+      <String, dynamic>{
+        'reservationId': 'r4',
+        'guests': 8,
+        'partySize': 3,
+        'table': <String, dynamic>{'capacity': 8},
+      },
+    );
+
+    expect(model.guests, 3);
+  });
+
+  test('a missing response party falls back to the number the customer chose', () {
+    expect(
+      CustomerReservationModel.partySizeFromReservation(
+        requested: 2,
+        returned: 0,
+        tableCapacity: 8,
+      ),
+      2,
+    );
+    expect(
+      CustomerReservationModel.partySizeFromReservation(
+        requested: 2,
+        returned: 8,
+        tableCapacity: 8,
+      ),
+      2,
+    );
+    expect(
+      CustomerReservationModel.partySizeFromReservation(
+        requested: 2,
+        returned: 2,
+        tableCapacity: 8,
+      ),
+      2,
+    );
+    expect(
+      CustomerReservationModel.partySizeFromReservation(
+        requested: 4,
+        returned: 4,
+        tableCapacity: 4,
+      ),
+      4,
+    );
+  });
 }

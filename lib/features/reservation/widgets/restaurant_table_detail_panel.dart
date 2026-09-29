@@ -65,6 +65,10 @@ class RestaurantTableDetailPanel extends StatelessWidget {
                     bordered: true,
                   ),
                   Text(
+                    controller.bookedGuestsLabel(),
+                    style: AppTextStyles.tableSeatCount,
+                  ),
+                  Text(
                     SelectTableController.seatsLabel(table.seatCount),
                     style: AppTextStyles.tableSeatCount,
                   ),

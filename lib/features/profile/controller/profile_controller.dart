@@ -603,6 +603,7 @@ class ProfileController extends GetxController {
             ? reservation.restaurantName
             : AppStrings.reservations,
         rescheduleReservationId: reservation.reservationId,
+        guests: reservation.guests,
       ),
     );
   }

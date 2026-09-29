@@ -38,6 +38,40 @@ class _SignedInSession extends AuthSessionController {
   void openLogin() {}
 }
 
+class _FloorPlanTables extends TableRepository {
+  _FloorPlanTables(
+    super.apiClient,
+    super.branchRepository, {
+    super.discoveryRepository,
+  });
+
+  int detailFetches = 0;
+
+  @override
+  Future<List<RestaurantTableModel>> fetchFloorPlan({
+    String? restaurantId,
+  }) async {
+    return const <RestaurantTableModel>[
+      RestaurantTableModel(
+        id: 'table-1',
+        label: 'T1',
+        seatCount: 4,
+        status: TableStatus.available,
+        positionX: 10,
+        positionY: 20,
+        width: 80,
+        height: 80,
+      ),
+    ];
+  }
+
+  @override
+  Future<RestaurantTableModel> fetchTableById(String tableId) async {
+    detailFetches += 1;
+    throw const ApiException(message: 'Not allowed', statusCode: 403);
+  }
+}
+
 class _ScriptedReservationRepository extends ReservationRepository {
   _ScriptedReservationRepository(super.client);
 
@@ -52,6 +86,7 @@ class _ScriptedReservationRepository extends ReservationRepository {
     required DateTime startTime,
     required DateTime endTime,
     required int guests,
+    int? tableCapacity,
     String? notes,
     String restaurantId = '',
     String restaurantName = '',
@@ -308,5 +343,62 @@ void main() {
       await pumpController(tester);
       await expectFailure(tester, StateError('broken parser'));
     });
+  });
+
+  testWidgets('table detail failure keeps the floor-plan table', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const GetMaterialApp(home: SizedBox.shrink()));
+    Get.put(DiscoveryRepository(Get.find<ApiClient>()));
+    Get.put(BranchRepository(Get.find<DiscoveryRepository>()));
+    final _FloorPlanTables tables = _FloorPlanTables(
+      Get.find<ApiClient>(),
+      Get.find<BranchRepository>(),
+      discoveryRepository: Get.find<DiscoveryRepository>(),
+    );
+    Get.put<TableRepository>(tables);
+    Get.put<ReservationRepository>(
+      _ScriptedReservationRepository(Get.find<ApiClient>()),
+    );
+    Get.put(WaitlistRepository(Get.find<ApiClient>()));
+    Get.put(ReservationAvailabilityRepository());
+    Get.put<AuthSessionController>(_SignedInSession());
+    Get.put(ReservationController());
+    final ReservationController reservation = Get.find<ReservationController>();
+    reservation.restaurantId.value = 'rest-1';
+    reservation.branchId.value = 'branch-1';
+    final SelectTableController select = Get.put(SelectTableController());
+    await tester.pump();
+    await tester.pump();
+
+    const RestaurantTableModel floorPlanTable = RestaurantTableModel(
+      id: 'table-1',
+      label: 'T1',
+      seatCount: 4,
+      status: TableStatus.available,
+      positionX: 10,
+      positionY: 20,
+      width: 80,
+      height: 80,
+    );
+    select.tablesError.value = null;
+    select.floorPlanTables.assignAll(<RestaurantTableModel>[floorPlanTable]);
+    select.selectTable(floorPlanTable);
+    await tester.pump();
+    await tester.pump();
+
+    expect(tables.detailFetches, 1);
+    expect(select.selectedTableId.value, 'table-1');
+    expect(select.tablesError.value, isNull);
+    expect(select.floorPlanTables, hasLength(1));
+    final RestaurantTableModel shown = select.floorPlanTables.single;
+    expect(shown.id, 'table-1');
+    expect(shown.label, 'T1');
+    expect(shown.seatCount, 4);
+    expect(shown.positionX, 10);
+    expect(shown.positionY, 20);
+    expect(shown.width, 80);
+    expect(shown.height, 80);
+    expect(shown.status, TableStatus.available);
   });
 }

@@ -243,24 +243,36 @@ class SelectTableController extends GetxController {
   }
 
   Future<void> _refreshSelectedTableDetails(String tableId) async {
-    if (_restaurantId() == null) {
+    final String id = tableId.trim();
+    if (id.isEmpty || isClosed || _restaurantId() == null) {
       return;
     }
     try {
       final RestaurantTableModel fresh = await _tableRepository.fetchTableById(
-        tableId,
+        id,
       );
+      if (isClosed || selectedTableId.value != id) {
+        return;
+      }
+      if (fresh.id.isEmpty || fresh.id != id) {
+        return;
+      }
       final int index = floorPlanTables.indexWhere(
-        (RestaurantTableModel item) => item.id == fresh.id,
+        (RestaurantTableModel item) => item.id == id,
       );
-      if (index >= 0) {
-        floorPlanTables[index] = floorPlanTables[index].overlayWith(fresh);
+      if (index < 0) {
+        return;
       }
-      if (selectedTableId.value == tableId) {
-        selectedTableId.value = fresh.id;
+      // Authenticated table read may add status/capacity. Geometry already
+      // on the floor-plan row is kept when the detail payload omits it.
+      floorPlanTables[index] = floorPlanTables[index].overlayWith(fresh);
+    } on ApiException catch (error) {
+      if (error.isCancelled || isClosed) {
+        return;
       }
+      // Keep the public floor-plan table. Do not invent a replacement.
     } catch (_) {
-      // Keep the list snapshot if get-by-id fails.
+      // Keep the public floor-plan table. Do not invent a replacement.
     }
   }
 
@@ -334,6 +346,7 @@ class SelectTableController extends GetxController {
           startTime: window.startTime,
           endTime: window.endTime,
           guests: window.partySize,
+          tableCapacity: table.seatCount,
         );
       } else {
         created = await _reservationRepository.createReservation(
@@ -342,11 +355,16 @@ class SelectTableController extends GetxController {
           startTime: window.startTime,
           endTime: window.endTime,
           guests: window.partySize,
+          tableCapacity: table.seatCount,
           restaurantId: reservation.restaurantId.value,
           restaurantName: reservation.restaurantName.value,
         );
       }
-      _showLocalConfirmation(table, created.reservationId);
+      _showLocalConfirmation(
+        table,
+        created.reservationId,
+        guestCount: created.guests,
+      );
       if (Get.isRegistered<ProfileController>()) {
         Get.find<ProfileController>().refreshReservations();
       }
@@ -463,11 +481,14 @@ class SelectTableController extends GetxController {
 
   void _showLocalConfirmation(
     RestaurantTableModel table,
-    String referenceCode,
-  ) {
+    String referenceCode, {
+    int? guestCount,
+  }) {
     confirmation.value = ReservationConfirmationModel(
       restaurantName: _restaurantName(),
-      guestsLabel: _guestsLabel(),
+      guestsLabel: guestCount != null && guestCount > 0
+          ? _formatGuests(guestCount)
+          : _guestsLabel(),
       dateLabel: _dateLabel(),
       tableLabel: _tableLabel(table),
       referenceCode: referenceCode,
@@ -517,17 +538,22 @@ class SelectTableController extends GetxController {
     return id.isEmpty ? null : id;
   }
 
+  String bookedGuestsLabel() => _guestsLabel();
+
   String _guestsLabel() {
     final ReservationController? reservation = _reservationOrNull();
     if (reservation == null) {
-      return '${AppDimensions.reservationDefaultDinerCount} ${AppStrings.guestPlural}';
+      return _formatGuests(AppDimensions.reservationDefaultDinerCount);
     }
+    return _formatGuests(reservation.dinerCount.value);
+  }
 
-    final int count = reservation.dinerCount.value;
-    final String guestWord = count == 1
+  static String _formatGuests(int count) {
+    final int party = count < 1 ? 1 : count;
+    final String guestWord = party == 1
         ? AppStrings.guestSingular
         : AppStrings.guestPlural;
-    return '$count $guestWord';
+    return '$party $guestWord';
   }
 
   String _dateLabel() {

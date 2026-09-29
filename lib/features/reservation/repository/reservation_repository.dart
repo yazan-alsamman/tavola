@@ -349,6 +349,7 @@ class ReservationRepository {
     required DateTime startTime,
     required DateTime endTime,
     required int guests,
+    int? tableCapacity,
     String? notes,
     String restaurantId = '',
     String restaurantName = '',
@@ -385,6 +386,11 @@ class ReservationRepository {
           ? restaurantName
           : response.data.restaurantName,
       imageUrl: imageUrl.isNotEmpty ? imageUrl : response.data.imageUrl,
+      guests: CustomerReservationModel.partySizeFromReservation(
+        requested: guests,
+        returned: response.data.guests,
+        tableCapacity: tableCapacity,
+      ),
     );
     _upsert(created);
     if (created.isActive) {
@@ -426,6 +432,7 @@ class ReservationRepository {
     DateTime? startTime,
     DateTime? endTime,
     int? guests,
+    int? tableCapacity,
   }) async {
     await _ensureAuthenticated();
     final Map<String, dynamic> data = <String, dynamic>{};
@@ -455,18 +462,29 @@ class ReservationRepository {
             imageUrl: _cachedImage(reservationId),
           ),
         );
-    _upsert(response.data);
-    if (response.data.isActive) {
-      _upsertInto(upcomingReservations, response.data);
+    final int? requestedGuests = guests;
+    final CustomerReservationModel rescheduled =
+        requestedGuests == null
+        ? response.data
+        : response.data.copyWith(
+            guests: CustomerReservationModel.partySizeFromReservation(
+              requested: requestedGuests,
+              returned: response.data.guests,
+              tableCapacity: tableCapacity,
+            ),
+          );
+    _upsert(rescheduled);
+    if (rescheduled.isActive) {
+      _upsertInto(upcomingReservations, rescheduled);
       historyReservationsList.removeWhere(
         (CustomerReservationModel item) =>
-            item.reservationId == response.data.reservationId,
+            item.reservationId == rescheduled.reservationId,
       );
       historyReservationsList.refresh();
     } else {
-      _moveToHistory(response.data);
+      _moveToHistory(rescheduled);
     }
-    return response.data;
+    return rescheduled;
   }
 
   void _moveToHistory(CustomerReservationModel reservation) {
