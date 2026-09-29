@@ -22,7 +22,7 @@ void main() {
     expect(rect.height, 72);
   });
 
-  test('canvas origin stays top-left and includes every table extent', () {
+  test('content bounds use the real minimum and do not rewrite API geometry', () {
     final List<RestaurantTableModel> tables = <RestaurantTableModel>[
       RestaurantTableModel.fromJson(liveT1Json),
       RestaurantTableModel.fromJson(liveT5Json),
@@ -36,14 +36,93 @@ void main() {
       }),
     ];
 
-    final Size canvas = FloorPlanGeometry.canvasSize(tables);
-    expect(canvas.width, greaterThan(832 + 128));
-    expect(canvas.height, greaterThan(368 + 72));
+    final Rect bounds = FloorPlanGeometry.contentBounds(tables)!;
+    expect(bounds.left, lessThan(464));
+    expect(bounds.right, greaterThan(832 + 128));
+    expect(bounds.bottom, greaterThan(368 + 72));
+    expect(bounds.left, isNot(0));
     expect(
       FloorPlanGeometry.tableRect(tables[0])!.left,
       464,
       reason: 'T1 X is not remapped to the canvas bounding box',
     );
+    expect(tables[0].positionX, 464);
+  });
+
+  test('rotated geometry stays inside the viewport without changing API values', () {
+    final RestaurantTableModel table = RestaurantTableModel.fromJson(
+      <String, dynamic>{
+        'tableId': 'rotated',
+        'tableNumber': 'T9',
+        'positionX': -40,
+        'positionY': 800,
+        'width': 200,
+        'height': 40,
+        'rotation': 45,
+      },
+    );
+    const Size viewport = Size(390, 520);
+    final Rect bounds = FloorPlanGeometry.contentBounds(
+      <RestaurantTableModel>[table],
+    )!;
+    final FloorPlanFrame frame = FloorPlanGeometry.frameContent(
+      viewport: viewport,
+      content: bounds,
+    );
+    final Rect occupied = FloorPlanGeometry.occupiedBounds(table)!;
+
+    expect(table.positionX, -40);
+    expect(table.positionY, 800);
+    expect(table.width, 200);
+    expect(table.height, 40);
+    expect(table.rotation, 45);
+    expect(occupied.height, greaterThan(table.height!));
+    expect(occupied, isNot(FloorPlanGeometry.tableRect(table)));
+    expect(frame.scale, greaterThan(0));
+    expect(frame.x(occupied.left), greaterThanOrEqualTo(0));
+    expect(frame.y(occupied.top), greaterThanOrEqualTo(0));
+    expect(frame.x(occupied.right), lessThanOrEqualTo(viewport.width));
+    expect(frame.y(occupied.bottom), lessThanOrEqualTo(viewport.height));
+    expect(
+      (frame.x(occupied.right) - frame.x(occupied.left)) / occupied.width,
+      closeTo(frame.scale, 0.0001),
+    );
+  });
+
+  test('distant tables keep one uniform scale inside a small viewport', () {
+    final List<RestaurantTableModel> tables = <RestaurantTableModel>[
+      RestaurantTableModel.fromJson(<String, dynamic>{
+        'tableId': 'near',
+        'tableNumber': 'A',
+        'positionX': 20,
+        'positionY': 20,
+        'width': 40,
+        'height': 40,
+      }),
+      RestaurantTableModel.fromJson(<String, dynamic>{
+        'tableId': 'far',
+        'tableNumber': 'B',
+        'positionX': 4000,
+        'positionY': 20,
+        'width': 80,
+        'height': 30,
+      }),
+    ];
+    const Size viewport = Size(320, 180);
+    final FloorPlanFrame frame = FloorPlanGeometry.frameContent(
+      viewport: viewport,
+      content: FloorPlanGeometry.contentBounds(tables)!,
+    );
+    final Rect first = FloorPlanGeometry.occupiedBounds(tables[0])!;
+    final Rect second = FloorPlanGeometry.occupiedBounds(tables[1])!;
+
+    expect(frame.length(80) / 80, frame.scale);
+    expect(frame.length(40) / 40, frame.scale);
+    expect(frame.x(first.left), greaterThanOrEqualTo(0));
+    expect(frame.x(second.right), lessThanOrEqualTo(viewport.width));
+    expect(frame.y(first.top), greaterThanOrEqualTo(0));
+    expect(frame.y(second.bottom), lessThanOrEqualTo(viewport.height));
+    expect(tables[1].positionX, 4000);
   });
 
   test('missing geometry is not invented', () {
@@ -179,6 +258,51 @@ void main() {
     expect(terrace.contains(const Offset(160, 560)), isTrue);
     expect(vip.width, greaterThan(80 + 48));
     expect(terrace.width, greaterThan(96 + 48));
+  });
+
+  test('area chrome wraps member tables and the measured label', () {
+    final RestaurantTableModel table = RestaurantTableModel.fromJson(
+      <String, dynamic>{
+        'tableId': 't-hall',
+        'tableNumber': 'T6',
+        'floorPlanAreaId': 'hall',
+        'positionX': 500,
+        'positionY': 240,
+        'width': 80,
+        'height': 40,
+      },
+    );
+    const FloorPlanAreaModel area = FloorPlanAreaModel(
+      id: 'hall',
+      name: 'Main Hall',
+      sortOrder: 0,
+      positionX: 0,
+      positionY: 0,
+      width: 2000,
+      height: 2000,
+    );
+    final Rect cluster = FloorPlanGeometry.areaCluster(
+      area,
+      <RestaurantTableModel>[table],
+    )!;
+    final Rect wrapped = FloorPlanGeometry.encloseCluster(
+      cluster: cluster,
+      sideApi: 12,
+      topBandApi: 18,
+      minWidthApi: 90,
+    );
+
+    expect(table.positionX, 500);
+    expect(table.positionY, 240);
+    expect(area.positionX, 0);
+    expect(area.width, 2000);
+    expect(cluster.left, greaterThan(400));
+    expect(wrapped.top, lessThan(cluster.top));
+    expect(wrapped.left, lessThanOrEqualTo(cluster.left));
+    expect(wrapped.right, greaterThanOrEqualTo(cluster.right));
+    expect(wrapped.bottom, greaterThanOrEqualTo(cluster.bottom));
+    expect(wrapped.width, greaterThanOrEqualTo(90));
+    expect(wrapped.contains(cluster.center), isTrue);
   });
 
   test('explicit API area bounds are used unchanged', () {

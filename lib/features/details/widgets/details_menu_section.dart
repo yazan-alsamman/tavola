@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -71,19 +73,29 @@ class DetailsMenuSection extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.regularSpacing),
           ],
-          Text(
-            category.name,
-            style: AppTextStyles.sectionTitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (category.description.isNotEmpty) ...[
-            const SizedBox(height: AppDimensions.tinySpacing),
-            Text(
-              category.description,
-              style: AppTextStyles.detailsMenuItemDescription,
+          _MenuGlassCard(
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.contentPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.name,
+                    style: AppTextStyles.sectionTitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (category.description.isNotEmpty) ...[
+                    const SizedBox(height: AppDimensions.tinySpacing),
+                    Text(
+                      category.description,
+                      style: AppTextStyles.detailsMenuItemDescription,
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ],
+          ),
           const SizedBox(height: AppDimensions.regularSpacing),
           ...category.items.map(_buildItem),
         ],
@@ -94,40 +106,14 @@ class DetailsMenuSection extends StatelessWidget {
   Widget _buildItem(MenuItemModel item) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppDimensions.regularSpacing),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
-          border: Border.all(
-            color: AppColors.border,
-            width: AppDimensions.cardBorderWidth,
-          ),
-          boxShadow: const <BoxShadow>[
-            BoxShadow(
-              color: AppColors.primaryDark10,
-              blurRadius: AppDimensions.shadowBlur,
-              offset: Offset(0, AppDimensions.shadowOffsetY),
-            ),
-          ],
-        ),
+      child: _MenuGlassCard(
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.compactHorizontalPadding),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (item.imageUrl.isNotEmpty) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.detailsAmenityRadius,
-                  ),
-                  child: SizedBox(
-                    width: AppDimensions.detailsMenuItemImageSize,
-                    height: AppDimensions.detailsMenuItemImageSize,
-                    child: AppSafeImage(path: item.imageUrl, fit: BoxFit.cover),
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.regularSpacing),
-              ],
+              _buildMenuImage(item),
+              const SizedBox(width: AppDimensions.regularSpacing),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,9 +139,9 @@ class DetailsMenuSection extends StatelessWidget {
                     ],
                     if (item.price.isNotEmpty) ...[
                       const SizedBox(height: AppDimensions.smallSpacing),
-                      Text(
-                        item.price,
-                        style: AppTextStyles.detailsMenuItemPrice,
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: _MenuPriceChip(price: item.price),
                       ),
                     ],
                   ],
@@ -164,6 +150,41 @@ class DetailsMenuSection extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMenuImage(MenuItemModel item) {
+    final BorderRadius radius = BorderRadius.circular(
+      AppDimensions.detailsAmenityRadius,
+    );
+    return ClipRRect(
+      borderRadius: radius,
+      child: SizedBox(
+        width: AppDimensions.detailsMenuItemImageSize,
+        height: AppDimensions.detailsMenuItemImageSize,
+        child: item.imageUrl.isNotEmpty
+            ? AppSafeImage(path: item.imageUrl, fit: BoxFit.cover)
+            : DecoratedBox(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[
+                      AppColors.secondaryLight,
+                      AppColors.accent,
+                    ],
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Symbols.restaurant,
+                    color: AppColors.textLight,
+                    size: AppDimensions.mediumIconSize,
+                    fill: 1,
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -200,6 +221,78 @@ class _FeaturedBadge extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MenuGlassCard extends StatelessWidget {
+  const _MenuGlassCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final BorderRadius radius = BorderRadius.circular(AppDimensions.cardRadius);
+    return ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: AppDimensions.shadowBlur,
+          sigmaY: AppDimensions.shadowBlur,
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                AppColors.surface75,
+                AppColors.surfaceAlt90,
+              ],
+            ),
+            borderRadius: radius,
+            border: Border.all(
+              color: AppColors.border,
+              width: AppDimensions.cardBorderWidth,
+            ),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: AppColors.primaryDark10,
+                blurRadius: AppDimensions.shadowBlur,
+                offset: Offset(0, AppDimensions.shadowOffsetY),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuPriceChip extends StatelessWidget {
+  const _MenuPriceChip({required this.price});
+
+  final String price;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.secondaryLight,
+        borderRadius: BorderRadius.circular(AppDimensions.pillRadius),
+        border: Border.all(
+          color: AppColors.border,
+          width: AppDimensions.cardBorderWidth,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.badgePaddingHorizontal,
+          vertical: AppDimensions.compactBadgePaddingVertical,
+        ),
+        child: Text(price, style: AppTextStyles.detailsMenuItemPrice),
       ),
     );
   }

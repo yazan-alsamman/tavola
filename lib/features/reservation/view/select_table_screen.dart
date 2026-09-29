@@ -10,7 +10,6 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../../waitlist/widgets/waitlist_full_tables_card.dart';
 import '../controller/select_table_controller.dart';
-import '../model/floor_plan_geometry.dart';
 import '../widgets/floor_plan_live_time_badge.dart';
 import '../widgets/restaurant_floor_map.dart';
 import '../widgets/reservation_confirmation_overlay.dart';
@@ -218,37 +217,8 @@ class SelectTableScreen extends StatelessWidget {
                                             );
                                           }
 
-                                          final Size canvas =
-                                              FloorPlanGeometry.canvasSize(
-                                                controller.floorPlanTables
-                                                    .toList(growable: false),
-                                                areas: controller.floorPlanAreas
-                                                    .toList(growable: false),
-                                              );
-                                          return LayoutBuilder(
-                                            builder:
-                                                (
-                                                  BuildContext context,
-                                                  BoxConstraints constraints,
-                                                ) {
-                                                  final double width =
-                                                      constraints.maxWidth;
-                                                  final double height =
-                                                      canvas.width <= 0 ||
-                                                          canvas.height <= 0
-                                                      ? AppDimensions
-                                                            .floorPlanContainerHeight
-                                                      : width *
-                                                            (canvas.height /
-                                                                canvas.width);
-                                                  return SizedBox(
-                                                    width: width,
-                                                    height: height,
-                                                    child: RestaurantFloorMap(
-                                                      controller: controller,
-                                                    ),
-                                                  );
-                                                },
+                                          return RestaurantFloorMap(
+                                            controller: controller,
                                           );
                                         }),
                                       ),

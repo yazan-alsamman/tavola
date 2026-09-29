@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -91,24 +89,16 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
                                   .controller
                                   .floorPlanAreas
                                   .toList(growable: false);
-                              final Size canvas = FloorPlanGeometry.canvasSize(
-                                tables,
+                              final Size viewport = Size(mapWidth, mapHeight);
+                              final _FloorPlanLayout layout = _layoutFloorPlan(
+                                viewport: viewport,
+                                tables: tables,
                                 areas: areas,
+                                textDirection: Directionality.of(context),
                               );
-                              final double scale =
-                                  canvas.width <= 0 || canvas.height <= 0
-                                  ? 1
-                                  : math.min(
-                                      mapWidth / canvas.width,
-                                      mapHeight / canvas.height,
-                                    );
-                              final double offsetX =
-                                  (mapWidth - canvas.width * scale) / 2;
-                              final double offsetY =
-                                  (mapHeight - canvas.height * scale) / 2;
 
                               return Stack(
-                                clipBehavior: Clip.hardEdge,
+                                clipBehavior: Clip.none,
                                 children: [
                                   const SizedBox.expand(
                                     child: CustomPaint(
@@ -118,20 +108,14 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
                                   ...areas.map(
                                     (FloorPlanAreaModel area) => _buildArea(
                                       area,
-                                      tables,
-                                      areas: areas,
-                                      scale: scale,
-                                      offsetX: offsetX,
-                                      offsetY: offsetY,
+                                      layout: layout,
                                     ),
                                   ),
                                   ...tables.map(
                                     (RestaurantTableModel table) =>
                                         _buildMapTable(
                                           table,
-                                          scale: scale,
-                                          offsetX: offsetX,
-                                          offsetY: offsetY,
+                                          frame: layout.frame,
                                         ),
                                   ),
                                 ],
@@ -151,17 +135,14 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
   }
 
   Widget _buildArea(
-    FloorPlanAreaModel area,
-    List<RestaurantTableModel> tables, {
-    required List<FloorPlanAreaModel> areas,
-    required double scale,
-    required double offsetX,
-    required double offsetY,
+    FloorPlanAreaModel area, {
+    required _FloorPlanLayout layout,
   }) {
-    final Rect? rect = FloorPlanGeometry.areaRect(area, tables, areas: areas);
+    final Rect? rect = layout.areas[area.id];
     if (rect == null) {
       return const SizedBox.shrink();
     }
+    final FloorPlanFrame frame = layout.frame;
     final Color color = area.colorValue ?? AppColors.border;
     final String? translationKey = FloorPlanAreaModel.translationKeyFor(
       area.name,
@@ -169,10 +150,10 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
     final String label = translationKey == null ? area.name : translationKey.tr;
     return Positioned(
       key: ValueKey<String>('floor-plan-area-${area.id}'),
-      left: rect.left * scale + offsetX,
-      top: rect.top * scale + offsetY,
-      width: rect.width * scale,
-      height: rect.height * scale,
+      left: frame.x(rect.left),
+      top: frame.y(rect.top),
+      width: frame.length(rect.width),
+      height: frame.length(rect.height),
       child: IgnorePointer(
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -208,19 +189,17 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
 
   Widget _buildMapTable(
     RestaurantTableModel table, {
-    required double scale,
-    required double offsetX,
-    required double offsetY,
+    required FloorPlanFrame frame,
   }) {
     final Rect? rect = FloorPlanGeometry.tableRect(table);
     if (rect == null) {
       return const SizedBox.shrink();
     }
 
-    final double left = rect.left * scale + offsetX;
-    final double top = rect.top * scale + offsetY;
-    final double width = rect.width * scale;
-    final double height = rect.height * scale;
+    final double left = frame.x(rect.left);
+    final double top = frame.y(rect.top);
+    final double width = frame.length(rect.width);
+    final double height = frame.length(rect.height);
     if (width <= 0 || height <= 0) {
       return const SizedBox.shrink();
     }
@@ -304,6 +283,97 @@ class FloorPlanPlacedTable extends StatelessWidget {
             ),
     );
   }
+}
+
+class _FloorPlanLayout {
+  const _FloorPlanLayout({required this.frame, required this.areas});
+
+  final FloorPlanFrame frame;
+  final Map<String, Rect> areas;
+}
+
+_FloorPlanLayout _layoutFloorPlan({
+  required Size viewport,
+  required List<RestaurantTableModel> tables,
+  required List<FloorPlanAreaModel> areas,
+  required TextDirection textDirection,
+}) {
+  final Rect? tablesBounds = FloorPlanGeometry.contentBounds(tables);
+  if (tablesBounds == null) {
+    return const _FloorPlanLayout(
+      frame: FloorPlanFrame.identity,
+      areas: <String, Rect>{},
+    );
+  }
+
+  FloorPlanFrame frame = FloorPlanGeometry.frameContent(
+    viewport: viewport,
+    content: tablesBounds,
+    inset: 0,
+  );
+  Map<String, Rect> visual = <String, Rect>{};
+  for (int pass = 0; pass < 3; pass++) {
+    final double scale = frame.scale <= 0 ? 1 : frame.scale;
+    visual = <String, Rect>{};
+    Rect? content;
+    final Set<String> placed = <String>{};
+    for (final FloorPlanAreaModel area in areas) {
+      final Rect? cluster = FloorPlanGeometry.areaCluster(area, tables);
+      if (cluster == null) {
+        continue;
+      }
+      final Size label = _labelSize(_areaLabel(area), textDirection);
+      final Rect wrapped = FloorPlanGeometry.encloseCluster(
+        cluster: cluster,
+        sideApi: label.height / scale,
+        topBandApi: label.height / scale,
+        minWidthApi: label.width / scale,
+      );
+      visual[area.id] = wrapped;
+      content = content == null ? wrapped : content.expandToInclude(wrapped);
+      for (final RestaurantTableModel table in tables) {
+        if (table.floorPlanAreaId == area.id) {
+          placed.add(table.id);
+        }
+      }
+    }
+    for (final RestaurantTableModel table in tables) {
+      if (placed.contains(table.id)) {
+        continue;
+      }
+      final Rect? occupied = FloorPlanGeometry.occupiedBounds(table);
+      if (occupied == null) {
+        continue;
+      }
+      content = content == null ? occupied : content.expandToInclude(occupied);
+    }
+    frame = FloorPlanGeometry.frameContent(
+      viewport: viewport,
+      content: content ?? tablesBounds,
+      inset: 0,
+    );
+  }
+
+  return _FloorPlanLayout(frame: frame, areas: visual);
+}
+
+String _areaLabel(FloorPlanAreaModel area) {
+  final String? translationKey = FloorPlanAreaModel.translationKeyFor(
+    area.name,
+  );
+  return translationKey == null ? area.name : translationKey.tr;
+}
+
+Size _labelSize(String label, TextDirection textDirection) {
+  if (label.trim().isEmpty) {
+    return Size.zero;
+  }
+  final TextPainter painter = TextPainter(
+    text: TextSpan(text: label, style: AppTextStyles.floorPlanLiveLabel),
+    textDirection: textDirection,
+    maxLines: 1,
+  )..layout();
+  return Size(painter.width, painter.height);
 }
 
 class _RestaurantMapPainter extends CustomPainter {

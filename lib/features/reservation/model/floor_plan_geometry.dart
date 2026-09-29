@@ -13,32 +13,132 @@ import 'restaurant_table_model.dart';
 class FloorPlanGeometry {
   const FloorPlanGeometry._();
 
-  /// Canvas origin stays (0, 0). Size is the axis-aligned extent of API tables
-  /// and the dining-area bounds derived from those tables.
-  static Size canvasSize(
-    List<RestaurantTableModel> tables, {
-    List<FloorPlanAreaModel> areas = const <FloorPlanAreaModel>[],
-  }) {
-    double maxX = 0;
-    double maxY = 0;
-    void include(Rect? rect) {
-      if (rect == null) {
-        return;
-      }
-      maxX = math.max(maxX, rect.right);
-      maxY = math.max(maxY, rect.bottom);
+  /// Axis-aligned size of [contentBounds]. Does not move API coordinates.
+  static Size canvasSize(List<RestaurantTableModel> tables) {
+    final Rect? bounds = contentBounds(tables);
+    if (bounds == null) {
+      return Size.zero;
     }
+    return Size(bounds.width, bounds.height);
+  }
 
+  /// Union of rotated table extents, including the chair orbit.
+  /// The minimum is the real geometry, not (0, 0).
+  static Rect? contentBounds(List<RestaurantTableModel> tables) {
+    Rect? bounds;
     for (final RestaurantTableModel table in tables) {
-      include(tableRect(table));
+      bounds = _include(bounds, occupiedBounds(table));
     }
-    for (final FloorPlanAreaModel area in areas) {
-      include(areaRect(area, tables, areas: areas));
+    return bounds;
+  }
+
+  /// Occupied extent of the tables that belong to [area].
+  /// Falls back to an explicit API box only when the area has no tables.
+  static Rect? areaCluster(
+    FloorPlanAreaModel area,
+    List<RestaurantTableModel> tables,
+  ) {
+    Rect? bounds;
+    for (final RestaurantTableModel table in tables) {
+      if (table.floorPlanAreaId != area.id) {
+        continue;
+      }
+      bounds = _include(bounds, occupiedBounds(table));
     }
-    return Size(
-      maxX + AppDimensions.floorPlanCanvasPadding,
-      maxY + AppDimensions.floorPlanCanvasPadding,
+    if (bounds != null || !area.hasExplicitBounds) {
+      return bounds;
+    }
+    return Rect.fromLTWH(
+      area.positionX!,
+      area.positionY!,
+      area.width!,
+      area.height!,
     );
+  }
+
+  /// Grows [cluster] so the measured label fits around it.
+  /// [sideApi], [topBandApi], and [minWidthApi] are label measurements
+  /// converted by the current render scale. API fields are not written.
+  static Rect encloseCluster({
+    required Rect cluster,
+    required double sideApi,
+    required double topBandApi,
+    required double minWidthApi,
+  }) {
+    final double side = sideApi > 0 ? sideApi : 0;
+    final double band = topBandApi > 0 ? topBandApi : 0;
+    double left = cluster.left - side;
+    double right = cluster.right + side;
+    final double width = right - left;
+    if (minWidthApi > width) {
+      final double extra = (minWidthApi - width) / 2;
+      left -= extra;
+      right += extra;
+    }
+    return Rect.fromLTRB(
+      left,
+      cluster.top - side - band,
+      right,
+      cluster.bottom + side,
+    );
+  }
+
+  static Rect? _include(Rect? bounds, Rect? rect) {
+    if (rect == null || rect.width <= 0 || rect.height <= 0) {
+      return bounds;
+    }
+    return bounds == null ? rect : bounds.expandToInclude(rect);
+  }
+
+  /// API rectangle expanded by the chair orbit, then rotated about its center.
+  /// The stored position, size, and rotation are not changed.
+  static Rect? occupiedBounds(RestaurantTableModel table) {
+    final Rect? rect = tableRect(table);
+    if (rect == null) {
+      return null;
+    }
+    final double reach =
+        math.min(rect.width, rect.height) *
+        AppDimensions.floorPlanSeatOrbitFraction;
+    final Rect padded = Rect.fromLTRB(
+      rect.left - reach,
+      rect.top - reach,
+      rect.right + reach,
+      rect.bottom + reach,
+    );
+    return _rotatedAabb(padded, table.rotation ?? 0);
+  }
+
+  static Rect _rotatedAabb(Rect rect, double degrees) {
+    final double turns = degrees / 360;
+    if (turns == turns.roundToDouble()) {
+      return rect;
+    }
+    final double radians = degrees * math.pi / 180;
+    final double cosR = math.cos(radians);
+    final double sinR = math.sin(radians);
+    final double cx = rect.center.dx;
+    final double cy = rect.center.dy;
+    double minX = double.infinity;
+    double minY = double.infinity;
+    double maxX = double.negativeInfinity;
+    double maxY = double.negativeInfinity;
+    for (final Offset corner in <Offset>[
+      rect.topLeft,
+      rect.topRight,
+      rect.bottomRight,
+      rect.bottomLeft,
+    ]) {
+      final double dx = corner.dx - cx;
+      final double dy = corner.dy - cy;
+      final double x = cx + dx * cosR - dy * sinR;
+      final double y = cy + dx * sinR + dy * cosR;
+      minX = math.min(minX, x);
+      minY = math.min(minY, y);
+      maxX = math.max(maxX, x);
+      maxY = math.max(maxY, y);
+    }
+    return Rect.fromLTRB(minX, minY, maxX, maxY);
   }
 
   /// Area box from the API.
@@ -195,24 +295,82 @@ class FloorPlanGeometry {
   }
 
   /// Fit-to-viewport scale/translate. Does not change stored X/Y/width/height.
+  ///
+  /// [canvas] is treated as a box whose top-left is (0, 0). Prefer
+  /// [frameContent] when the geometry's minimum is not the origin.
   static Matrix4 fitToViewport({required Size viewport, required Size canvas}) {
+    final FloorPlanFrame frame = frameContent(
+      viewport: viewport,
+      content: Rect.fromLTWH(0, 0, canvas.width, canvas.height),
+    );
+    return Matrix4.identity()
+      ..translateByDouble(frame.dx, frame.dy, 0, 1)
+      ..scaleByDouble(frame.scale, frame.scale, 1, 1);
+  }
+
+  /// Uniform scale and translation from API space into [viewport].
+  ///
+  /// The inset is a fraction of the shorter viewport edge, so the same
+  /// geometry stays inside a phone, a tablet, portrait, and landscape.
+  static FloorPlanFrame frameContent({
+    required Size viewport,
+    required Rect content,
+    double? inset,
+  }) {
     if (viewport.width <= 0 ||
         viewport.height <= 0 ||
-        canvas.width <= 0 ||
-        canvas.height <= 0) {
-      return Matrix4.identity();
+        content.width <= 0 ||
+        content.height <= 0) {
+      return FloorPlanFrame.identity;
+    }
+
+    final double resolvedInset =
+        inset ??
+        math.min(viewport.width, viewport.height) *
+            AppDimensions.floorPlanViewportInsetFraction;
+    final double innerWidth = viewport.width - resolvedInset * 2;
+    final double innerHeight = viewport.height - resolvedInset * 2;
+    if (innerWidth <= 0 || innerHeight <= 0) {
+      return FloorPlanFrame.identity;
     }
 
     final double scale = math.min(
-      viewport.width / canvas.width,
-      viewport.height / canvas.height,
+      innerWidth / content.width,
+      innerHeight / content.height,
     );
-    final double dx = (viewport.width - canvas.width * scale) / 2;
-    final double dy = (viewport.height - canvas.height * scale) / 2;
-    return Matrix4.identity()
-      ..translateByDouble(dx, dy, 0, 1)
-      ..scaleByDouble(scale, scale, 1, 1);
+    final double usedWidth = content.width * scale;
+    final double usedHeight = content.height * scale;
+    return FloorPlanFrame(
+      scale: scale,
+      dx: (viewport.width - usedWidth) / 2 - content.left * scale,
+      dy: (viewport.height - usedHeight) / 2 - content.top * scale,
+    );
   }
+}
+
+/// Presentation-only map from API coordinates into the floor-plan viewport.
+class FloorPlanFrame {
+  const FloorPlanFrame({
+    required this.scale,
+    required this.dx,
+    required this.dy,
+  });
+
+  static const FloorPlanFrame identity = FloorPlanFrame(
+    scale: 1,
+    dx: 0,
+    dy: 0,
+  );
+
+  final double scale;
+  final double dx;
+  final double dy;
+
+  double x(double apiX) => apiX * scale + dx;
+
+  double y(double apiY) => apiY * scale + dy;
+
+  double length(double apiLength) => apiLength * scale;
 }
 
 class _AreaBand {

@@ -282,7 +282,12 @@ class AppDimensions {
 
   static const double floorPlanLegendDotSize = 12.0;
   static const double floorPlanTableRadius = 16.0;
-  static const double floorPlanCanvasPadding = 24.0;
+
+  /// Share of the shorter viewport edge left empty around fitted geometry.
+  static const double floorPlanViewportInsetFraction = 0.06;
+
+  /// Chair orbit as a fraction of the table's shorter side. Presentation only.
+  static const double floorPlanSeatOrbitFraction = 0.16;
   static const double floorPlanContainerHeight = 600.0;
   static const double floorPlanMapMinScale = 1.0;
   static const double floorPlanMapMaxScale = 2.4;

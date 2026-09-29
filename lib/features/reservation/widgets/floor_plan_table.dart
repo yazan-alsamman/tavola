@@ -40,7 +40,8 @@ class FloorPlanTable extends StatelessWidget {
     final double bodyHeight = isCircle ? math.min(width, height) : height;
     final double chairDepth = math.max(
       AppDimensions.tinySpacing * 2,
-      math.min(bodyWidth, bodyHeight) * 0.16,
+      math.min(bodyWidth, bodyHeight) *
+          AppDimensions.floorPlanSeatOrbitFraction,
     );
     final double chairWidth = chairDepth * 1.35;
     final double gap = AppDimensions.tinySpacing;
