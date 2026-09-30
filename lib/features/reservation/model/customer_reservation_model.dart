@@ -1,5 +1,6 @@
 import '../../../core/network/api_exception.dart';
 import '../../../core/utils/media_url_resolver.dart';
+import 'reservation_status.dart';
 
 /// Customer reservation DTO from create/cancel/reschedule and
 /// `GET /reservations/my*` (enriched list + flat detail).
@@ -32,11 +33,10 @@ class CustomerReservationModel {
   final String? notes;
   final String imageUrl;
 
-  /// Pending / Approved (case-insensitive; API uses PascalCase).
-  bool get isActive {
-    final String normalized = status.trim().toLowerCase();
-    return normalized == 'pending' || normalized == 'approved';
-  }
+  /// Open bookings are API `Pending` or `Approved` only.
+  bool get isActive => ReservationStatusApi.isOpen(status);
+
+  String get customerStatusLabel => ReservationStatusApi.customerLabel(status);
 
   CustomerReservationModel copyWith({
     String? reservationId,
@@ -74,9 +74,7 @@ class CustomerReservationModel {
     String restaurantName = '',
     String imageUrl = '',
   }) {
-    final String parsedName = ApiException.coerceString(
-      json['restaurantName'],
-    );
+    final String parsedName = ApiException.coerceString(json['restaurantName']);
     final String parsedImage = MediaUrlResolver.resolve(
       json['restaurantImage'] ??
           json['imageUrl'] ??

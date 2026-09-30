@@ -64,6 +64,11 @@ extension TableStatusTheme on TableStatus {
         return AppStrings.tableCleaning;
       case TableStatus.disabled:
         return AppStrings.tableDisabled;
+      case TableStatus.reserved:
+        return AppStrings.tableReserved;
+      case TableStatus.merged:
+      case TableStatus.unrecognized:
+        return AppStrings.tableUnavailable;
     }
   }
 
@@ -76,7 +81,11 @@ extension TableStatusTheme on TableStatus {
       case TableStatus.cleaning:
         return AppColors.surfaceAlt;
       case TableStatus.disabled:
+      case TableStatus.merged:
+      case TableStatus.unrecognized:
         return AppColors.disabled;
+      case TableStatus.reserved:
+        return AppColors.accent;
     }
   }
 
@@ -89,7 +98,11 @@ extension TableStatusTheme on TableStatus {
       case TableStatus.cleaning:
         return AppColors.textSecondary;
       case TableStatus.disabled:
+      case TableStatus.merged:
+      case TableStatus.unrecognized:
         return AppColors.textSecondary;
+      case TableStatus.reserved:
+        return AppColors.textPrimary;
     }
   }
 
@@ -102,7 +115,11 @@ extension TableStatusTheme on TableStatus {
       case TableStatus.cleaning:
         return AppColors.surface;
       case TableStatus.disabled:
+      case TableStatus.merged:
+      case TableStatus.unrecognized:
         return AppColors.disabled;
+      case TableStatus.reserved:
+        return AppColors.accent;
     }
   }
 
@@ -115,7 +132,11 @@ extension TableStatusTheme on TableStatus {
       case TableStatus.cleaning:
         return AppColors.border;
       case TableStatus.disabled:
+      case TableStatus.merged:
+      case TableStatus.unrecognized:
         return AppColors.border;
+      case TableStatus.reserved:
+        return AppColors.accent;
     }
   }
 
@@ -128,7 +149,11 @@ extension TableStatusTheme on TableStatus {
       case TableStatus.cleaning:
         return AppColors.border;
       case TableStatus.disabled:
+      case TableStatus.merged:
+      case TableStatus.unrecognized:
         return AppColors.disabled;
+      case TableStatus.reserved:
+        return AppColors.accent;
     }
   }
 
@@ -141,7 +166,11 @@ extension TableStatusTheme on TableStatus {
       case TableStatus.cleaning:
         return AppTextStyles.floorPlanTableLabelMuted;
       case TableStatus.disabled:
+      case TableStatus.merged:
+      case TableStatus.unrecognized:
         return AppTextStyles.floorPlanTableLabelMuted;
+      case TableStatus.reserved:
+        return AppTextStyles.floorPlanTableLabelOnAccent;
     }
   }
 
@@ -154,7 +183,11 @@ extension TableStatusTheme on TableStatus {
       case TableStatus.cleaning:
         return AppTextStyles.floorPlanSeatBadgeMuted;
       case TableStatus.disabled:
+      case TableStatus.merged:
+      case TableStatus.unrecognized:
         return AppTextStyles.floorPlanSeatBadgeMuted;
+      case TableStatus.reserved:
+        return AppTextStyles.floorPlanSeatBadgeOnAccent;
     }
   }
 }

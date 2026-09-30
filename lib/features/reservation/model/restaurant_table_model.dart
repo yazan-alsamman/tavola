@@ -89,8 +89,37 @@ class RestaurantTableModel {
 
   bool get isRound => tableShape == TableShape.circle;
 
+  /// Operational status blocks booking only when the payload included `status`.
+  /// A missing status is not treated as [TableStatus.available].
+  bool get isOperationallyBlocked =>
+      hasExplicitStatus && status != TableStatus.available;
+
   bool get isSelectable =>
-      status == TableStatus.available && (isAvailableForWindow ?? true);
+      !isOperationallyBlocked && isAvailableForWindow != false;
+
+  /// Why a tap must not select this table. Null when the table can be booked.
+  String? get selectionBlockedMessage {
+    if (isOperationallyBlocked) {
+      switch (status) {
+        case TableStatus.occupied:
+          return AppStrings.occupiedTableNote;
+        case TableStatus.cleaning:
+          return AppStrings.cleaningTableNote;
+        case TableStatus.disabled:
+          return AppStrings.disabledTableNote;
+        case TableStatus.reserved:
+          return AppStrings.reservedTableNote;
+        case TableStatus.available:
+        case TableStatus.merged:
+        case TableStatus.unrecognized:
+          return AppStrings.tableCurrentlyUnavailable;
+      }
+    }
+    if (isAvailableForWindow == false) {
+      return AppStrings.tableUnavailableForSlotNote;
+    }
+    return null;
+  }
 
   RestaurantTableModel copyWith({
     String? id,
@@ -252,8 +281,12 @@ class RestaurantTableModel {
         return TableStatus.cleaning;
       case AppStrings.apiTableStatusDisabled:
         return TableStatus.disabled;
+      case AppStrings.apiTableStatusReserved:
+        return TableStatus.reserved;
+      case AppStrings.apiTableStatusMerged:
+        return TableStatus.merged;
       default:
-        return TableStatus.disabled;
+        return TableStatus.unrecognized;
     }
   }
 }

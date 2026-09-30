@@ -464,6 +464,8 @@ class ProfileScreen extends StatelessWidget {
                               details: controller.detailsForReservation(
                                 reservation,
                               ),
+                              statusLabel: reservation.customerStatusLabel,
+                              reservationStatus: reservation.status,
                               onReschedule: () =>
                                   controller.rescheduleReservation(reservation),
                               onCancel: () => controller.cancelReservation(

@@ -52,7 +52,7 @@ Owner/Organization, Employee/Staff, or health/ops endpoints.
   - Menus (public): `GET /restaurants/:id/menus`, `/menus/default`, `/menus/:menuId`
   - Working hours: `GET /restaurants/:restaurantId/branches/:branchId/working-hours` (primary branch — Details Hours card + restaurant card hours)
   - Tables: `GET /tables/:tableId`
-  - Reservations: availability, create, cancel, reschedule, `GET /reservations/my`, `/my/upcoming`, `/my/history`, `/my/:id`
+  - Reservations: `GET /reservations/available-slots` (time slots), `GET /reservations/availability` (tables for the selected window), create, cancel, reschedule, `GET /reservations/my`, `/my/upcoming`, `/my/history`, `/my/:id`
   - Notifications: `GET /notifications`, unread-count, mark read / read-all, identity-token (`PushIdentityService` after sign-in; OneSignal SDK not bundled)
   - Messaging (Chat tab): `GET/POST /conversations`, `GET /conversations/:id`, messages, read, close
   - Waitlist (customer): `POST /waitlist` (join), `POST /waitlist/:entryId/cancel` — shown on Select Table when no tables are available. `POST /waitlist/:id/promote` is Employee-only and not wired.

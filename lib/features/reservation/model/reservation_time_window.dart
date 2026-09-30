@@ -4,6 +4,8 @@ class ReservationTimeWindow {
     required this.startTime,
     required this.endTime,
     required this.partySize,
+    this.originalStartTimeIso,
+    this.originalEndTimeIso,
   });
 
   final String branchId;
@@ -11,7 +13,27 @@ class ReservationTimeWindow {
   final DateTime endTime;
   final int partySize;
 
-  String get startTimeIso => startTime.toUtc().toIso8601String();
+  /// Exact `startTime` string from available-slots, when this window is one.
+  final String? originalStartTimeIso;
 
-  String get endTimeIso => endTime.toUtc().toIso8601String();
+  /// Exact `endTime` string from available-slots, when this window is one.
+  final String? originalEndTimeIso;
+
+  /// Value sent as `reservationStartTime`. Prefers the original API string.
+  String get startTimeIso {
+    final String? raw = originalStartTimeIso?.trim();
+    if (raw != null && raw.isNotEmpty) {
+      return raw;
+    }
+    return startTime.toUtc().toIso8601String();
+  }
+
+  /// Value sent as `reservationEndTime`. Prefers the original API string.
+  String get endTimeIso {
+    final String? raw = originalEndTimeIso?.trim();
+    if (raw != null && raw.isNotEmpty) {
+      return raw;
+    }
+    return endTime.toUtc().toIso8601String();
+  }
 }

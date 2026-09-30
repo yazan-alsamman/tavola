@@ -297,21 +297,11 @@ class SelectTableScreen extends StatelessWidget {
                                     idleBackground: AppColors.primaryDark,
                                     idleForeground: AppColors.textLight,
                                   ),
-                                  child: busy
-                                      ? const SizedBox(
-                                          width: AppDimensions.mediumIconSize,
-                                          height: AppDimensions.mediumIconSize,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: AppDimensions
-                                                .progressIndicatorStrokeWidth,
-                                            color: AppColors.textLight,
-                                          ),
-                                        )
-                                      : Text(
-                                          AppStrings.confirmReservation,
-                                          style: AppTextStyles
-                                              .confirmReservationButton,
-                                        ),
+                                  child: Text(
+                                    AppStrings.confirmReservation,
+                                    style:
+                                        AppTextStyles.confirmReservationButton,
+                                  ),
                                 ),
                               ),
                             ),
@@ -322,10 +312,12 @@ class SelectTableScreen extends StatelessWidget {
                 ],
               ),
             ),
-            if (controller.showConfirmation.value &&
-                controller.confirmation.value != null)
+            if (controller.isCreatingReservation.value ||
+                (controller.showConfirmation.value &&
+                    controller.confirmation.value != null))
               ReservationConfirmationOverlay(
-                confirmation: controller.confirmation.value!,
+                key: const ValueKey<String>('reservation-confirm-motion'),
+                confirmation: controller.confirmation.value,
                 onDismiss: controller.dismissConfirmation,
               ),
           ],

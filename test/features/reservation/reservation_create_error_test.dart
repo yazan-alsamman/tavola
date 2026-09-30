@@ -14,7 +14,7 @@ import 'package:tavla/features/discovery/repository/discovery_repository.dart';
 import 'package:tavla/features/reservation/controller/reservation_controller.dart';
 import 'package:tavla/features/reservation/controller/select_table_controller.dart';
 import 'package:tavla/features/reservation/model/customer_reservation_model.dart';
-import 'package:tavla/features/reservation/model/reservation_availability_slot_model.dart';
+import 'package:tavla/features/reservation/model/reservation_time_slot.dart';
 import 'package:tavla/features/reservation/model/restaurant_table_model.dart';
 import 'package:tavla/features/reservation/model/table_status.dart';
 import 'package:tavla/features/reservation/repository/reservation_availability_repository.dart';
@@ -78,6 +78,8 @@ class _ScriptedReservationRepository extends ReservationRepository {
   Object? nextCreateError;
   CustomerReservationModel? nextCreateResult;
   int createCalls = 0;
+  String? lastStartTimeIso;
+  String? lastEndTimeIso;
 
   @override
   Future<CustomerReservationModel> createReservation({
@@ -91,7 +93,11 @@ class _ScriptedReservationRepository extends ReservationRepository {
     String restaurantId = '',
     String restaurantName = '',
     String imageUrl = '',
+    String? startTimeIso,
+    String? endTimeIso,
   }) async {
+    lastStartTimeIso = startTimeIso;
+    lastEndTimeIso = endTimeIso;
     createCalls += 1;
     final Object? error = nextCreateError;
     if (error != null) {
@@ -146,27 +152,30 @@ void main() {
 
   tearDown(Get.reset);
 
-  test('createReservation surfaces 409 and does not return a booking', () async {
-    final ReservationRepository repo = ReservationRepository(
-      Get.find<ApiClient>(),
-    );
-
-    try {
-      await repo.createReservation(
-        branchId: 'b1',
-        tableId: 't1',
-        startTime: DateTime.utc(2026, 9, 22, 18),
-        endTime: DateTime.utc(2026, 9, 22, 20),
-        guests: 2,
+  test(
+    'createReservation surfaces 409 and does not return a booking',
+    () async {
+      final ReservationRepository repo = ReservationRepository(
+        Get.find<ApiClient>(),
       );
-      fail('expected ApiException');
-    } on ApiException catch (error) {
-      expect(error.isConflict, isTrue);
-      expect(error.message, 'Table is no longer available.');
-    }
-    expect(repo.activeReservations, isEmpty);
-    expect(hits.single.path, AppUrls.reservationsPath);
-  });
+
+      try {
+        await repo.createReservation(
+          branchId: 'b1',
+          tableId: 't1',
+          startTime: DateTime.utc(2026, 9, 22, 18),
+          endTime: DateTime.utc(2026, 9, 22, 20),
+          guests: 2,
+        );
+        fail('expected ApiException');
+      } on ApiException catch (error) {
+        expect(error.isConflict, isTrue);
+        expect(error.message, 'Table is no longer available.');
+      }
+      expect(repo.activeReservations, isEmpty);
+      expect(hits.single.path, AppUrls.reservationsPath);
+    },
+  );
 
   test('createReservation surfaces timeout without a fake booking', () async {
     dio.interceptors.clear();
@@ -242,19 +251,23 @@ void main() {
       select = Get.put(SelectTableController());
       await tester.pump();
       Get.put(ReservationController());
-      final ReservationController reservation = Get.find<ReservationController>();
+      final ReservationController reservation =
+          Get.find<ReservationController>();
       reservation.restaurantId.value = 'rest-1';
       reservation.restaurantName.value = 'Seeki';
       reservation.branchId.value = 'branch-1';
-      reservation.availabilitySlots.assignAll(<ReservationAvailabilitySlotModel>[
-        ReservationAvailabilitySlotModel(
-          startTime: DateTime.utc(2026, 9, 22, 18),
-          endTime: DateTime.utc(2026, 9, 22, 20),
-          label: '6:00 PM',
+      reservation.availabilitySlots.assignAll(<ReservationTimeSlot>[
+        ReservationTimeSlot(
+          startTime: DateTime.utc(2026, 9, 22, 15),
+          endTime: DateTime.utc(2026, 9, 22, 17),
+          startTimeIso: '2026-09-22T15:00:00Z',
+          endTimeIso: '2026-09-22T17:00:00Z',
         ),
       ]);
       reservation.timeSlots.assignAll(<String>['6:00 PM']);
-      select.floorPlanTables.assignAll(<RestaurantTableModel>[availableTable()]);
+      select.floorPlanTables.assignAll(<RestaurantTableModel>[
+        availableTable(),
+      ]);
       select.selectedTableId.value = 'table-1';
       select.isLoadingTables.value = false;
       addTearDown(() {
@@ -285,6 +298,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 4));
       expect(reservations.createCalls, 1);
+      expect(reservations.lastStartTimeIso, '2026-09-22T15:00:00Z');
+      expect(reservations.lastEndTimeIso, '2026-09-22T17:00:00Z');
       expect(select.isCreatingReservation.value, isFalse);
       expect(select.showConfirmation.value, isTrue);
       expect(select.confirmation.value?.referenceCode, 'res-1');

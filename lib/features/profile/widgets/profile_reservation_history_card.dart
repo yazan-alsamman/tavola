@@ -9,6 +9,9 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../reviews/model/review_model.dart';
+import '../../reservation/model/reservation_status.dart';
+import '../../reservation/widgets/reservation_status_colors.dart';
+import '../../reservation/widgets/reservation_status_pill.dart';
 import '../model/reservation_history_item_model.dart';
 import 'profile_reservation_review_section.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -161,13 +164,14 @@ class ProfileReservationHistoryCard extends StatelessWidget {
                                     const SizedBox(
                                       width: AppDimensions.smallSpacing,
                                     ),
-                                    _StatusChip(
-                                      label: item.status.trim().isNotEmpty
-                                          ? AppStrings.localizeUiLabel(
-                                              item.status,
-                                            )
-                                          : AppStrings
-                                              .reservationHistoryCompleted,
+                                    _HistoryStatus(
+                                      label: ReservationStatusApi.customerLabel(
+                                        item.status,
+                                      ),
+                                      color:
+                                          ReservationStatusColors.forStoredStatus(
+                                            item.status,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -284,10 +288,39 @@ class _RestaurantThumbnail extends StatelessWidget {
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.label});
+class _HistoryStatus extends StatelessWidget {
+  const _HistoryStatus({required this.label, required this.color});
 
   final String label;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    if (color == null) {
+      return _StatusChip(label: label, color: AppColors.primaryDark);
+    }
+    return Flexible(
+      child: Align(
+        alignment: AlignmentDirectional.topEnd,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerEnd,
+          child: ReservationStatusPill(
+            label: label.toUpperCase(),
+            color: color!,
+            textStyle: AppTextStyles.reservationHistoryStatus,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +330,7 @@ class _StatusChip extends StatelessWidget {
         vertical: AppDimensions.tinySpacing,
       ),
       decoration: BoxDecoration(
-        color: AppColors.primaryDark.withValues(
+        color: color.withValues(
           alpha: AppDimensions.reservationHistoryStatusFillAlpha,
         ),
         borderRadius: BorderRadius.circular(AppDimensions.pillRadius),

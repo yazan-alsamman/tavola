@@ -695,6 +695,24 @@ class AppStrings {
   static const String apiTableStatusReserved = 'reserved';
   static const String apiTableStatusDisabled = 'disabled';
   static const String apiTableStatusCleaning = 'cleaning';
+  static const String apiTableStatusMerged = 'merged';
+
+  /// `ReservationResponseDto.status` / `MyReservationItemResponseDto.status`.
+  static const String apiReservationStatusPending = 'Pending';
+  static const String apiReservationStatusApproved = 'Approved';
+  static const String apiReservationStatusRejected = 'Rejected';
+  static const String apiReservationStatusCancelled = 'Cancelled';
+  static const String apiReservationStatusCompleted = 'Completed';
+  static const String apiReservationStatusExpired = 'Expired';
+  static const String apiReservationStatusNoShow = 'NoShow';
+
+  /// `GET /reservations/available-slots` `data.outcome`.
+  static const String apiReservationSlotsOutcomeAvailable = 'AVAILABLE';
+  static const String apiReservationSlotsOutcomeClosed = 'CLOSED';
+  static const String apiReservationSlotsOutcomeNoSuitableTable =
+      'NO_SUITABLE_TABLE';
+  static const String apiReservationSlotsOutcomeNoRemainingSlots =
+      'NO_REMAINING_SLOTS';
   static const String apiFloorPlanStatusActive = 'active';
 
   /// API error / payload match tokens (not localized).
@@ -758,16 +776,26 @@ class AppStrings {
       'Premium window seating with panoramic city views, natural daylight, and a quiet atmosphere — ideal for intimate dining and special occasions.'
           .tr;
   static String get occupiedTableNote =>
-      'This table is currently occupied. Please choose another available table.'
-          .tr;
+      'This table is currently unavailable because it is occupied.'.tr;
   static String get disabledTableNote =>
-      'This table is disabled and cannot be booked.'.tr;
+      'This table is currently unavailable.'.tr;
+  static String get reservedTableNote =>
+      'This table is currently unavailable because it is reserved.'.tr;
+  static String get tableCurrentlyUnavailable =>
+      'This table is currently unavailable.'.tr;
   static String get tableUnavailableForSlotNote =>
       'This table is not available for the selected date and time. Please choose another table.'
           .tr;
   static String get cleaningTableNote =>
-      'Being refreshed for the next service. This table will be ready shortly.'
-          .tr;
+      'This table is currently unavailable because it is being cleaned.'.tr;
+  static String get reservationStatusPending => 'Pending'.tr;
+  static String get reservationStatusAccepted => 'Accepted'.tr;
+  static String get reservationStatusRejected => 'Rejected'.tr;
+  static String get reservationStatusCancelled => 'Cancelled'.tr;
+  static String get reservationStatusCompleted => 'Completed'.tr;
+  static String get reservationStatusExpired => 'Expired'.tr;
+  static String get reservationStatusNoShow => 'No show'.tr;
+  static String get reservationStatusUnknown => 'Status unavailable'.tr;
   static String get reservationConfirmed =>
       'Your table has been reserved successfully.'.tr;
   static String get confirmed => 'Confirmed'.tr;

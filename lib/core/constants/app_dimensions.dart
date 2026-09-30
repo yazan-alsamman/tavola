@@ -302,6 +302,17 @@ class AppDimensions {
   static const Duration floorPlanLiveDotPulseDuration = Duration(
     milliseconds: 1600,
   );
+
+  /// How long an unavailable-table notice stays visible before it leaves.
+  static const Duration floorPlanUnavailableNoticeDuration = Duration(
+    seconds: 2,
+  );
+
+  /// Entrance scale for the unavailable-table notice.
+  static const double floorPlanUnavailableNoticeEnterScale = 0.96;
+
+  /// Entrance slide as a fraction of the notice height.
+  static const double floorPlanUnavailableNoticeEnterSlide = 0.08;
   static const double floorPlanSelectedShadowBlur = 18.0;
   static const double tableDescriptionFieldMinHeight = 96.0;
   static const double dashedBorderStrokeWidth = 1.5;
@@ -391,10 +402,6 @@ class AppDimensions {
   /// UI never waits longer than [ApiClient] will keep the Future alive.
   static const Duration homeCatalogLoadTimeout = apiHardRequestTimeout;
 
-  /// Hour/minute (24h) for reservation time-slot indices (display labels are localized).
-  static const List<int> reservationSlotHours = <int>[19, 20, 20, 21];
-  static const List<int> reservationSlotMinutes = <int>[30, 0, 30, 15];
-
   /// Hours for experience-duration indices (display labels are localized).
   static const List<double> reservationDurationHours = <double>[1.5, 2.0, 2.5];
 
@@ -414,6 +421,20 @@ class AppDimensions {
   static const double confirmationHeaderHeight = 196.0;
   static const double confirmationIconContainerSize = 56.0;
   static const double confirmationIconSize = 30.0;
+
+  /// Tint behind a reservation-status capsule. Text stays in the full status color.
+  static const double reservationStatusPillFillAlpha = 0.10;
+  static const double reservationStatusPillBorderAlpha = 0.28;
+
+  /// One-shot confirm motion: the existing mark settles, then the card arrives.
+  static const Duration reservationConfirmSentDuration = Duration(
+    milliseconds: 420,
+  );
+  static const Duration reservationConfirmCardRevealDuration = Duration(
+    milliseconds: 260,
+  );
+  static const double reservationConfirmSentBeginScale = 0.92;
+  static const double reservationConfirmCardBeginScale = 0.97;
   static const double confirmationTornToothHeight = 14.0;
   static const int confirmationTornToothCount = 18;
   static const double confirmationBottomPadding = 28.0;

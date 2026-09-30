@@ -8,6 +8,8 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../home/model/restaurant_model.dart';
+import '../../reservation/widgets/reservation_status_colors.dart';
+import '../../reservation/widgets/reservation_status_pill.dart';
 
 class ProfileReservationCard extends StatelessWidget {
   const ProfileReservationCard({
@@ -18,6 +20,8 @@ class ProfileReservationCard extends StatelessWidget {
     this.compact = false,
     this.onCancel,
     this.onReschedule,
+    this.statusLabel,
+    this.reservationStatus,
   });
 
   final RestaurantModel restaurant;
@@ -26,6 +30,10 @@ class ProfileReservationCard extends StatelessWidget {
   final bool compact;
   final VoidCallback? onCancel;
   final VoidCallback? onReschedule;
+  final String? statusLabel;
+
+  /// Stored backend reservation status. Used only to color [statusLabel].
+  final String? reservationStatus;
 
   static const List<IconData> _detailIcons = [
     Symbols.calendar_today,
@@ -34,6 +42,22 @@ class ProfileReservationCard extends StatelessWidget {
   ];
 
   bool get _hasActions => onCancel != null || onReschedule != null;
+
+  Color? get _statusColor {
+    final String? stored = reservationStatus?.trim();
+    if (stored != null && stored.isNotEmpty) {
+      return ReservationStatusColors.forStoredStatus(stored);
+    }
+    return ReservationStatusColors.forCustomerLabel(statusLabel);
+  }
+
+  TextStyle get _statusStyle {
+    final Color? color = _statusColor;
+    if (color == null) {
+      return AppTextStyles.body;
+    }
+    return AppTextStyles.body.copyWith(color: color);
+  }
 
   double get _cardHeight => compact
       ? AppDimensions.onboardingReservationCardHeight
@@ -101,6 +125,19 @@ class ProfileReservationCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.reservationTitle,
                             ),
+                            if (statusLabel != null &&
+                                statusLabel!.trim().isNotEmpty) ...[
+                              SizedBox(
+                                height: compact
+                                    ? AppDimensions.tinySpacing
+                                    : AppDimensions.smallSpacing,
+                              ),
+                              _ReservationStatusLabel(
+                                label: statusLabel!,
+                                color: _statusColor,
+                                style: _statusStyle,
+                              ),
+                            ],
                             SizedBox(
                               height: compact
                                   ? AppDimensions.compactSpacing
@@ -249,6 +286,42 @@ class _ReservationInfoItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ReservationStatusLabel extends StatelessWidget {
+  const _ReservationStatusLabel({
+    required this.label,
+    required this.color,
+    required this.style,
+  });
+
+  final String label;
+  final Color? color;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget text = Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: AlignmentDirectional.centerStart,
+        child: color == null
+            ? text
+            : ReservationStatusPill(
+                label: label,
+                color: color!,
+                textStyle: style,
+              ),
+      ),
     );
   }
 }

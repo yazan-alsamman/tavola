@@ -5,6 +5,7 @@ class ReservationConfirmationModel {
     required this.dateLabel,
     required this.tableLabel,
     required this.referenceCode,
+    this.statusLabel,
   });
 
   final String restaurantName;
@@ -12,4 +13,7 @@ class ReservationConfirmationModel {
   final String dateLabel;
   final String tableLabel;
   final String referenceCode;
+
+  /// Customer label from the create/reschedule response. Null for preview.
+  final String? statusLabel;
 }

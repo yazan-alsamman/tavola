@@ -7,12 +7,14 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/navigation/app_navigation.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/utils/branch_time_zone.dart';
 import '../../auth/controller/auth_session_controller.dart';
 import '../../branches/model/branch_model.dart';
 import '../../branches/repository/branch_repository.dart';
 import '../../home/model/restaurant_model.dart';
-import '../model/reservation_availability_slot_model.dart';
+import '../model/available_reservation_slots.dart';
 import '../model/reservation_route_args.dart';
+import '../model/reservation_time_slot.dart';
 import '../model/reservation_time_window.dart';
 import '../repository/reservation_availability_repository.dart';
 import '../repository/reservation_repository.dart';
@@ -37,9 +39,12 @@ class ReservationController extends GetxController {
   final RxString restaurantName = ''.obs;
   final RxString branchId = ''.obs;
   final RxnString rescheduleReservationId = RxnString();
-  final RxList<ReservationAvailabilitySlotModel> availabilitySlots =
-      <ReservationAvailabilitySlotModel>[].obs;
+  final RxList<ReservationTimeSlot> availabilitySlots =
+      <ReservationTimeSlot>[].obs;
   final RxList<String> timeSlots = <String>[].obs;
+  final RxString slotsTimezone = ''.obs;
+  final Rxn<AvailableReservationSlotsOutcome> slotsOutcome =
+      Rxn<AvailableReservationSlotsOutcome>();
   final RxList<String> durationOptions = <String>[].obs;
   final RxBool isResolvingBranch = false.obs;
   final RxBool isSearchingAvailability = false.obs;
@@ -145,8 +150,7 @@ class ReservationController extends GetxController {
   Future<void> loadAvailabilitySlots() async {
     final String bid = branchId.value.trim();
     if (bid.isEmpty) {
-      availabilitySlots.clear();
-      timeSlots.clear();
+      _clearSlotState();
       slotsError.value = null;
       isLoadingSlots.value = false;
       return;
@@ -155,20 +159,37 @@ class ReservationController extends GetxController {
     final int requestId = ++_slotsRequestId;
     isLoadingSlots.value = true;
     slotsError.value = null;
+    _clearSlotState();
     try {
-      final List<ReservationAvailabilitySlotModel> slots =
-          await _reservationRepository.fetchAvailabilitySlots(
+      final AvailableReservationSlots result = await _reservationRepository
+          .fetchAvailableSlots(
             branchId: bid,
             date: selectedDay.value,
             partySize: dinerCount.value,
-            experienceDuration: _selectedDuration(),
-            labelBuilder: formatSlotLabel,
+            durationMinutes: _selectedDurationMinutes(),
           );
       if (isClosed || requestId != _slotsRequestId) {
         return;
       }
-      availabilitySlots.assignAll(slots);
-      _syncTimeSlotLabels();
+      final List<ReservationTimeSlot> visible =
+          result.outcome == AvailableReservationSlotsOutcome.available
+          ? result.slots
+          : const <ReservationTimeSlot>[];
+      final List<String> labels = <String>[];
+      for (final ReservationTimeSlot slot in visible) {
+        final String? label = formatSlotLabel(slot.startTime, result.timezone);
+        if (label == null) {
+          throw ApiException(message: AppStrings.reservationSlotsLoadError);
+        }
+        labels.add(label);
+      }
+      if (isClosed || requestId != _slotsRequestId) {
+        return;
+      }
+      slotsTimezone.value = result.timezone;
+      slotsOutcome.value = result.outcome;
+      availabilitySlots.assignAll(visible);
+      timeSlots.assignAll(labels);
       if (selectedTimeSlotIndex.value >= timeSlots.length) {
         selectedTimeSlotIndex.value = 0;
       }
@@ -179,17 +200,18 @@ class ReservationController extends GetxController {
       if (error.isCancelled) {
         return;
       }
-      availabilitySlots.clear();
-      timeSlots.clear();
+      _clearSlotState();
       slotsError.value = error.message.isNotEmpty
           ? error.message
           : AppStrings.reservationSlotsLoadError;
+      if (error.isUnauthorized) {
+        await AuthSessionController.requireSignInIfRegistered();
+      }
     } catch (_) {
       if (isClosed || requestId != _slotsRequestId) {
         return;
       }
-      availabilitySlots.clear();
-      timeSlots.clear();
+      _clearSlotState();
       slotsError.value = AppStrings.reservationSlotsLoadError;
     } finally {
       if (!isClosed && requestId == _slotsRequestId) {
@@ -198,64 +220,102 @@ class ReservationController extends GetxController {
     }
   }
 
-  void _syncTimeSlotLabels() {
-    timeSlots.assignAll(
-      availabilitySlots
-          .map(
-            (ReservationAvailabilitySlotModel slot) =>
-                slot.label.trim().isNotEmpty
-                ? slot.label
-                : formatSlotLabel(slot.startTime),
-          )
-          .toList(growable: false),
-    );
+  void _clearSlotState() {
+    availabilitySlots.clear();
+    timeSlots.clear();
+    slotsTimezone.value = '';
+    slotsOutcome.value = null;
   }
 
-  static String formatSlotLabel(DateTime value) {
-    final DateTime local = value.toLocal();
-    final int hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
-    final String minute = local.minute.toString().padLeft(2, '0');
-    final String period = local.hour >= 12
+  void _syncTimeSlotLabels() {
+    final String zone = slotsTimezone.value;
+    final List<String> labels = <String>[];
+    for (final ReservationTimeSlot slot in availabilitySlots) {
+      final String? label = formatSlotLabel(slot.startTime, zone);
+      if (label == null) {
+        timeSlots.clear();
+        slotsError.value = AppStrings.reservationSlotsLoadError;
+        return;
+      }
+      labels.add(label);
+    }
+    timeSlots.assignAll(labels);
+  }
+
+  /// 12-hour label in the branch timezone from the available-slots response.
+  static String? formatSlotLabel(DateTime value, String timeZoneName) {
+    final DateTime? wall = BranchTimeZone.wallTime(value, timeZoneName);
+    if (wall == null) {
+      return null;
+    }
+    final int hour = wall.hour % 12 == 0 ? 12 : wall.hour % 12;
+    final String minute = wall.minute.toString().padLeft(2, '0');
+    final String period = wall.hour >= 12
         ? AppStrings.timePeriodPm
         : AppStrings.timePeriodAm;
     return '$hour:$minute $period';
   }
 
-  ReservationTimeWindow? buildTimeWindow() {
-    final String resolvedBranchId = branchId.value.trim();
-    if (resolvedBranchId.isEmpty) {
+  /// Calendar date of [instant] in the branch timezone (`YYYY-MM-DD`).
+  String? formatBranchDate(DateTime instant) {
+    final DateTime? wall = _wallTime(instant);
+    if (wall == null) {
       return null;
     }
-    if (availabilitySlots.isEmpty) {
-      return null;
-    }
-
-    final DateTime start = _selectedStartTime();
-    final DateTime end = start.add(_selectedDuration());
-    return ReservationTimeWindow(
-      branchId: resolvedBranchId,
-      startTime: start,
-      endTime: end,
-      partySize: dinerCount.value,
-    );
+    final String month = wall.month.toString().padLeft(2, '0');
+    final String day = wall.day.toString().padLeft(2, '0');
+    return '${wall.year}-$month-$day';
   }
 
-  DateTime _selectedStartTime() {
+  /// `HH:mm` of [instant] in the branch timezone.
+  String? formatBranchTime(DateTime instant) {
+    final DateTime? wall = _wallTime(instant);
+    if (wall == null) {
+      return null;
+    }
+    final String hour = wall.hour.toString().padLeft(2, '0');
+    final String minute = wall.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  DateTime? _wallTime(DateTime instant) {
+    return BranchTimeZone.wallTime(instant, slotsTimezone.value);
+  }
+
+  ReservationTimeWindow? buildTimeWindow() {
+    final String resolvedBranchId = branchId.value.trim();
+    if (resolvedBranchId.isEmpty || availabilitySlots.isEmpty) {
+      return null;
+    }
+
     final int index = selectedTimeSlotIndex.value.clamp(
       0,
       availabilitySlots.length - 1,
     );
-    return availabilitySlots[index].startTime;
+    final ReservationTimeSlot slot = availabilitySlots[index];
+    return ReservationTimeWindow(
+      branchId: resolvedBranchId,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      partySize: dinerCount.value,
+      originalStartTimeIso: slot.startTimeIso,
+      originalEndTimeIso: slot.endTimeIso,
+    );
   }
 
-  Duration _selectedDuration() {
-    final int index = selectedDurationIndex.value.clamp(
-      0,
-      AppDimensions.reservationDurationHours.length - 1,
-    );
-    final double hours = AppDimensions.reservationDurationHours[index];
-    final int minutes = (hours * 60).round();
-    return Duration(minutes: minutes);
+  /// Minutes from the duration the user selected. Omitted when there is no
+  /// selection, so the backend applies its own default.
+  int? _selectedDurationMinutes() {
+    final List<double> hours = AppDimensions.reservationDurationHours;
+    if (hours.isEmpty) {
+      return null;
+    }
+    final int index = selectedDurationIndex.value.clamp(0, hours.length - 1);
+    final int minutes = (hours[index] * 60).round();
+    if (minutes <= 0) {
+      return null;
+    }
+    return minutes;
   }
 
   void incrementDiners() {

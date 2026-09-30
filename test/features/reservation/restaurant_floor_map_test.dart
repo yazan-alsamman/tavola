@@ -39,16 +39,30 @@ void main() {
       RestaurantTableModel.fromJson(liveT5Json),
     ];
 
-    await tester.pumpWidget(harness(tables: tables, textDirection: TextDirection.ltr));
+    await tester.pumpWidget(
+      harness(tables: tables, textDirection: TextDirection.ltr),
+    );
 
     final Positioned t1 = tester.widget<Positioned>(
-      find.byKey(const ValueKey<String>('floor-plan-position-64367a7e-acbb-4011-afc4-b4dd75393ea9')),
+      find.byKey(
+        const ValueKey<String>(
+          'floor-plan-position-64367a7e-acbb-4011-afc4-b4dd75393ea9',
+        ),
+      ),
     );
     final Positioned t3 = tester.widget<Positioned>(
-      find.byKey(const ValueKey<String>('floor-plan-position-0ad54710-b92c-428f-a4ac-a60bc86c5916')),
+      find.byKey(
+        const ValueKey<String>(
+          'floor-plan-position-0ad54710-b92c-428f-a4ac-a60bc86c5916',
+        ),
+      ),
     );
     final Positioned t5 = tester.widget<Positioned>(
-      find.byKey(const ValueKey<String>('floor-plan-position-efd1304e-dfb5-45a8-9bc7-631321451a5d')),
+      find.byKey(
+        const ValueKey<String>(
+          'floor-plan-position-efd1304e-dfb5-45a8-9bc7-631321451a5d',
+        ),
+      ),
     );
 
     expect(t1.left, 464);
@@ -67,20 +81,36 @@ void main() {
   });
 
   testWidgets('RTL does not mirror floor-plan coordinates', (tester) async {
-    final RestaurantTableModel table = RestaurantTableModel.fromJson(liveT5Json);
+    final RestaurantTableModel table = RestaurantTableModel.fromJson(
+      liveT5Json,
+    );
 
     await tester.pumpWidget(
-      harness(tables: <RestaurantTableModel>[table], textDirection: TextDirection.ltr),
+      harness(
+        tables: <RestaurantTableModel>[table],
+        textDirection: TextDirection.ltr,
+      ),
     );
     final Positioned ltr = tester.widget<Positioned>(
-      find.byKey(const ValueKey<String>('floor-plan-position-efd1304e-dfb5-45a8-9bc7-631321451a5d')),
+      find.byKey(
+        const ValueKey<String>(
+          'floor-plan-position-efd1304e-dfb5-45a8-9bc7-631321451a5d',
+        ),
+      ),
     );
 
     await tester.pumpWidget(
-      harness(tables: <RestaurantTableModel>[table], textDirection: TextDirection.rtl),
+      harness(
+        tables: <RestaurantTableModel>[table],
+        textDirection: TextDirection.rtl,
+      ),
     );
     final Positioned rtl = tester.widget<Positioned>(
-      find.byKey(const ValueKey<String>('floor-plan-position-efd1304e-dfb5-45a8-9bc7-631321451a5d')),
+      find.byKey(
+        const ValueKey<String>(
+          'floor-plan-position-efd1304e-dfb5-45a8-9bc7-631321451a5d',
+        ),
+      ),
     );
 
     expect(ltr.left, 592);
@@ -95,7 +125,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       harness(
-        tables: <RestaurantTableModel>[RestaurantTableModel.fromJson(liveT5Json)],
+        tables: <RestaurantTableModel>[
+          RestaurantTableModel.fromJson(liveT5Json),
+        ],
         textDirection: TextDirection.ltr,
       ),
     );
@@ -135,7 +167,9 @@ void main() {
     expect(moved.top, 300);
   });
 
-  testWidgets('does not place a table when geometry is missing', (tester) async {
+  testWidgets('does not place a table when geometry is missing', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       harness(
         tables: <RestaurantTableModel>[
@@ -148,7 +182,70 @@ void main() {
       ),
     );
 
-    expect(find.byKey(const ValueKey<String>('floor-plan-position-missing-geo')), findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('floor-plan-position-missing-geo')),
+      findsNothing,
+    );
     expect(find.text('TX'), findsNothing);
+  });
+
+  test(
+    'blocked floor-plan tap shows the existing note and does not select',
+    () {
+      final RestaurantTableModel occupied = RestaurantTableModel.fromJson(
+        <String, dynamic>{
+          'tableId': 'occupied-table',
+          'tableNumber': 'T2',
+          'status': 'Occupied',
+        },
+      );
+      final RestaurantTableModel closedForSlot = RestaurantTableModel.fromJson(
+        <String, dynamic>{
+          'tableId': 'slot-table',
+          'tableNumber': 'T4',
+          'isAvailable': false,
+        },
+      );
+      RestaurantTableModel? selected;
+      final List<String> notices = <String>[];
+
+      routeFloorPlanTableTap(
+        table: occupied,
+        selectTable: (RestaurantTableModel value) => selected = value,
+        showUnavailable: notices.add,
+      );
+      routeFloorPlanTableTap(
+        table: closedForSlot,
+        selectTable: (RestaurantTableModel value) => selected = value,
+        showUnavailable: notices.add,
+      );
+
+      expect(selected, isNull);
+      expect(notices, <String>[
+        occupied.selectionBlockedMessage!,
+        closedForSlot.selectionBlockedMessage!,
+      ]);
+    },
+  );
+
+  test('available floor-plan tap selects the table', () {
+    final RestaurantTableModel table = RestaurantTableModel.fromJson(
+      <String, dynamic>{
+        'tableId': 'open-table',
+        'tableNumber': 'T1',
+        'status': 'Available',
+      },
+    );
+    RestaurantTableModel? selected;
+    String? notice;
+
+    routeFloorPlanTableTap(
+      table: table,
+      selectTable: (RestaurantTableModel value) => selected = value,
+      showUnavailable: (String message) => notice = message,
+    );
+
+    expect(selected, table);
+    expect(notice, isNull);
   });
 }

@@ -80,6 +80,8 @@ class AppUrls {
   static const String reservationsPath = '/reservations';
   static const String reservationsAvailabilityPath =
       '$reservationsPath/availability';
+  static const String reservationsAvailableSlotsPath =
+      '$reservationsPath/available-slots';
   static const String reservationsPageQueryKey = 'page';
   static const String reservationsPageSizeQueryKey = 'pageSize';
   static const String reservationsLimitQueryKey = 'limit';

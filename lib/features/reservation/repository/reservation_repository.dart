@@ -12,12 +12,13 @@ import '../../../core/network/api_response.dart';
 import '../../../core/network/auth_token_reader.dart';
 import '../../../core/utils/app_dependency.dart';
 import '../../discovery/repository/discovery_repository.dart';
+import '../model/available_reservation_slots.dart';
 import '../model/customer_reservation_model.dart';
-import '../model/reservation_availability_slot_model.dart';
 import '../model/restaurant_table_model.dart';
 import '../model/reservation_time_window.dart';
 
 /// Customer reservation APIs:
+/// - `GET /reservations/available-slots`
 /// - `GET /reservations/availability`
 /// - `POST /reservations`
 /// - `POST /reservations/:id/cancel`
@@ -96,114 +97,61 @@ class ReservationRepository {
     return response.data;
   }
 
-  /// Builds bookable start times for [date] by probing
-  /// `GET /reservations/availability` with live `SearchAvailabilityQueryDto`:
-  /// `branchId`, `reservationStartTime`, `reservationEndTime`, `partySize`.
+  /// `GET /reservations/available-slots`
   ///
-  /// Candidate clock times come from [AppDimensions.reservationSlotHours] /
-  /// [AppDimensions.reservationSlotMinutes]. A candidate is kept when at least
-  /// one selectable table is returned for that window.
-  Future<List<ReservationAvailabilitySlotModel>> fetchAvailabilitySlots({
+  /// Query: `branchId`, `date` (`YYYY-MM-DD`), `partySize`, and
+  /// `durationMinutes` when the reservation flow has a selected duration.
+  /// The returned [AvailableReservationSlots.slots] are the only bookable
+  /// windows. This method does not build or filter candidate times.
+  Future<AvailableReservationSlots> fetchAvailableSlots({
     required String branchId,
     required DateTime date,
     required int partySize,
-    required Duration experienceDuration,
-    String Function(DateTime start)? labelBuilder,
+    int? durationMinutes,
   }) async {
     await _ensureAuthenticated();
     final String bid = branchId.trim();
     if (bid.isEmpty) {
       throw ApiException(message: AppStrings.reservationWindowIncomplete);
     }
-    if (experienceDuration.inMinutes <= 0) {
-      throw ApiException(message: AppStrings.reservationWindowIncomplete);
+    final Map<String, dynamic> query = <String, dynamic>{
+      'branchId': bid,
+      'date': _reservationDateQuery(date),
+      'partySize': partySize,
+    };
+    if (durationMinutes != null) {
+      query['durationMinutes'] = durationMinutes;
     }
-
-    final DateTime now = DateTime.now();
-    final List<DateTime> candidates = _candidateSlotStarts(date)
-        .where((DateTime start) => start.isAfter(now))
-        .toList(growable: false);
-    if (candidates.isEmpty) {
-      return const <ReservationAvailabilitySlotModel>[];
-    }
-
-    final List<({ReservationAvailabilitySlotModel? slot, ApiException? error})>
-    probes = await Future.wait(
-      candidates.map((DateTime start) async {
-        final ReservationTimeWindow window = ReservationTimeWindow(
-          branchId: bid,
-          startTime: start,
-          endTime: start.add(experienceDuration),
-          partySize: partySize,
+    final ApiResponse<AvailableReservationSlots> response = await _apiClient
+        .get<AvailableReservationSlots>(
+          AppUrls.reservationsAvailableSlotsPath,
+          queryParameters: query,
+          parseData: (Object? raw) {
+            try {
+              return AvailableReservationSlots.parse(raw);
+            } on FormatException {
+              throw ApiException(message: AppStrings.reservationSlotsLoadError);
+            }
+          },
         );
-        try {
-          final List<RestaurantTableModel> tables = await searchAvailability(
-            window,
-          );
-          final bool hasOpenTable = tables.any(
-            (RestaurantTableModel table) => table.isSelectable,
-          );
-          if (!hasOpenTable) {
-            return (slot: null, error: null);
-          }
-          final String label =
-              labelBuilder?.call(start) ?? start.toLocal().toIso8601String();
-          return (
-            slot: ReservationAvailabilitySlotModel(
-              startTime: start,
-              endTime: window.endTime,
-              label: label,
-            ),
-            error: null,
-          );
-        } on ApiException catch (error) {
-          return (slot: null, error: error);
-        }
-      }),
-    );
-
-    final List<ReservationAvailabilitySlotModel> slots =
-        <ReservationAvailabilitySlotModel>[];
-    ApiException? lastError;
-    int failedProbes = 0;
-    for (final ({ReservationAvailabilitySlotModel? slot, ApiException? error})
-        probe in probes) {
-      if (probe.slot != null) {
-        slots.add(probe.slot!);
-      } else if (probe.error != null) {
-        failedProbes += 1;
-        lastError = probe.error;
-      }
-    }
-    final ApiException? probeFailure = lastError;
-    if (slots.isEmpty &&
-        failedProbes == candidates.length &&
-        probeFailure != null) {
-      throw probeFailure;
-    }
-    slots.sort(
-      (ReservationAvailabilitySlotModel a, ReservationAvailabilitySlotModel b) =>
-          a.startTime.compareTo(b.startTime),
-    );
-    return slots;
+    return response.data;
   }
 
-  static List<DateTime> _candidateSlotStarts(DateTime date) {
-    final DateTime day = DateTime(date.year, date.month, date.day);
-    final List<DateTime> starts = <DateTime>[];
-    final int count = AppDimensions.reservationSlotHours.length;
-    for (int i = 0; i < count; i++) {
-      starts.add(
-        DateTime(
-          day.year,
-          day.month,
-          day.day,
-          AppDimensions.reservationSlotHours[i],
-          AppDimensions.reservationSlotMinutes[i],
-        ),
-      );
+  static String _reservationDateQuery(DateTime date) {
+    final String month = date.month.toString().padLeft(2, '0');
+    final String day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
+
+  static String _reservationInstant(DateTime? instant, String? originalIso) {
+    final String? raw = originalIso?.trim();
+    if (raw != null && raw.isNotEmpty) {
+      return raw;
     }
-    return starts;
+    if (instant == null) {
+      throw ApiException(message: AppStrings.reservationWindowIncomplete);
+    }
+    return instant.toUtc().toIso8601String();
   }
 
   /// `GET /reservations/my`
@@ -354,6 +302,8 @@ class ReservationRepository {
     String restaurantId = '',
     String restaurantName = '',
     String imageUrl = '',
+    String? startTimeIso,
+    String? endTimeIso,
   }) async {
     await _ensureAuthenticated();
     final ApiResponse<CustomerReservationModel> response = await _apiClient
@@ -362,8 +312,11 @@ class ReservationRepository {
           data: <String, dynamic>{
             'branchId': branchId,
             'tableId': tableId,
-            'reservationStartTime': startTime.toUtc().toIso8601String(),
-            'reservationEndTime': endTime.toUtc().toIso8601String(),
+            'reservationStartTime': _reservationInstant(
+              startTime,
+              startTimeIso,
+            ),
+            'reservationEndTime': _reservationInstant(endTime, endTimeIso),
             'guests': guests,
             if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
           },
@@ -433,17 +386,24 @@ class ReservationRepository {
     DateTime? endTime,
     int? guests,
     int? tableCapacity,
+    String? startTimeIso,
+    String? endTimeIso,
   }) async {
     await _ensureAuthenticated();
     final Map<String, dynamic> data = <String, dynamic>{};
     if (tableId != null && tableId.trim().isNotEmpty) {
       data['tableId'] = tableId.trim();
     }
-    if (startTime != null) {
-      data['reservationStartTime'] = startTime.toUtc().toIso8601String();
+    if (startTime != null ||
+        (startTimeIso != null && startTimeIso.trim().isNotEmpty)) {
+      data['reservationStartTime'] = _reservationInstant(
+        startTime,
+        startTimeIso,
+      );
     }
-    if (endTime != null) {
-      data['reservationEndTime'] = endTime.toUtc().toIso8601String();
+    if (endTime != null ||
+        (endTimeIso != null && endTimeIso.trim().isNotEmpty)) {
+      data['reservationEndTime'] = _reservationInstant(endTime, endTimeIso);
     }
     if (guests != null) {
       data['guests'] = guests;
@@ -463,8 +423,7 @@ class ReservationRepository {
           ),
         );
     final int? requestedGuests = guests;
-    final CustomerReservationModel rescheduled =
-        requestedGuests == null
+    final CustomerReservationModel rescheduled = requestedGuests == null
         ? response.data
         : response.data.copyWith(
             guests: CustomerReservationModel.partySizeFromReservation(
@@ -600,8 +559,7 @@ class ReservationRepository {
 
   static List<CustomerReservationModel> _parseReservationItems(Object? raw) {
     final List<dynamic> items = _extractItems(raw);
-    final List<CustomerReservationModel> parsed =
-        <CustomerReservationModel>[];
+    final List<CustomerReservationModel> parsed = <CustomerReservationModel>[];
     for (final dynamic item in items) {
       if (item is! Map) {
         continue;

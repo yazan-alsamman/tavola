@@ -94,6 +94,13 @@ void main() {
       await notifications.fetchUnreadCount();
       await notifications.fetchNotifications();
 
+      await reservations.fetchAvailableSlots(
+        branchId: 'b1',
+        date: DateTime.utc(2026, 9, 30),
+        partySize: 2,
+        durationMinutes: 120,
+      );
+
       final DateTime start = DateTime.utc(2026, 8, 1, 18);
       await reservations.searchAvailability(
         ReservationTimeWindow(
@@ -125,6 +132,7 @@ void main() {
       expect(hits, contains('/users/me/export'));
       expect(hits, contains('/notifications/unread-count'));
       expect(hits, contains('/notifications'));
+      expect(hits, contains(AppUrls.reservationsAvailableSlotsPath));
       expect(hits, contains('/reservations/availability'));
       expect(hits, contains('/waitlist'));
       expect(
@@ -268,6 +276,29 @@ Map<String, dynamic> _bodyFor(String path) {
       'success': true,
       'message': 'ok',
       'data': <String, dynamic>{'count': 1},
+    };
+  }
+  if (path.endsWith(AppUrls.reservationsAvailableSlotsPath)) {
+    return <String, dynamic>{
+      'success': true,
+      'message': 'ok',
+      'data': <String, dynamic>{
+        'branchId': 'b1',
+        'date': '2026-09-30',
+        'timezone': 'Asia/Damascus',
+        'dayOfWeek': 3,
+        'openingTime': '18:00',
+        'closingTime': '23:00',
+        'intervalMinutes': 30,
+        'durationMinutes': 120,
+        'outcome': 'AVAILABLE',
+        'slots': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'startTime': '2026-09-30T16:30:00.000Z',
+            'endTime': '2026-09-30T18:30:00.000Z',
+          },
+        ],
+      },
     };
   }
   if (path.endsWith('/waitlist')) {

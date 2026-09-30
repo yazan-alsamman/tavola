@@ -701,6 +701,19 @@ class AppTranslations extends Translations {
     'Payment history': 'Payment history',
     'Payments': 'Payments',
     'Pending': 'Pending',
+    'Accepted': 'Accepted',
+    'Rejected': 'Rejected',
+    'Expired': 'Expired',
+    'No show': 'No show',
+    'Status unavailable': 'Status unavailable',
+    'This table is currently unavailable because it is occupied.':
+        'This table is currently unavailable because it is occupied.',
+    'This table is currently unavailable.':
+        'This table is currently unavailable.',
+    'This table is currently unavailable because it is reserved.':
+        'This table is currently unavailable because it is reserved.',
+    'This table is currently unavailable because it is being cleaned.':
+        'This table is currently unavailable because it is being cleaned.',
     'Rate your visit': 'Rate your visit',
     'Your review': 'Your review',
     'Write a review': 'Write a review',
@@ -1532,6 +1545,18 @@ class AppTranslations extends Translations {
     'Payment history': 'سجل المدفوعات',
     'Payments': 'المدفوعات',
     'Pending': 'قيد الانتظار',
+    'Accepted': 'مقبول',
+    'Rejected': 'مرفوض',
+    'Expired': 'منتهي',
+    'No show': 'لم يحضر',
+    'Status unavailable': 'الحالة غير متاحة',
+    'This table is currently unavailable because it is occupied.':
+        'هذه الطاولة غير متاحة حالياً لأنها مشغولة.',
+    'This table is currently unavailable.': 'هذه الطاولة غير متاحة حالياً.',
+    'This table is currently unavailable because it is reserved.':
+        'هذه الطاولة غير متاحة حالياً لأنها محجوزة.',
+    'This table is currently unavailable because it is being cleaned.':
+        'هذه الطاولة غير متاحة حالياً لأنها قيد التنظيف.',
     'Rate your visit': 'قيّم زيارتك',
     'Your review': 'تقييمك',
     'Write a review': 'اكتب تقييماً',

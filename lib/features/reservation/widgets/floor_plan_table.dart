@@ -32,7 +32,8 @@ class FloorPlanTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isCleaning = table.status == TableStatus.cleaning;
+    final bool isCleaning =
+        table.hasExplicitStatus && table.status == TableStatus.cleaning;
     final double rotationRadians = ((table.rotation ?? 0) * math.pi) / 180;
     final TableShape? shape = table.tableShape;
     final bool isCircle = shape == TableShape.circle;

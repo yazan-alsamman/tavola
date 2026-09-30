@@ -75,16 +75,15 @@ void main() {
     expect(table.isSelectable, isFalse);
   });
 
-  test('maps operational statuses and does not invent Reserved', () {
-    expect(
-      TableStatus.values.map((TableStatus status) => status.name),
-      isNot(contains('reserved')),
-    );
+  test('maps operational statuses from the API enum', () {
     expect(TableStatus.values, <TableStatus>[
       TableStatus.available,
       TableStatus.occupied,
       TableStatus.cleaning,
       TableStatus.disabled,
+      TableStatus.reserved,
+      TableStatus.merged,
+      TableStatus.unrecognized,
     ]);
 
     expect(
@@ -113,7 +112,35 @@ void main() {
         'tableId': '1',
         'status': 'reserved',
       }).status,
-      TableStatus.disabled,
+      TableStatus.reserved,
+    );
+    expect(
+      RestaurantTableModel.fromJson(<String, dynamic>{
+        'tableId': '1',
+        'status': 'Merged',
+      }).status,
+      TableStatus.merged,
+    );
+    expect(
+      RestaurantTableModel.fromJson(<String, dynamic>{
+        'tableId': '1',
+        'status': 'not-a-status',
+      }).status,
+      TableStatus.unrecognized,
+    );
+    expect(
+      RestaurantTableModel.fromJson(<String, dynamic>{
+        'tableId': '1',
+        'status': 'Cleaning',
+      }).isSelectable,
+      isFalse,
+    );
+    expect(
+      RestaurantTableModel.fromJson(<String, dynamic>{
+        'tableId': '1',
+        'status': 'Cleaning',
+      }).selectionBlockedMessage,
+      isNotEmpty,
     );
   });
 

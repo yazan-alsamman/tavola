@@ -16,8 +16,8 @@ import '../../waitlist/repository/waitlist_repository.dart';
 import '../model/customer_reservation_model.dart';
 import '../model/floor_plan_area_model.dart';
 import '../model/restaurant_table_model.dart';
-import '../model/table_status.dart';
 import '../model/reservation_confirmation_model.dart';
+import '../model/reservation_status.dart';
 import '../model/reservation_time_window.dart';
 import '../repository/reservation_repository.dart';
 import '../repository/table_repository.dart';
@@ -41,6 +41,10 @@ class SelectTableController extends GetxController {
   final RxBool isJoiningWaitlist = false.obs;
   final RxnString tablesError = RxnString();
   final RxnString waitlistEntryId = RxnString();
+
+  /// Signed-in availability search failed. Tables stay on the floor plan,
+  /// but they are not treated as bookable.
+  final RxBool availabilityUnresolved = false.obs;
 
   @override
   void onInit() {
@@ -74,6 +78,7 @@ class SelectTableController extends GetxController {
   Future<void> loadTables() async {
     isLoadingTables.value = true;
     tablesError.value = null;
+    availabilityUnresolved.value = false;
     try {
       final List<RestaurantTableModel> tables = await _loadTablesForContext();
       floorPlanTables.assignAll(tables);
@@ -163,6 +168,7 @@ class SelectTableController extends GetxController {
       try {
         final List<RestaurantTableModel> availability =
             await _reservationRepository.searchAvailability(window);
+        availabilityUnresolved.value = false;
         return RestaurantTableModel.overlayAvailability(
           floorPlan: floorPlan,
           availability: availability,
@@ -172,6 +178,7 @@ class SelectTableController extends GetxController {
           rethrow;
         }
         tablesError.value = error.message;
+        availabilityUnresolved.value = true;
         return floorPlan;
       }
     }
@@ -198,6 +205,7 @@ class SelectTableController extends GetxController {
   }
 
   bool get canConfirm =>
+      !availabilityUnresolved.value &&
       selectedTable != null &&
       selectedTable!.isSelectable &&
       !isCreatingReservation.value;
@@ -238,6 +246,18 @@ class SelectTableController extends GetxController {
   bool get showWaitlistCard => canJoinWaitlist || canCancelWaitlist;
 
   void selectTable(RestaurantTableModel table) {
+    if (availabilityUnresolved.value) {
+      Get.snackbar(
+        AppStrings.selectYourTable,
+        tablesError.value ?? AppStrings.reservationAvailabilityFailed,
+      );
+      return;
+    }
+    final String? blocked = table.selectionBlockedMessage;
+    if (blocked != null) {
+      Get.snackbar(AppStrings.selectYourTable, blocked);
+      return;
+    }
     selectedTableId.value = table.id;
     _refreshSelectedTableDetails(table.id);
   }
@@ -266,6 +286,14 @@ class SelectTableController extends GetxController {
       // Authenticated table read may add status/capacity. Geometry already
       // on the floor-plan row is kept when the detail payload omits it.
       floorPlanTables[index] = floorPlanTables[index].overlayWith(fresh);
+      final RestaurantTableModel updated = floorPlanTables[index];
+      if (!updated.isSelectable && selectedTableId.value == id) {
+        selectedTableId.value = null;
+        final String? blocked = updated.selectionBlockedMessage;
+        if (blocked != null) {
+          Get.snackbar(AppStrings.selectYourTable, blocked);
+        }
+      }
     } on ApiException catch (error) {
       if (error.isCancelled || isClosed) {
         return;
@@ -277,25 +305,11 @@ class SelectTableController extends GetxController {
   }
 
   String descriptionFor(RestaurantTableModel table) {
-    if (table.description != null) {
+    if (table.description != null && table.description!.trim().isNotEmpty) {
       return table.description!;
     }
-
-    if (table.status == TableStatus.available &&
-        table.isAvailableForWindow == false) {
-      return AppStrings.tableUnavailableForSlotNote;
-    }
-
-    switch (table.status) {
-      case TableStatus.available:
-        return AppStrings.availableTableDescription;
-      case TableStatus.occupied:
-        return AppStrings.occupiedTableNote;
-      case TableStatus.cleaning:
-        return AppStrings.cleaningTableNote;
-      case TableStatus.disabled:
-        return AppStrings.disabledTableNote;
-    }
+    return table.selectionBlockedMessage ??
+        AppStrings.availableTableDescription;
   }
 
   Future<void> confirmReservation() async {
@@ -347,6 +361,8 @@ class SelectTableController extends GetxController {
           endTime: window.endTime,
           guests: window.partySize,
           tableCapacity: table.seatCount,
+          startTimeIso: window.startTimeIso,
+          endTimeIso: window.endTimeIso,
         );
       } else {
         created = await _reservationRepository.createReservation(
@@ -358,12 +374,15 @@ class SelectTableController extends GetxController {
           tableCapacity: table.seatCount,
           restaurantId: reservation.restaurantId.value,
           restaurantName: reservation.restaurantName.value,
+          startTimeIso: window.startTimeIso,
+          endTimeIso: window.endTimeIso,
         );
       }
       _showLocalConfirmation(
         table,
         created.reservationId,
         guestCount: created.guests,
+        reservationStatus: created.status,
       );
       if (Get.isRegistered<ProfileController>()) {
         Get.find<ProfileController>().refreshReservations();
@@ -416,15 +435,32 @@ class SelectTableController extends GetxController {
       return;
     }
 
+    final String? preferredDate = reservation.formatBranchDate(
+      window.startTime,
+    );
+    final String? preferredTimeFrom = reservation.formatBranchTime(
+      window.startTime,
+    );
+    final String? preferredTimeTo = reservation.formatBranchTime(
+      window.endTime,
+    );
+    if (preferredDate == null || preferredTimeFrom == null) {
+      Get.snackbar(
+        AppStrings.waitlistJoin,
+        reservation.branchError.value ?? AppStrings.reservationWindowIncomplete,
+      );
+      return;
+    }
+
     isJoiningWaitlist.value = true;
     try {
       final WaitlistEntryModel entry = await _waitlistRepository.join(
         WaitlistJoinRequestModel(
           branchId: window.branchId,
           partySize: window.partySize,
-          preferredDate: _formatPreferredDate(window.startTime),
-          preferredTimeFrom: _formatPreferredTime(window.startTime),
-          preferredTimeTo: _formatPreferredTime(window.endTime),
+          preferredDate: preferredDate,
+          preferredTimeFrom: preferredTimeFrom,
+          preferredTimeTo: preferredTimeTo,
         ),
       );
       waitlistEntryId.value = entry.entryId;
@@ -467,22 +503,11 @@ class SelectTableController extends GetxController {
     }
   }
 
-  static String _formatPreferredDate(DateTime value) {
-    final String month = value.month.toString().padLeft(2, '0');
-    final String day = value.day.toString().padLeft(2, '0');
-    return '${value.year}-$month-$day';
-  }
-
-  static String _formatPreferredTime(DateTime value) {
-    final String hour = value.hour.toString().padLeft(2, '0');
-    final String minute = value.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
   void _showLocalConfirmation(
     RestaurantTableModel table,
     String referenceCode, {
     int? guestCount,
+    String? reservationStatus,
   }) {
     confirmation.value = ReservationConfirmationModel(
       restaurantName: _restaurantName(),
@@ -492,6 +517,9 @@ class SelectTableController extends GetxController {
       dateLabel: _dateLabel(),
       tableLabel: _tableLabel(table),
       referenceCode: referenceCode,
+      statusLabel: reservationStatus == null
+          ? null
+          : ReservationStatusApi.customerLabel(reservationStatus),
     );
     showConfirmation.value = true;
   }

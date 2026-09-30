@@ -10,6 +10,7 @@ import '../model/floor_plan_area_model.dart';
 import '../model/floor_plan_geometry.dart';
 import '../model/restaurant_table_model.dart';
 import 'floor_plan_table.dart';
+import 'floor_plan_unavailable_notice.dart';
 import 'table_status_legend.dart';
 
 class RestaurantFloorMap extends StatefulWidget {
@@ -27,6 +28,8 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
   late final Animation<double> _pulseAnimation;
   final TransformationController _transformController =
       TransformationController();
+  String? _unavailableMessage;
+  int _unavailableNoticeId = 0;
 
   @override
   void initState() {
@@ -66,62 +69,96 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
                       (BuildContext context, BoxConstraints mapConstraints) {
                         final double mapWidth = mapConstraints.maxWidth;
                         final double mapHeight = mapConstraints.maxHeight;
-                        return InteractiveViewer(
-                          transformationController: _transformController,
-                          minScale: AppDimensions.floorPlanMapMinScale,
-                          maxScale: AppDimensions.floorPlanMapMaxScale,
-                          boundaryMargin: const EdgeInsets.all(
-                            AppDimensions.smallSpacing,
-                          ),
-                          clipBehavior: Clip.hardEdge,
-                          child: SizedBox(
-                            width: mapWidth,
-                            height: mapHeight,
-                            child: Obx(() {
-                              if (Get.isRegistered<LocaleController>()) {
-                                Get.find<LocaleController>().languageCode.value;
-                              }
-                              final List<RestaurantTableModel> tables = widget
-                                  .controller
-                                  .floorPlanTables
-                                  .toList(growable: false);
-                              final List<FloorPlanAreaModel> areas = widget
-                                  .controller
-                                  .floorPlanAreas
-                                  .toList(growable: false);
-                              final Size viewport = Size(mapWidth, mapHeight);
-                              final _FloorPlanLayout layout = _layoutFloorPlan(
-                                viewport: viewport,
-                                tables: tables,
-                                areas: areas,
-                                textDirection: Directionality.of(context),
-                              );
-
-                              return Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  const SizedBox.expand(
-                                    child: CustomPaint(
-                                      painter: _RestaurantMapPainter(),
-                                    ),
-                                  ),
-                                  ...areas.map(
-                                    (FloorPlanAreaModel area) => _buildArea(
-                                      area,
-                                      layout: layout,
-                                    ),
-                                  ),
-                                  ...tables.map(
-                                    (RestaurantTableModel table) =>
-                                        _buildMapTable(
-                                          table,
-                                          frame: layout.frame,
+                        final String? unavailableMessage = _unavailableMessage;
+                        final int unavailableNoticeId = _unavailableNoticeId;
+                        return Stack(
+                          children: [
+                            InteractiveViewer(
+                              transformationController: _transformController,
+                              minScale: AppDimensions.floorPlanMapMinScale,
+                              maxScale: AppDimensions.floorPlanMapMaxScale,
+                              boundaryMargin: const EdgeInsets.all(
+                                AppDimensions.smallSpacing,
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              child: SizedBox(
+                                width: mapWidth,
+                                height: mapHeight,
+                                child: Obx(() {
+                                  if (Get.isRegistered<LocaleController>()) {
+                                    Get.find<LocaleController>()
+                                        .languageCode
+                                        .value;
+                                  }
+                                  final List<RestaurantTableModel> tables =
+                                      widget.controller.floorPlanTables.toList(
+                                        growable: false,
+                                      );
+                                  final List<FloorPlanAreaModel> areas = widget
+                                      .controller
+                                      .floorPlanAreas
+                                      .toList(growable: false);
+                                  final Size viewport = Size(
+                                    mapWidth,
+                                    mapHeight,
+                                  );
+                                  final _FloorPlanLayout layout =
+                                      _layoutFloorPlan(
+                                        viewport: viewport,
+                                        tables: tables,
+                                        areas: areas,
+                                        textDirection: Directionality.of(
+                                          context,
                                         ),
-                                  ),
-                                ],
-                              );
-                            }),
-                          ),
+                                      );
+
+                                  return Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      const SizedBox.expand(
+                                        child: CustomPaint(
+                                          painter: _RestaurantMapPainter(),
+                                        ),
+                                      ),
+                                      ...areas.map(
+                                        (FloorPlanAreaModel area) =>
+                                            _buildArea(area, layout: layout),
+                                      ),
+                                      ...tables.map(
+                                        (RestaurantTableModel table) =>
+                                            _buildMapTable(
+                                              table,
+                                              frame: layout.frame,
+                                            ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                              ),
+                            ),
+                            Positioned(
+                              left: AppDimensions.contentPadding,
+                              right: AppDimensions.contentPadding,
+                              bottom: AppDimensions.smallSpacing,
+                              child: unavailableMessage == null
+                                  ? const SizedBox.shrink()
+                                  : Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: IgnorePointer(
+                                        child: FloorPlanUnavailableNotice(
+                                          key: ValueKey<int>(
+                                            unavailableNoticeId,
+                                          ),
+                                          message: unavailableMessage,
+                                          onDismissed: () =>
+                                              _clearUnavailableNotice(
+                                                unavailableNoticeId,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ],
                         );
                       },
                 ),
@@ -225,11 +262,47 @@ class _RestaurantFloorMapState extends State<RestaurantFloorMap>
           isSelected: isSelected,
           width: width,
           height: height,
-          onTap: () => widget.controller.selectTable(table),
+          onTap: () => _onTableTap(table),
         ),
       ),
     );
   }
+
+  void _onTableTap(RestaurantTableModel table) {
+    routeFloorPlanTableTap(
+      table: table,
+      selectTable: widget.controller.selectTable,
+      showUnavailable: _showUnavailableNotice,
+    );
+  }
+
+  void _showUnavailableNotice(String message) {
+    setState(() {
+      _unavailableNoticeId += 1;
+      _unavailableMessage = message;
+    });
+  }
+
+  void _clearUnavailableNotice(int noticeId) {
+    if (!mounted || noticeId != _unavailableNoticeId) {
+      return;
+    }
+    setState(() => _unavailableMessage = null);
+  }
+}
+
+/// Floor-plan taps. A blocked table shows [showUnavailable] and is not selected.
+void routeFloorPlanTableTap({
+  required RestaurantTableModel table,
+  required void Function(RestaurantTableModel table) selectTable,
+  required void Function(String message) showUnavailable,
+}) {
+  final String? blocked = table.selectionBlockedMessage;
+  if (blocked != null) {
+    showUnavailable(blocked);
+    return;
+  }
+  selectTable(table);
 }
 
 /// Places a table at Backend `positionX`/`positionY` using [Positioned.left]/[Positioned.top].
