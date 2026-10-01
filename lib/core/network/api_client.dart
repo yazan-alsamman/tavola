@@ -96,16 +96,14 @@ class ApiClient {
       // InterceptorsWrapper+async when cuisine/occasion/restaurants overlap).
       // Authenticated attach/refresh stays async via [_attachAuthorization].
       InterceptorsWrapper(
-        onRequest:
-            (RequestOptions options, RequestInterceptorHandler handler) {
-              if (_isAnonymousGuest ||
-                  options.extra[_skipAuthExtraKey] == true) {
-                options.headers.remove('Authorization');
-                handler.next(options);
-                return;
-              }
-              unawaited(_attachAuthorization(options, handler));
-            },
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
+          if (_isAnonymousGuest || options.extra[_skipAuthExtraKey] == true) {
+            options.headers.remove('Authorization');
+            handler.next(options);
+            return;
+          }
+          unawaited(_attachAuthorization(options, handler));
+        },
         onError: (DioException error, ErrorInterceptorHandler handler) async {
           void passError([DioException? nextError]) {
             if (!handler.isCompleted) {
@@ -423,7 +421,7 @@ class ApiClient {
     }
   }
 
-  /// Multipart POST (e.g. avatar upload). Clears default JSON content-type.
+  /// Multipart POST (e.g. review image). Clears default JSON content-type.
   Future<ApiResponse<T>> postMultipart<T>(
     String path, {
     required FormData formData,

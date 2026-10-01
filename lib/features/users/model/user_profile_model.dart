@@ -8,7 +8,6 @@ class UserProfileModel {
     this.phone,
     this.language,
     this.preferredCurrency,
-    this.avatarUrl,
     this.createdAt,
     this.updatedAt,
   });
@@ -23,7 +22,6 @@ class UserProfileModel {
   final String? phone;
   final String? language;
   final String? preferredCurrency;
-  final String? avatarUrl;
   final String? createdAt;
   final String? updatedAt;
 
@@ -52,7 +50,6 @@ class UserProfileModel {
     String? phone,
     String? language,
     String? preferredCurrency,
-    String? avatarUrl,
     String? createdAt,
     String? updatedAt,
   }) {
@@ -65,14 +62,12 @@ class UserProfileModel {
       phone: phone ?? this.phone,
       language: language ?? this.language,
       preferredCurrency: preferredCurrency ?? this.preferredCurrency,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
-    final String? avatar = _readAvatarUrl(json);
     return UserProfileModel(
       id: _readString(json['userId']) ?? _readString(json['id']) ?? '',
       firstName: _readString(json['firstName']) ?? '',
@@ -82,7 +77,6 @@ class UserProfileModel {
       phone: _readPhone(json),
       language: _readString(json['language']),
       preferredCurrency: _readString(json['preferredCurrency']),
-      avatarUrl: avatar,
       createdAt: _readString(json['createdAt']),
       updatedAt: _readString(json['updatedAt']),
     );
@@ -112,16 +106,18 @@ class UserProfileModel {
     final String? countryCode =
         (_readString(json['countryCode']) ?? _readString(json['dialCode']))
             ?.trim();
-    final String? national = (_readString(json['phoneNumber']) ??
-            _readString(json['nationalNumber']) ??
-            _readString(json['mobile']))
-        ?.trim();
+    final String? national =
+        (_readString(json['phoneNumber']) ??
+                _readString(json['nationalNumber']) ??
+                _readString(json['mobile']))
+            ?.trim();
     if (countryCode != null &&
         countryCode.isNotEmpty &&
         national != null &&
         national.isNotEmpty) {
-      final String dial =
-          countryCode.startsWith('+') ? countryCode : '+$countryCode';
+      final String dial = countryCode.startsWith('+')
+          ? countryCode
+          : '+$countryCode';
       final String digits = national.replaceAll(RegExp(r'\D'), '');
       if (digits.isNotEmpty) {
         return '$dial$digits';
@@ -148,44 +144,4 @@ class UserProfileModel {
   );
 
   static bool _looksLikeUuid(String value) => _uuidPattern.hasMatch(value);
-
-  static String? _readAvatarUrl(Map<String, dynamic> json) {
-    final String parsed = _extractAvatarUrl(json).trim();
-    return parsed.isEmpty ? null : parsed;
-  }
-
-  static String _extractAvatarUrl(Map<String, dynamic> payload) {
-    const List<String> preferredKeys = <String>[
-      'avatarUrl',
-      'avatar_url',
-      'avatar',
-      'imageUrl',
-      'url',
-      'path',
-      'avatarPath',
-      'profileImage',
-      'secure_url',
-    ];
-    for (final String key in preferredKeys) {
-      final Object? value = payload[key];
-      if (value is String && value.trim().isNotEmpty) {
-        return value.trim();
-      }
-      if (value is Map<String, dynamic>) {
-        final String nested = _extractAvatarUrl(value).trim();
-        if (nested.isNotEmpty) {
-          return nested;
-        }
-      }
-    }
-    for (final Object? value in payload.values) {
-      if (value is Map<String, dynamic>) {
-        final String nested = _extractAvatarUrl(value).trim();
-        if (nested.isNotEmpty) {
-          return nested;
-        }
-      }
-    }
-    return '';
-  }
 }

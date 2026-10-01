@@ -18,7 +18,7 @@ class BrowseByOccasionSection extends StatelessWidget {
 
   final List<OccasionCategoryModel> categories;
   final String? selectedCategory;
-  final ValueChanged<String> onSelected;
+  final ValueChanged<OccasionCategoryModel> onSelected;
 
   /// Maps icons to `GET /occasion-categories` slugs exactly.
   static IconData _iconFor(OccasionCategoryModel category) {
@@ -79,7 +79,7 @@ class BrowseByOccasionSection extends StatelessWidget {
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
-                      onTap: () => onSelected(category.name),
+                      onTap: () => onSelected(category),
                       child: Container(
                         padding: const EdgeInsets.all(
                           AppDimensions.contentPadding,

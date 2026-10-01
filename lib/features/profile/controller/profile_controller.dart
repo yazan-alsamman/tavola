@@ -67,10 +67,11 @@ class ProfileController extends GetxController {
   final Rxn<UserPreferencesModel> userPreferences = Rxn<UserPreferencesModel>();
   final RxBool isLoadingProfile = false.obs;
   final RxBool isLoadingReservations = false.obs;
-  final RxBool isUploadingAvatar = false.obs;
   final RxBool isReviewBusy = false.obs;
   final RxnString profileError = RxnString();
   final RxnString reservationsError = RxnString();
+  Future<void>? _reservationsLoad;
+  bool _reservationsRefreshQueued = false;
 
   @override
   void onInit() {
@@ -229,8 +230,7 @@ class ProfileController extends GetxController {
   /// Profile card name = signup/login username from API identity.
   String get profileDisplayName {
     // Touch both Rx sources so Obx rebuilds after login identity lands.
-    final String fromController =
-        userProfile.value?.displayName.trim() ?? '';
+    final String fromController = userProfile.value?.displayName.trim() ?? '';
     final String fromRepository =
         _usersRepository.profileRx.value?.displayName.trim() ?? '';
     if (fromController.isNotEmpty) {
@@ -248,14 +248,6 @@ class ProfileController extends GetxController {
       return null;
     }
     return phone;
-  }
-
-  String? get profileAvatarUrl {
-    final String? url = userProfile.value?.avatarUrl?.trim();
-    if (url == null || url.isEmpty) {
-      return null;
-    }
-    return url;
   }
 
   List<RestaurantModel> get featuredRestaurants {
@@ -284,7 +276,32 @@ class ProfileController extends GetxController {
   }
 
   /// `GET /reservations/my/upcoming` + `GET /reservations/my/history`.
-  Future<void> loadReservations() async {
+  ///
+  /// A refresh requested while one is running waits, then loads once more so
+  /// the latest backend statuses replace the list.
+  Future<void> loadReservations() {
+    final Future<void>? active = _reservationsLoad;
+    if (active != null) {
+      _reservationsRefreshQueued = true;
+      return active;
+    }
+    final Future<void> run = _loadReservationsOnce();
+    _reservationsLoad = run.whenComplete(() {
+      if (!identical(_reservationsLoad, run)) {
+        return;
+      }
+      _reservationsLoad = null;
+      if (!_reservationsRefreshQueued || isClosed) {
+        _reservationsRefreshQueued = false;
+        return;
+      }
+      _reservationsRefreshQueued = false;
+      unawaited(loadReservations());
+    });
+    return run;
+  }
+
+  Future<void> _loadReservationsOnce() async {
     if (isClosed) {
       return;
     }
@@ -294,7 +311,10 @@ class ProfileController extends GetxController {
       _syncReservationLists();
       return;
     }
-    isLoadingReservations.value = true;
+    final bool showBlockingLoader = reservationHistory.isEmpty;
+    if (showBlockingLoader) {
+      isLoadingReservations.value = true;
+    }
     reservationsError.value = null;
     try {
       await _reservationRepository.syncProfileReservations();
@@ -351,11 +371,7 @@ class ProfileController extends GetxController {
       restaurantName: item.restaurantName,
       onPickImage: _pickReviewImagePath,
       onSubmit:
-          ({
-            required int rating,
-            required String comment,
-            String? imagePath,
-          }) {
+          ({required int rating, required String comment, String? imagePath}) {
             return submitReview(
               reservationId: item.reservationId,
               rating: rating,
@@ -499,6 +515,9 @@ class ProfileController extends GetxController {
 
   void selectSection(int index) {
     selectedSectionIndex.value = index;
+    if (index == lastReservationsSectionIndex) {
+      unawaited(loadReservations());
+    }
     // Deletion cancel flag lives in Keychain — hydrate only when Settings opens,
     // never on the Login→Home critical path (SecItem races freeze/crash iOS).
     final bool isSignedIn = Get.isRegistered<AuthSessionController>()
@@ -507,9 +526,7 @@ class ProfileController extends GetxController {
     if (index == settingsSectionIndex && isSignedIn) {
       AppDependency.ensureUsersRepository();
       if (Get.isRegistered<UsersRepository>()) {
-        unawaited(
-          Get.find<UsersRepository>().hydratePendingAccountDeletion(),
-        );
+        unawaited(Get.find<UsersRepository>().hydratePendingAccountDeletion());
       }
     }
   }
@@ -578,12 +595,17 @@ class ProfileController extends GetxController {
       }
     } catch (_) {
       if (!isClosed) {
-        Get.snackbar(AppStrings.reservations, AppStrings.networkUnexpectedError);
+        Get.snackbar(
+          AppStrings.reservations,
+          AppStrings.networkUnexpectedError,
+        );
       }
     }
   }
 
-  Future<void> rescheduleReservation(CustomerReservationModel reservation) async {
+  Future<void> rescheduleReservation(
+    CustomerReservationModel reservation,
+  ) async {
     if (!await _requireSignIn()) {
       return;
     }
@@ -703,38 +725,10 @@ class ProfileController extends GetxController {
     await syncLanguageToProfile(isArabic: isArabic);
   }
 
-  Future<void> pickAndUploadAvatar() async {
-    if (!await _requireSignIn()) {
-      return;
-    }
-    try {
-      final XFile? file = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: AppDimensions.avatarPickerMaxWidth,
-        maxHeight: AppDimensions.avatarPickerMaxHeight,
-        imageQuality: AppDimensions.avatarPickerImageQuality,
-      );
-      if (file == null) {
-        return;
-      }
-      isUploadingAvatar.value = true;
-      final UserProfileModel updated = await _usersRepository.uploadMyAvatar(
-        filePath: file.path,
-        fileName: file.name,
-      );
-      userProfile.value = updated;
-    } on ApiException catch (error) {
-      Get.snackbar(AppStrings.profile, error.message);
-    } catch (_) {
-      Get.snackbar(AppStrings.profile, AppStrings.avatarUploadFailed);
-    } finally {
-      isUploadingAvatar.value = false;
-    }
-  }
-
   Future<bool> _requireSignIn() async {
     if (Get.isRegistered<AuthSessionController>()) {
-      return Get.find<AuthSessionController>().requireSignInForProtectedAction();
+      return Get.find<AuthSessionController>()
+          .requireSignInForProtectedAction();
     }
     return _hasAccessToken();
   }

@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:get/get.dart' hide FormData, MultipartFile;
+import 'package:get/get.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
@@ -14,7 +13,6 @@ import '../../../core/network/api_response.dart';
 import '../../../core/network/auth_token_reader.dart';
 import '../../../core/network/customer_identity_payload.dart';
 import '../../../core/network/secure_auth_token_store.dart';
-import '../../../core/utils/media_url_resolver.dart';
 import '../../home/model/restaurant_model.dart';
 import '../model/delete_account_result_model.dart';
 import '../model/export_user_data_result_model.dart';
@@ -28,7 +26,6 @@ import '../model/user_profile_model.dart';
 /// - `POST /users/me/cancel-deletion`
 /// - `GET /users/me/export`
 /// - `GET/PATCH /users/me/preferences`
-/// - `POST /users/me/avatar`
 /// - `GET /users/me/favorites`
 /// - `POST/DELETE /users/me/favorites/:restaurantId`
 class UsersRepository {
@@ -51,14 +48,12 @@ class UsersRepository {
   static const String exportPath = AppUrls.usersMeExportPath;
   static const String cancelDeletionPath = AppUrls.usersMeCancelDeletionPath;
   static const String preferencesPath = AppUrls.usersMePreferencesPath;
-  static const String avatarPath = AppUrls.usersMeAvatarPath;
   static const String favoritesPath = AppUrls.usersMeFavoritesPath;
   static const String _pageQueryKey = 'page';
   static const String _pageSizeQueryKey = 'pageSize';
   static const String _limitQueryKey = 'limit';
   static const String _usernameKey = 'customer_username';
   static const String _phoneKey = 'customer_phone';
-  static const String _avatarUrlKey = 'customer_avatar_url';
   static const String _pendingDeletionAtKey =
       'customer_pending_account_deletion_at';
 
@@ -70,7 +65,6 @@ class UsersRepository {
   Future<void>? _profileLoadInFlight;
   String _cachedUsername = '';
   String _cachedPhone = '';
-  String _cachedAvatarUrl = '';
   bool _identityHydrated = false;
 
   UserProfileModel? get cachedProfile => profileRx.value;
@@ -82,7 +76,7 @@ class UsersRepository {
       .toList(growable: false);
 
   /// Clears in-memory user session caches so a new/guest session never sees
-  /// stale profile, avatar, preferences, or favorites from a prior account.
+  /// stale profile, preferences, or favorites from a prior account.
   void clearSessionCaches() {
     profileRx.value = null;
     _cachedPreferences = null;
@@ -98,7 +92,6 @@ class UsersRepository {
   void applyCustomerIdentityInMemory({
     required String username,
     required String phone,
-    String? avatarUrl,
   }) {
     final String nextUsername = username.trim();
     final String nextPhone = phone.trim();
@@ -107,10 +100,6 @@ class UsersRepository {
     }
     if (nextPhone.isNotEmpty) {
       _cachedPhone = nextPhone;
-    }
-    final String normalizedAvatar = _normalizeAvatarUrl(avatarUrl);
-    if (normalizedAvatar.isNotEmpty) {
-      _cachedAvatarUrl = normalizedAvatar;
     }
     _identityHydrated = true;
 
@@ -121,9 +110,6 @@ class UsersRepository {
             ? _cachedUsername
             : current.username,
         phone: _cachedPhone.isNotEmpty ? _cachedPhone : current.phone,
-        avatarUrl: _cachedAvatarUrl.isNotEmpty
-            ? _cachedAvatarUrl
-            : current.avatarUrl,
       );
     } else if (_cachedUsername.isNotEmpty || _cachedPhone.isNotEmpty) {
       // Guest→login can finish before `/users/me` — expose identity immediately.
@@ -134,7 +120,6 @@ class UsersRepository {
         email: '',
         username: _cachedUsername,
         phone: _cachedPhone.isEmpty ? null : _cachedPhone,
-        avatarUrl: _cachedAvatarUrl.isEmpty ? null : _cachedAvatarUrl,
       );
     }
 
@@ -147,13 +132,8 @@ class UsersRepository {
   Future<void> rememberCustomerIdentity({
     required String username,
     required String phone,
-    String? avatarUrl,
   }) async {
-    applyCustomerIdentityInMemory(
-      username: username,
-      phone: phone,
-      avatarUrl: avatarUrl,
-    );
+    applyCustomerIdentityInMemory(username: username, phone: phone);
   }
 
   /// Allows `/users/me` to run again after guest probing skipped the load.
@@ -185,9 +165,6 @@ class UsersRepository {
         phone.isEmpty
             ? _vault.delete(_phoneKey)
             : _vault.write(_phoneKey, phone),
-        _cachedAvatarUrl.isEmpty
-            ? _vault.delete(_avatarUrlKey)
-            : _vault.write(_avatarUrlKey, _cachedAvatarUrl),
       ]).timeout(AppDimensions.secureStorageTimeout);
     } catch (_) {
       // Identity remains available in memory for this session.
@@ -197,7 +174,6 @@ class UsersRepository {
   Future<void> clearCustomerIdentity() async {
     _cachedUsername = '';
     _cachedPhone = '';
-    _cachedAvatarUrl = '';
     _identityHydrated = true;
     _identityDiskDirty = false;
     if (defaultTargetPlatform != TargetPlatform.iOS) {
@@ -210,7 +186,6 @@ class UsersRepository {
       await Future.wait<void>(<Future<void>>[
         _vault.delete(_usernameKey),
         _vault.delete(_phoneKey),
-        _vault.delete(_avatarUrlKey),
       ]).timeout(AppDimensions.secureStorageTimeout);
     } catch (_) {
       // Guest / logout must not block on storage.
@@ -225,11 +200,9 @@ class UsersRepository {
       final List<String?> values = await Future.wait<String?>(<Future<String?>>[
         _vault.read(_usernameKey),
         _vault.read(_phoneKey),
-        _vault.read(_avatarUrlKey),
       ]).timeout(AppDimensions.secureStorageTimeout);
       final String diskUsername = values[0]?.trim() ?? '';
       final String diskPhone = values[1]?.trim() ?? '';
-      final String diskAvatar = _normalizeAvatarUrl(values[2]);
       // Login may call [rememberCustomerIdentity] while this await is in flight.
       // Never clobber a fresher in-memory username/phone with empty Keychain.
       if (_cachedUsername.isEmpty && diskUsername.isNotEmpty) {
@@ -238,16 +211,13 @@ class UsersRepository {
       if (_cachedPhone.isEmpty && diskPhone.isNotEmpty) {
         _cachedPhone = diskPhone;
       }
-      if (_cachedAvatarUrl.isEmpty && diskAvatar.isNotEmpty) {
-        _cachedAvatarUrl = diskAvatar;
-      }
     } catch (_) {
       // Keep any in-memory login identity; disk is best-effort only.
     }
     _identityHydrated = true;
   }
 
-  /// Loads `/users/me` once for shared header avatar (safe to call repeatedly).
+  /// Loads `/users/me` once for shared profile identity (safe to call repeatedly).
   Future<void> ensureProfileLoaded() async {
     if (_profileLoadAttempted) {
       return;
@@ -278,7 +248,7 @@ class UsersRepository {
       try {
         await fetchMyProfile();
       } catch (_) {
-        // Header keeps the fallback avatar asset.
+        // Profile card keeps the last in-memory identity.
       }
     } finally {
       if (!completer.isCompleted) {
@@ -293,16 +263,10 @@ class UsersRepository {
     final UserProfileModel? previous = profileRx.value;
     final ApiResponse<UserProfileModel> response = await _apiClient
         .get<UserProfileModel>(mePath, parseData: _parseProfile);
-    final String? previousAvatar = previous?.avatarUrl;
-    UserProfileModel profile = _normalizeProfileAvatar(
-      _mergeCustomerIdentity(response.data, previous: previous),
+    UserProfileModel profile = _mergeCustomerIdentity(
+      response.data,
+      previous: previous,
     );
-    // Profile DTO may omit avatar; keep the last uploaded URL when present.
-    if ((profile.avatarUrl == null || profile.avatarUrl!.trim().isEmpty) &&
-        previousAvatar != null &&
-        previousAvatar.trim().isNotEmpty) {
-      profile = profile.copyWith(avatarUrl: previousAvatar);
-    }
     // `/users/me` currently omits username — never let that wipe login identity.
     if (profile.username.trim().isEmpty) {
       final String fallback = _cachedUsername.isNotEmpty
@@ -341,22 +305,12 @@ class UsersRepository {
         : (_cachedPhone.isNotEmpty
               ? _cachedPhone
               : (previous?.phone?.trim() ?? ''));
-    final String avatarUrl = _normalizeAvatarUrl(
-      profile.avatarUrl?.trim().isNotEmpty == true
-          ? profile.avatarUrl
-          : (_cachedAvatarUrl.isNotEmpty
-                ? _cachedAvatarUrl
-                : previous?.avatarUrl),
-    );
-    if (username == profile.username &&
-        phone == (profile.phone ?? '') &&
-        avatarUrl == (profile.avatarUrl ?? '')) {
+    if (username == profile.username && phone == (profile.phone ?? '')) {
       return profile;
     }
     return profile.copyWith(
       username: username,
       phone: phone.isEmpty ? profile.phone : phone,
-      avatarUrl: avatarUrl.isEmpty ? profile.avatarUrl : avatarUrl,
     );
   }
 
@@ -382,15 +336,7 @@ class UsersRepository {
 
     final ApiResponse<UserProfileModel> response = await _apiClient
         .patch<UserProfileModel>(mePath, data: data, parseData: _parseProfile);
-    final String? previousAvatar = profileRx.value?.avatarUrl;
-    UserProfileModel profile = _normalizeProfileAvatar(
-      _mergeCustomerIdentity(response.data),
-    );
-    if ((profile.avatarUrl == null || profile.avatarUrl!.trim().isEmpty) &&
-        previousAvatar != null &&
-        previousAvatar.trim().isNotEmpty) {
-      profile = profile.copyWith(avatarUrl: previousAvatar);
-    }
+    final UserProfileModel profile = _mergeCustomerIdentity(response.data);
     profileRx.value = profile;
     return profile;
   }
@@ -420,80 +366,6 @@ class UsersRepository {
         );
     _cachedPreferences = response.data;
     return response.data;
-  }
-
-  /// `POST /users/me/avatar` returns UploadAvatarResponseDto (not full profile).
-  Future<UserProfileModel> uploadMyAvatar({
-    required String filePath,
-    String? fileName,
-  }) async {
-    final String before = _normalizeAvatarUrl(profileRx.value?.avatarUrl);
-    final ApiResponse<String> response = await _postAvatarMultipart(
-      filePath: filePath,
-      fileName: fileName,
-    );
-    final UserProfileModel refreshedProfile = await fetchMyProfile();
-    final String fromProfile = _normalizeAvatarUrl(refreshedProfile.avatarUrl);
-    final String fromUpload = _normalizeAvatarUrl(response.data);
-    final String resolvedAvatar = fromProfile.isNotEmpty
-        ? fromProfile
-        : (fromUpload.isNotEmpty ? fromUpload : before);
-    if (resolvedAvatar.isEmpty) {
-      throw ApiException(message: AppStrings.avatarUploadFailed);
-    }
-    final UserProfileModel updated = refreshedProfile.copyWith(
-      avatarUrl: resolvedAvatar,
-    );
-    if (resolvedAvatar.isNotEmpty) {
-      _cachedAvatarUrl = resolvedAvatar;
-      _identityDiskDirty = true;
-      unawaited(flushIdentityToDisk());
-    }
-    profileRx.value = updated;
-    return updated;
-  }
-
-  Future<ApiResponse<String>> _postAvatarMultipart({
-    required String filePath,
-    String? fileName,
-  }) async {
-    final FormData formData = FormData.fromMap(<String, dynamic>{
-      // Some deployments expect different multipart field names; send all
-      // aliases so avatar persistence does not depend on one backend variant.
-      AppStrings.apiAvatarUploadFieldFile: await MultipartFile.fromFile(
-        filePath,
-        filename: fileName,
-      ),
-      AppStrings.apiAvatarUploadFieldAvatar: await MultipartFile.fromFile(
-        filePath,
-        filename: fileName,
-      ),
-      AppStrings.apiAvatarUploadFieldImage: await MultipartFile.fromFile(
-        filePath,
-        filename: fileName,
-      ),
-      AppStrings.apiAvatarUploadFieldProfileImage: await MultipartFile.fromFile(
-        filePath,
-        filename: fileName,
-      ),
-    });
-    return _apiClient.postMultipart<String>(
-      avatarPath,
-      formData: formData,
-      parseData: _parseAvatarUrl,
-    );
-  }
-
-  UserProfileModel _normalizeProfileAvatar(UserProfileModel profile) {
-    final String normalized = _normalizeAvatarUrl(profile.avatarUrl);
-    if (normalized.isEmpty || normalized == profile.avatarUrl) {
-      return profile;
-    }
-    return profile.copyWith(avatarUrl: normalized);
-  }
-
-  String _normalizeAvatarUrl(String? raw) {
-    return MediaUrlResolver.normalize(raw);
   }
 
   /// `GET /users/me/favorites?page=&pageSize=` — favorites list.
@@ -678,55 +550,6 @@ class UsersRepository {
       return UserPreferencesModel.fromJson(raw);
     }
     throw ArgumentError(AppStrings.invalidUserPreferencesPayload);
-  }
-
-  static String _parseAvatarUrl(Object? raw) {
-    final String parsed = _extractAvatarUrl(raw);
-    return parsed.trim();
-  }
-
-  static String _extractAvatarUrl(Object? raw) {
-    if (raw is String) {
-      return raw;
-    }
-    if (raw is! Map<String, dynamic>) {
-      return '';
-    }
-
-    const List<String> preferredKeys = <String>[
-      AppStrings.apiAvatarFieldAvatarUrl,
-      'avatar_url',
-      AppStrings.apiAvatarFieldAvatar,
-      AppStrings.apiAvatarFieldImageUrl,
-      AppStrings.apiAvatarFieldUrl,
-      AppStrings.apiAvatarFieldPath,
-      'avatarPath',
-      'profileImage',
-      'secure_url',
-    ];
-
-    for (final String key in preferredKeys) {
-      final Object? value = raw[key];
-      if (value is String && value.trim().isNotEmpty) {
-        return value.trim();
-      }
-      if (value is Map<String, dynamic>) {
-        final String nested = _extractAvatarUrl(value).trim();
-        if (nested.isNotEmpty) {
-          return nested;
-        }
-      }
-    }
-
-    for (final Object? value in raw.values) {
-      if (value is Map<String, dynamic>) {
-        final String nested = _extractAvatarUrl(value).trim();
-        if (nested.isNotEmpty) {
-          return nested;
-        }
-      }
-    }
-    return '';
   }
 
   static List<RestaurantModel> _parseFavoriteRestaurants(Object? raw) {

@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
 
-import 'package:tavla/core/constants/app_urls.dart';
 import 'package:tavla/core/network/api_client.dart';
 import 'package:tavla/core/network/auth_token_reader.dart';
 import 'package:tavla/features/users/repository/users_repository.dart';
@@ -13,22 +12,23 @@ import 'package:tavla/features/users/repository/users_repository.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('fetchMyProfile reads nested data.user avatar payload', () async {
-    final Dio dio = Dio(BaseOptions(baseUrl: 'http://example.com/api/v1'));
-    dio.httpClientAdapter = _UsersAdapter();
-    final _Tokens tokens = _Tokens();
-    Get.put<AuthTokenReader>(tokens, permanent: true);
+  test(
+    'fetchMyProfile reads nested data.user when avatar is present',
+    () async {
+      final Dio dio = Dio(BaseOptions(baseUrl: 'http://example.com/api/v1'));
+      dio.httpClientAdapter = _UsersAdapter();
+      final _Tokens tokens = _Tokens();
+      Get.put<AuthTokenReader>(tokens, permanent: true);
 
-    final UsersRepository users = UsersRepository(
-      ApiClient(dio: dio, tokenReader: tokens),
-    );
+      final UsersRepository users = UsersRepository(
+        ApiClient(dio: dio, tokenReader: tokens),
+      );
 
-    final profile = await users.fetchMyProfile();
-    expect(profile.username, 'nested-user');
-    final Uri base = Uri.parse(AppUrls.apiBaseUrl);
-    final String expectedOrigin = '${base.scheme}://${base.authority}';
-    expect(profile.avatarUrl, '$expectedOrigin/uploads/customer-avatar.png');
-  });
+      final profile = await users.fetchMyProfile();
+      expect(profile.username, 'nested-user');
+      expect(profile.email, 'nested@example.com');
+    },
+  );
 }
 
 class _Tokens implements AuthTokenSession {

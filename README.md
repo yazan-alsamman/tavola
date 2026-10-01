@@ -46,7 +46,7 @@ Owner/Organization, Employee/Staff, or health/ops endpoints.
 - Feature repositories / screen controllers: route-specific GetX Bindings (lazy, created on navigation)
 - **Customer APIs wired today:**
   - Auth: `/auth/customer/*`, `/auth/refresh`, `/auth/logout`, `/auth/logout-all`, `/auth/sessions`, `/auth/change-password`
-  - Users: `GET/PATCH /users/me`, preferences, avatar, favorites
+  - Users: `GET/PATCH /users/me`, preferences, favorites
   - Taxonomy: `GET /cuisine-categories`, `GET /occasion-categories`
   - Discovery: `/discovery/restaurants` (`q`, `page`/`limit`, optional `lat`/`lng`), `nearby`, `:id`, branches, floor-plan, offers (Home Special Offer card); media IDs resolve via `MediaUrlResolver` (`/files/:id` or `MEDIA_BASE_URL`)
   - Menus (public): `GET /restaurants/:id/menus`, `/menus/default`, `/menus/:menuId`

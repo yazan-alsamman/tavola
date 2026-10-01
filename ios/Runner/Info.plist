@@ -33,7 +33,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>TAVOLA uses your location to show nearby restaurants and provide location-based recommendations.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>TAVOLA needs photo library access so you can choose a profile avatar or attach a photo to a restaurant review.</string>
+	<string>TAVOLA needs photo library access so you can attach a photo to a restaurant review.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

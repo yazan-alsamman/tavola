@@ -12,7 +12,6 @@ class CustomerAuthResponseModel {
     required this.userId,
     this.username = '',
     this.phone = '',
-    this.avatarUrl = '',
     this.sessionVersion,
   });
 
@@ -24,7 +23,6 @@ class CustomerAuthResponseModel {
   /// From login/register user payload — used as Profile card name.
   final String username;
   final String phone;
-  final String avatarUrl;
   final int? sessionVersion;
 
   factory CustomerAuthResponseModel.fromJson(Map<String, dynamic> json) {
@@ -56,7 +54,6 @@ class CustomerAuthResponseModel {
       ),
       username: _looksLikeUuid(username) ? '' : username,
       phone: _phoneField(identity) ?? '',
-      avatarUrl: _avatarField(identity),
     );
   }
 
@@ -79,8 +76,9 @@ class CustomerAuthResponseModel {
       source['phoneNumber'] ?? source['nationalNumber'] ?? source['mobile'],
     );
     if (countryCode.isNotEmpty && national.isNotEmpty) {
-      final String dial =
-          countryCode.startsWith('+') ? countryCode : '+$countryCode';
+      final String dial = countryCode.startsWith('+')
+          ? countryCode
+          : '+$countryCode';
       final String digits = national.replaceAll(RegExp(r'\D'), '');
       if (digits.isNotEmpty) {
         return '$dial$digits';
@@ -106,37 +104,4 @@ class CustomerAuthResponseModel {
   );
 
   static bool _looksLikeUuid(String value) => _uuidPattern.hasMatch(value);
-
-  static String _avatarField(Map<String, dynamic> user) {
-    for (final String key in <String>[
-      'avatarUrl',
-      'avatar',
-      'imageUrl',
-      'url',
-      'path',
-      'avatarPath',
-      'profileImage',
-    ]) {
-      final Object? value = user[key];
-      if (value is String && value.trim().isNotEmpty) {
-        return value.trim();
-      }
-      if (value is Map) {
-        final Map<String, dynamic> nestedMap = Map<String, dynamic>.from(value);
-        for (final String nestedKey in <String>[
-          'avatarUrl',
-          'imageUrl',
-          'url',
-          'path',
-          'avatar',
-        ]) {
-          final Object? nested = nestedMap[nestedKey];
-          if (nested is String && nested.trim().isNotEmpty) {
-            return nested.trim();
-          }
-        }
-      }
-    }
-    return '';
-  }
 }

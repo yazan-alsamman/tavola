@@ -40,11 +40,6 @@ class AppDimensions {
   static const double compactFavoriteIconSize = 18.0;
   static const double bookingRestaurantCardSpacing = 12.0;
   static const double promoHeight = 190.0;
-  static const double homeOccasionScrollTopInset = 6.0;
-  static const double homeOccasionScrollMinDelta = 8.0;
-  static const Duration homeOccasionScrollDuration = Duration(
-    milliseconds: 900,
-  );
   static const double homeScrollToTopRevealDistance = 120.0;
   static const double homeScrollToTopButtonSize = 48.0;
   static const double homeScrollToTopIconSize = 24.0;
@@ -115,8 +110,23 @@ class AppDimensions {
   static const double imageFallbackIconSize = 36.0;
   static const double settingsIconSize = 22.0;
   static const double avatarSize = 48.0;
-  static const double avatarRadius = 25.0;
-  static const double avatarIconSize = 26.0;
+  static const double profileIdentityNameFontSize = 26.0;
+  static const double profileIdentityNameLineHeight = 1.12;
+  static const double profileIdentityMetaFontSize = 15.0;
+  static const double profileIdentityMetaLineHeight = 1.2;
+  static const double profileIdentityMarkSize = 56.0;
+  static const double profileIdentityIconSize = 28.0;
+  static const double profileIdentityIconGlowSigma = 7.0;
+  static const double profileIdentityBlurSigma = 18.0;
+  static const double profileIdentityOrbSize = 88.0;
+  static const double profileIdentityAccentOrbAlpha = 0.42;
+  static const double profileIdentityPrimaryOrbAlpha = 0.12;
+  static const double profileIdentityGlassAlpha = 0.78;
+  static const double profileIdentityChipAlpha = 0.72;
+  static const double profileIdentityBorderAlpha = 0.16;
+  static const double profileIdentityElevationOpacity = 0.08;
+  static const double profileIdentityElevationBlur = 18.0;
+  static const double profileIdentityElevationY = 8.0;
   static const double avatarPickerMaxWidth = 1024.0;
   static const double avatarPickerMaxHeight = 1024.0;
   static const int avatarPickerImageQuality = 85;
@@ -197,10 +207,6 @@ class AppDimensions {
   static const double headerNotificationIconSize = 24.0;
   static const double headerProfileSize = 38.0;
 
-  /// Person glyph inside the header avatar circle (filled brand chip).
-  static const double headerProfileIconSize = 24.0;
-  static const double headerProfileBorderWidth = 1.0;
-
   static const double conciergeContentMaxWidth = 720.0;
 
   /// Distance from the latest message that still follows a quiet reload.
@@ -274,6 +280,21 @@ class AppDimensions {
   static const int occasionGridColumnCount = 2;
   static const int occasionWideGridColumnCount = 4;
   static const double occasionWideBreakpoint = 700.0;
+
+  /// Drill-in for one occasion's restaurants. Matches the shell depth ease.
+  static const Duration occasionRestaurantsTransitionDuration = Duration(
+    milliseconds: 300,
+  );
+  static const double occasionRestaurantsEnterScale = 0.98;
+  static const double occasionRestaurantEntranceBeginScale = 0.96;
+  static const Duration occasionRestaurantEntranceDuration = Duration(
+    milliseconds: 280,
+  );
+  static const int occasionRestaurantStaggerStepMs = 45;
+  static const int occasionRestaurantStaggerWindow = 4;
+  static const double occasionRestaurantGridAspectRatio = 0.72;
+  static const int occasionRestaurantSkeletonCount = 4;
+  static const double occasionRestaurantPressedScale = 0.98;
 
   static const double reservationCounterButtonSize = 48.0;
   static const double reservationCounterIconSize = 24.0;
@@ -378,6 +399,10 @@ class AppDimensions {
 
   static const int apiDefaultPage = 1;
   static const int apiDefaultLimit = 20;
+
+  /// `GET /reservations/my/history` page size (API maximum) and page cap.
+  static const int reservationsHistoryPageLimit = 100;
+  static const int reservationsHistoryMaxPages = 5;
 
   /// Debounce for Home Discovery `q` search before hitting the API.
   static const Duration homeSearchDebounce = Duration(milliseconds: 400);

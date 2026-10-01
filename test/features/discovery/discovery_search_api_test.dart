@@ -78,4 +78,28 @@ void main() {
     expect(hits.first.name, 'Search Hit');
     expect(discovery.cachedRestaurants, isNotEmpty);
   });
+
+  test(
+    'cuisineId and occasionId filter discovery without replacing cache',
+    () async {
+      await discovery.listRestaurants(forceRefresh: true);
+      final List<RestaurantModel>? cached = discovery.cachedRestaurants;
+
+      await discovery.listRestaurants(
+        cuisineId: '11111111-1111-4111-8111-111111111111',
+        occasionId: '22222222-2222-4222-8222-222222222222',
+      );
+
+      expect(lastPath, AppUrls.discoveryRestaurantsPath);
+      expect(
+        lastQuery?[AppUrls.discoveryCuisineIdQueryKey],
+        '11111111-1111-4111-8111-111111111111',
+      );
+      expect(
+        lastQuery?[AppUrls.discoveryOccasionIdQueryKey],
+        '22222222-2222-4222-8222-222222222222',
+      );
+      expect(discovery.cachedRestaurants, cached);
+    },
+  );
 }

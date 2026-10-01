@@ -49,17 +49,24 @@ class DiscoveryRepository {
     int limit = AppDimensions.apiDefaultLimit,
     bool forceRefresh = false,
     String? query,
+    String? cuisineId,
+    String? occasionId,
     double? latitude,
     double? longitude,
     double? radiusKm,
     CancelToken? cancelToken,
   }) async {
     final String trimmedQuery = query?.trim() ?? '';
+    final String? trimmedCuisineId = _taxonomyId(cuisineId);
+    final String? trimmedOccasionId = _taxonomyId(occasionId);
     final bool isSearch = trimmedQuery.isNotEmpty;
-    if (!isSearch && !forceRefresh && _restaurantsCache != null) {
+    final bool isTaxonomyFilter =
+        trimmedCuisineId != null || trimmedOccasionId != null;
+    final bool useBrowseCache = !isSearch && !isTaxonomyFilter;
+    if (useBrowseCache && !forceRefresh && _restaurantsCache != null) {
       return _restaurantsCache!;
     }
-    if (!isSearch) {
+    if (useBrowseCache) {
       final Future<List<RestaurantModel>>? inFlight = _listInFlight;
       if (inFlight != null && !forceRefresh) {
         return inFlight;
@@ -70,19 +77,21 @@ class DiscoveryRepository {
       page: page,
       limit: limit,
       query: trimmedQuery.isEmpty ? null : trimmedQuery,
+      cuisineId: trimmedCuisineId,
+      occasionId: trimmedOccasionId,
       latitude: latitude,
       longitude: longitude,
       radiusKm: radiusKm,
       cancelToken: cancelToken,
-      updateCache: !isSearch,
+      updateCache: useBrowseCache,
     );
-    if (!isSearch) {
+    if (useBrowseCache) {
       _listInFlight = request;
     }
     try {
       return await request;
     } finally {
-      if (!isSearch && identical(_listInFlight, request)) {
+      if (useBrowseCache && identical(_listInFlight, request)) {
         _listInFlight = null;
       }
     }
@@ -93,6 +102,8 @@ class DiscoveryRepository {
     required String query,
     int page = AppDimensions.apiDefaultPage,
     int limit = AppDimensions.apiDefaultLimit,
+    String? cuisineId,
+    String? occasionId,
     double? latitude,
     double? longitude,
     double? radiusKm,
@@ -103,6 +114,8 @@ class DiscoveryRepository {
       limit: limit,
       forceRefresh: true,
       query: query,
+      cuisineId: cuisineId,
+      occasionId: occasionId,
       latitude: latitude,
       longitude: longitude,
       radiusKm: radiusKm,
@@ -114,6 +127,8 @@ class DiscoveryRepository {
     required int page,
     required int limit,
     String? query,
+    String? cuisineId,
+    String? occasionId,
     double? latitude,
     double? longitude,
     double? radiusKm,
@@ -128,6 +143,14 @@ class DiscoveryRepository {
     final String? trimmedQuery = query?.trim();
     if (trimmedQuery != null && trimmedQuery.isNotEmpty) {
       params[AppUrls.discoverySearchQueryKey] = trimmedQuery;
+    }
+    final String? trimmedCuisineId = _taxonomyId(cuisineId);
+    if (trimmedCuisineId != null) {
+      params[AppUrls.discoveryCuisineIdQueryKey] = trimmedCuisineId;
+    }
+    final String? trimmedOccasionId = _taxonomyId(occasionId);
+    if (trimmedOccasionId != null) {
+      params[AppUrls.discoveryOccasionIdQueryKey] = trimmedOccasionId;
     }
     // `lat/lng` are only valid on `/discovery/restaurants/nearby`.
     // Keep the signature for backward compatibility at call sites, but never
@@ -153,6 +176,14 @@ class DiscoveryRepository {
       }
     }
     return items;
+  }
+
+  static String? _taxonomyId(String? raw) {
+    final String value = raw?.trim() ?? '';
+    if (value.isEmpty) {
+      return null;
+    }
+    return value;
   }
 
   /// `GET /discovery/restaurants/nearby` (`lat`, `lng`, optional `radiusKm`, `q`).

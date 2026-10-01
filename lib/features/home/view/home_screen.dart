@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 
 import '../../../common/widgets/bottom_nav_bar.dart';
@@ -17,6 +16,7 @@ import '../../../core/localization/locale_controller.dart';
 import '../../../core/navigation/bottom_nav_navigation.dart';
 import '../../../core/utils/app_dependency.dart';
 import '../controller/home_controller.dart';
+import '../controller/occasion_restaurants_controller.dart';
 import '../model/restaurant_model.dart';
 import '../widgets/browse_by_occasion_section.dart';
 import '../widgets/home_scroll_to_top_button.dart';
@@ -32,9 +32,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
-  final GlobalKey _restaurantsSectionKey = GlobalKey();
-  bool _isOccasionScrollInFlight = false;
-  bool _hasPendingOccasionScroll = false;
   bool _showScrollToTop = false;
 
   @override
@@ -75,63 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
       0,
       duration: AppDimensions.homeScrollToTopDuration,
       curve: Curves.easeOutCubic,
-    );
-  }
-
-  Future<void> _scrollToRestaurantsSection() async {
-    if (_isOccasionScrollInFlight) {
-      _hasPendingOccasionScroll = true;
-      return;
-    }
-
-    _isOccasionScrollInFlight = true;
-    try {
-      do {
-        _hasPendingOccasionScroll = false;
-        // Wait for filter-driven list relayout before calculating offset.
-        await WidgetsBinding.instance.endOfFrame;
-        if (!mounted) {
-          return;
-        }
-        await _animateToRestaurantsSectionIfNeeded();
-      } while (_hasPendingOccasionScroll && mounted);
-    } finally {
-      _isOccasionScrollInFlight = false;
-    }
-  }
-
-  Future<void> _animateToRestaurantsSectionIfNeeded() async {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-    final BuildContext? context = _restaurantsSectionKey.currentContext;
-    if (context == null) {
-      return;
-    }
-    final RenderObject? renderObject = context.findRenderObject();
-    if (renderObject is! RenderBox) {
-      return;
-    }
-    final RenderAbstractViewport? viewport = RenderAbstractViewport.maybeOf(
-      renderObject,
-    );
-    if (viewport == null) {
-      return;
-    }
-    final RevealedOffset reveal = viewport.getOffsetToReveal(renderObject, 0.0);
-    final double targetOffset =
-        (reveal.offset - AppDimensions.homeOccasionScrollTopInset).clamp(
-          0.0,
-          _scrollController.position.maxScrollExtent,
-        );
-    final double delta = (targetOffset - _scrollController.offset).abs();
-    if (delta < AppDimensions.homeOccasionScrollMinDelta) {
-      return;
-    }
-    await _scrollController.animateTo(
-      targetOffset,
-      duration: AppDimensions.homeOccasionScrollDuration,
-      curve: Curves.easeInOutCubic,
     );
   }
 
@@ -309,148 +249,140 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: AppDimensions.sectionSpacing),
                         HomeSpecialOfferCard(controller: controller),
                         const SizedBox(height: AppDimensions.sectionSpacing),
-                        KeyedSubtree(
-                          key: _restaurantsSectionKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SectionTitle(
-                                title: AppStrings.restaurantsNearYou,
-                              ),
-                              const SizedBox(
-                                height: AppDimensions.smallSpacing,
-                              ),
-                              Obx(() {
-                                final bool searching =
-                                    controller.isSearchingRestaurants.value;
-                                if (controller.isLoadingRestaurants.value &&
-                                    !controller.isServerSearchActive.value) {
-                                  return const SizedBox(
-                                    height: AppDimensions.imageHeight,
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: AppDimensions
-                                            .progressIndicatorStrokeWidth,
-                                      ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SectionTitle(title: AppStrings.restaurantsNearYou),
+                            const SizedBox(height: AppDimensions.smallSpacing),
+                            Obx(() {
+                              final bool searching =
+                                  controller.isSearchingRestaurants.value;
+                              if (controller.isLoadingRestaurants.value &&
+                                  !controller.isServerSearchActive.value) {
+                                return const SizedBox(
+                                  height: AppDimensions.imageHeight,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: AppDimensions
+                                          .progressIndicatorStrokeWidth,
                                     ),
-                                  );
-                                }
-
-                                if (searching) {
-                                  return const SizedBox(
-                                    height: AppDimensions.imageHeight,
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: AppDimensions
-                                            .progressIndicatorStrokeWidth,
-                                      ),
-                                    ),
-                                  );
-                                }
-
-                                final String? searchError =
-                                    controller.searchError.value;
-                                if (controller.isServerSearchActive.value &&
-                                    searchError != null &&
-                                    controller.searchResults.isEmpty) {
-                                  return Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          searchError,
-                                          style: AppTextStyles.label.copyWith(
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: controller.retrySearch,
-                                        style: TextButton.styleFrom(
-                                          textStyle:
-                                              AppTextStyles.authLinkEmphasis,
-                                        ),
-                                        child: Text(
-                                          AppStrings.retry,
-                                          style: AppTextStyles.authLinkEmphasis,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }
-
-                                final String? restaurantsError =
-                                    controller.restaurantsError.value;
-                                if (restaurantsError != null &&
-                                    !controller.isServerSearchActive.value) {
-                                  return Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          restaurantsError,
-                                          style: AppTextStyles.label.copyWith(
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: controller.loadRestaurants,
-                                        style: TextButton.styleFrom(
-                                          textStyle:
-                                              AppTextStyles.authLinkEmphasis,
-                                        ),
-                                        child: Text(
-                                          AppStrings.retry,
-                                          style: AppTextStyles.authLinkEmphasis,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }
-
-                                // Required: ListView.builder itemBuilder is not tracked by Obx.
-                                controller.watchFavorites();
-                                controller.searchQuery.value;
-                                controller.selectedFilterIndex.value;
-                                controller.selectedOccasion.value;
-                                controller.isServerSearchActive.value;
-                                controller.searchResults.length;
-
-                                final List<RestaurantModel> visibleRestaurants =
-                                    controller.filteredRestaurants;
-
-                                if (visibleRestaurants.isEmpty) {
-                                  return Text(
-                                    controller.isServerSearchActive.value
-                                        ? AppStrings.searchRestaurantsEmpty
-                                        : AppStrings.restaurantsEmpty,
-                                    style: AppTextStyles.label.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  );
-                                }
-
-                                return ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: visibleRestaurants.length,
-                                  itemBuilder: (context, index) {
-                                    final restaurant =
-                                        visibleRestaurants[index];
-                                    return RestaurantCard(
-                                      restaurant: restaurant,
-                                      isFavorite: controller.isFavorite(
-                                        restaurant.id,
-                                      ),
-                                      onFavoritePressed: () => controller
-                                          .toggleFavorite(restaurant.id),
-                                      onTap: () =>
-                                          controller.openDetails(restaurant),
-                                    );
-                                  },
+                                  ),
                                 );
-                              }),
-                            ],
-                          ),
+                              }
+
+                              if (searching) {
+                                return const SizedBox(
+                                  height: AppDimensions.imageHeight,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: AppDimensions
+                                          .progressIndicatorStrokeWidth,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final String? searchError =
+                                  controller.searchError.value;
+                              if (controller.isServerSearchActive.value &&
+                                  searchError != null &&
+                                  controller.searchResults.isEmpty) {
+                                return Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        searchError,
+                                        style: AppTextStyles.label.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: controller.retrySearch,
+                                      style: TextButton.styleFrom(
+                                        textStyle:
+                                            AppTextStyles.authLinkEmphasis,
+                                      ),
+                                      child: Text(
+                                        AppStrings.retry,
+                                        style: AppTextStyles.authLinkEmphasis,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              final String? restaurantsError =
+                                  controller.restaurantsError.value;
+                              if (restaurantsError != null &&
+                                  !controller.isServerSearchActive.value) {
+                                return Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        restaurantsError,
+                                        style: AppTextStyles.label.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: controller.loadRestaurants,
+                                      style: TextButton.styleFrom(
+                                        textStyle:
+                                            AppTextStyles.authLinkEmphasis,
+                                      ),
+                                      child: Text(
+                                        AppStrings.retry,
+                                        style: AppTextStyles.authLinkEmphasis,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              // Required: ListView.builder itemBuilder is not tracked by Obx.
+                              controller.watchFavorites();
+                              controller.searchQuery.value;
+                              controller.selectedFilterIndex.value;
+                              controller.selectedOccasion.value;
+                              controller.isServerSearchActive.value;
+                              controller.searchResults.length;
+
+                              final List<RestaurantModel> visibleRestaurants =
+                                  controller.filteredRestaurants;
+
+                              if (visibleRestaurants.isEmpty) {
+                                return Text(
+                                  controller.isServerSearchActive.value
+                                      ? AppStrings.searchRestaurantsEmpty
+                                      : AppStrings.restaurantsEmpty,
+                                  style: AppTextStyles.label.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                );
+                              }
+
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: visibleRestaurants.length,
+                                itemBuilder: (context, index) {
+                                  final restaurant = visibleRestaurants[index];
+                                  return RestaurantCard(
+                                    restaurant: restaurant,
+                                    isFavorite: controller.isFavorite(
+                                      restaurant.id,
+                                    ),
+                                    onFavoritePressed: () => controller
+                                        .toggleFavorite(restaurant.id),
+                                    onTap: () =>
+                                        controller.openDetails(restaurant),
+                                  );
+                                },
+                              );
+                            }),
+                          ],
                         ),
                         const SizedBox(height: AppDimensions.sectionSpacing),
                         Obx(() {
@@ -548,10 +480,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             categories: controller.occasionCategoryItems
                                 .toList(),
                             selectedCategory: controller.selectedOccasion.value,
-                            onSelected: (String occasion) {
-                              controller.selectOccasion(occasion);
-                              _scrollToRestaurantsSection();
-                            },
+                            onSelected: OccasionRestaurantsController.open,
                           );
                         }),
                       ],

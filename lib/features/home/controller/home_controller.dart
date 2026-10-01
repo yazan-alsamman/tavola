@@ -205,9 +205,6 @@ class HomeController extends GetxController {
     if (occasions != null && occasions.isNotEmpty) {
       _applyOccasionItems(occasions);
       isLoadingOccasionCategories.value = false;
-    } else {
-      _applyOccasionItems(OccasionCategoryModel.fallbackItems());
-      isLoadingOccasionCategories.value = false;
     }
 
     // Discovery list cache when Splash / Welcome already prefetched.
@@ -288,7 +285,56 @@ class HomeController extends GetxController {
     cuisineCategoriesError.value = message;
   }
 
+  void _setOccasionError(_HomeListErrorKind kind, String message) {
+    _occasionErrorKind = kind;
+    occasionCategoriesError.value = message;
+  }
+
+  int _catalogRequestSerial = 0;
+
+  /// Cuisine category id for `GET /discovery/restaurants?cuisineId=`.
+  ///
+  /// This is a `cuisineCategoryIds` value from the restaurant assignment,
+  /// not the legacy `cuisineType` string.
+  String? get _selectedCuisineCategoryId {
+    final int index = selectedFilterIndex.value;
+    if (index <= 0) {
+      return null;
+    }
+    final int categoryIndex = index - 1;
+    if (categoryIndex < 0 || categoryIndex >= cuisineCategories.length) {
+      return null;
+    }
+    final String id = cuisineCategories[categoryIndex].id.trim();
+    if (id.isEmpty) {
+      return null;
+    }
+    return id;
+  }
+
+  /// Occasion category id for `GET /discovery/restaurants?occasionId=`.
+  ///
+  /// This is an `occasionCategoryIds` value from the restaurant assignment.
+  String? get _selectedOccasionCategoryId {
+    final String selected = selectedOccasion.value?.trim() ?? '';
+    if (selected.isEmpty) {
+      return null;
+    }
+    for (final OccasionCategoryModel item in occasionCategoryItems) {
+      if (item.name != selected && item.slug != selected) {
+        continue;
+      }
+      final String id = item.id.trim();
+      if (id.isEmpty) {
+        return null;
+      }
+      return id;
+    }
+    return null;
+  }
+
   Future<void> loadRestaurants() async {
+    final int serial = ++_catalogRequestSerial;
     final bool showSpinner = restaurants.isEmpty;
     if (showSpinner) {
       isLoadingRestaurants.value = true;
@@ -297,8 +343,15 @@ class HomeController extends GetxController {
     _restaurantsErrorKind = null;
     try {
       final List<RestaurantModel> items = await _discoveryRepository
-          .listRestaurants(forceRefresh: true)
+          .listRestaurants(
+            forceRefresh: true,
+            cuisineId: _selectedCuisineCategoryId,
+            occasionId: _selectedOccasionCategoryId,
+          )
           .timeout(AppDimensions.homeCatalogLoadTimeout);
+      if (isClosed || serial != _catalogRequestSerial) {
+        return;
+      }
       restaurants.assignAll(items);
       if (items.isEmpty) {
         _setRestaurantsError(
@@ -309,6 +362,9 @@ class HomeController extends GetxController {
       _logCatalog('restaurants ok', items.length);
     } on TimeoutException {
       _logCatalog('restaurants timeout', 0);
+      if (serial != _catalogRequestSerial) {
+        return;
+      }
       if (restaurants.isEmpty) {
         _setRestaurantsError(
           _HomeListErrorKind.timeout,
@@ -317,11 +373,17 @@ class HomeController extends GetxController {
       }
     } on ApiException catch (error) {
       _logCatalog('restaurants api: ${error.message}', 0);
+      if (serial != _catalogRequestSerial || error.isCancelled) {
+        return;
+      }
       if (restaurants.isEmpty) {
         _setRestaurantsError(_HomeListErrorKind.api, error.message);
       }
     } catch (error) {
       _logCatalog('restaurants unexpected: $error', 0);
+      if (serial != _catalogRequestSerial) {
+        return;
+      }
       if (restaurants.isEmpty) {
         _setRestaurantsError(
           _HomeListErrorKind.unexpected,
@@ -329,7 +391,9 @@ class HomeController extends GetxController {
         );
       }
     } finally {
-      isLoadingRestaurants.value = false;
+      if (!isClosed && serial == _catalogRequestSerial) {
+        isLoadingRestaurants.value = false;
+      }
     }
   }
 
@@ -380,9 +444,6 @@ class HomeController extends GetxController {
   }
 
   Future<void> loadOccasionCategories() async {
-    if (occasionCategoryItems.isEmpty) {
-      _applyOccasionItems(OccasionCategoryModel.fallbackItems());
-    }
     final bool showSpinner = occasionCategoryItems.isEmpty;
     if (showSpinner) {
       isLoadingOccasionCategories.value = true;
@@ -393,28 +454,28 @@ class HomeController extends GetxController {
       final List<OccasionCategoryModel> items = await _taxonomyRepository
           .fetchOccasionCategories()
           .timeout(AppDimensions.homeCatalogLoadTimeout);
-      if (items.isNotEmpty) {
-        _applyOccasionItems(items);
-        _logCatalog('occasion ok', items.length);
-        return;
-      }
-      if (occasionCategoryItems.isEmpty) {
-        _applyOccasionItems(OccasionCategoryModel.fallbackItems());
-      }
+      _applyOccasionItems(items);
+      _logCatalog('occasion ok', items.length);
     } on TimeoutException {
       _logCatalog('occasion timeout', 0);
       if (occasionCategoryItems.isEmpty) {
-        _applyOccasionItems(OccasionCategoryModel.fallbackItems());
+        _setOccasionError(
+          _HomeListErrorKind.timeout,
+          AppStrings.networkTimeoutError,
+        );
       }
     } on ApiException catch (error) {
       _logCatalog('occasion api: ${error.message}', 0);
       if (occasionCategoryItems.isEmpty) {
-        _applyOccasionItems(OccasionCategoryModel.fallbackItems());
+        _setOccasionError(_HomeListErrorKind.api, error.message);
       }
     } catch (error) {
       _logCatalog('occasion unexpected: $error', 0);
       if (occasionCategoryItems.isEmpty) {
-        _applyOccasionItems(OccasionCategoryModel.fallbackItems());
+        _setOccasionError(
+          _HomeListErrorKind.unexpected,
+          AppStrings.networkUnexpectedError,
+        );
       }
     } finally {
       isLoadingOccasionCategories.value = false;
@@ -449,16 +510,31 @@ class HomeController extends GetxController {
     if (index < 0 || index >= restaurantFilters.length) {
       return;
     }
+    if (selectedFilterIndex.value == index) {
+      return;
+    }
     selectedFilterIndex.value = index;
+    unawaited(_reloadRestaurantsForTaxonomy());
   }
 
-  void selectOccasion(String occasion) {
+  Future<void> selectOccasion(String occasion) {
     // Tap again to clear — users must not be forced to keep an occasion.
     if (selectedOccasion.value == occasion) {
       selectedOccasion.value = null;
-      return;
+    } else {
+      selectedOccasion.value = occasion;
     }
-    selectedOccasion.value = occasion;
+    return _reloadRestaurantsForTaxonomy();
+  }
+
+  Future<void> _reloadRestaurantsForTaxonomy() {
+    final String query = searchQuery.value.trim();
+    final Future<void> catalog = loadRestaurants();
+    if (query.isEmpty) {
+      return catalog;
+    }
+    _searchDebounce?.cancel();
+    return Future.wait<void>(<Future<void>>[catalog, _runServerSearch(query)]);
   }
 
   void updateSearch(String value) {
@@ -503,7 +579,12 @@ class HomeController extends GetxController {
     searchError.value = null;
     try {
       final List<RestaurantModel> items = await _discoveryRepository
-          .searchRestaurants(query: query, cancelToken: cancelToken)
+          .searchRestaurants(
+            query: query,
+            cuisineId: _selectedCuisineCategoryId,
+            occasionId: _selectedOccasionCategoryId,
+            cancelToken: cancelToken,
+          )
           .timeout(AppDimensions.homeCatalogLoadTimeout);
       if (isClosed || serial != _searchRequestSerial) {
         return;
@@ -550,8 +631,10 @@ class HomeController extends GetxController {
   }
 
   List<RestaurantModel> get filteredRestaurants {
-    // Final text search is server-backed (`q`). Cuisine/occasion chips refine
-    // the current result set — SearchRestaurantsQueryDto has no category keys.
+    // Text search uses `q`. Cuisine and occasion chips use `cuisineId` and
+    // `occasionId`, the same assignment as
+    // PATCH /restaurants/:id/cuisine-categories and
+    // PATCH /restaurants/:id/occasion-categories.
     // While debouncing, provisionally refine the cached catalog so typing stays
     // responsive until Discovery responds.
     Iterable<RestaurantModel> items;
@@ -569,20 +652,6 @@ class HomeController extends GetxController {
               restaurant.location.toLowerCase().contains(needle),
         );
       }
-    }
-    final int filterIndex = selectedFilterIndex.value;
-    if (filterIndex > 0 && filterIndex < restaurantFilters.length) {
-      final String cuisine = restaurantFilters[filterIndex];
-      items = items.where(
-        (RestaurantModel restaurant) => _matchesCuisine(restaurant, cuisine),
-      );
-    }
-
-    final String? occasion = selectedOccasion.value?.trim();
-    if (occasion != null && occasion.isNotEmpty) {
-      items = items.where(
-        (RestaurantModel restaurant) => _matchesOccasion(restaurant, occasion),
-      );
     }
     return items.toList(growable: false);
   }
@@ -793,29 +862,6 @@ class HomeController extends GetxController {
       index,
       currentIndex: BottomNavNavigation.homeIndex,
     );
-  }
-
-  static bool _matchesCuisine(RestaurantModel restaurant, String cuisine) {
-    final String needle = cuisine.toLowerCase();
-    if (restaurant.cuisine.toLowerCase() == needle) {
-      return true;
-    }
-    return restaurant.cuisineTags.any(
-      (String tag) => tag.toLowerCase() == needle,
-    );
-  }
-
-  static bool _matchesOccasion(RestaurantModel restaurant, String occasion) {
-    final String needle = occasion.toLowerCase();
-    if (restaurant.occasion.toLowerCase() == needle) {
-      return true;
-    }
-    if (restaurant.occasionTags.any(
-      (String tag) => tag.toLowerCase() == needle,
-    )) {
-      return true;
-    }
-    return restaurant.description.toLowerCase().contains(needle);
   }
 
   static void _log(String label, Stopwatch stopwatch) {

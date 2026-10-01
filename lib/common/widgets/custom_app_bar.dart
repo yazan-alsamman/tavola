@@ -8,25 +8,15 @@ import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/localization/locale_controller.dart';
 import '../../core/navigation/app_navigation.dart';
-import '../../features/auth/controller/auth_session_controller.dart';
 import '../../features/notifications/controller/notifications_badge_controller.dart';
-import '../../features/profile/controller/profile_controller.dart';
-import 'app_safe_image.dart';
 import 'guest_login_button.dart';
 import 'hoverable_button.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar({
-    super.key,
-    this.profileImagePath,
-    this.onNotificationPressed,
-    this.onProfilePressed,
-  });
+  const CustomAppBar({super.key, this.onNotificationPressed});
 
-  final String? profileImagePath;
   final VoidCallback? onNotificationPressed;
-  final VoidCallback? onProfilePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -46,40 +36,44 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   Widget _buildAppBar() {
     return AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: AppColors.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        toolbarHeight: AppDimensions.headerHeight,
-        titleSpacing: AppDimensions.pagePadding,
-        shape: const Border(
-          bottom: BorderSide(
-            color: AppColors.border,
-            width: AppDimensions.cardBorderWidth,
+      automaticallyImplyLeading: false,
+      backgroundColor: AppColors.surface,
+      surfaceTintColor: AppColors.surface,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      toolbarHeight: AppDimensions.headerHeight,
+      titleSpacing: AppDimensions.pagePadding,
+      shape: const Border(
+        bottom: BorderSide(
+          color: AppColors.border,
+          width: AppDimensions.cardBorderWidth,
+        ),
+      ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Symbols.restaurant,
+            color: AppColors.primary,
+            size: AppDimensions.headerLogoIconSize,
           ),
-        ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Symbols.restaurant,
-              color: AppColors.primary,
-              size: AppDimensions.headerLogoIconSize,
-            ),
-            const SizedBox(width: AppDimensions.smallSpacing),
-            Text(AppStrings.splashTitle, style: AppTextStyles.headerLogo),
-          ],
-        ),
-        actions: [
-          const GuestLoginButton(),
-          HoverableButton(
+          const SizedBox(width: AppDimensions.smallSpacing),
+          Text(AppStrings.splashTitle, style: AppTextStyles.headerLogo),
+        ],
+      ),
+      actions: [
+        const GuestLoginButton(),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(
+            end: AppDimensions.pagePadding,
+          ),
+          child: HoverableButton(
             child: InkResponse(
               onTap: onNotificationPressed ?? _openNotifications,
-              radius: AppDimensions.iconButtonSize / 2,
+              radius: AppDimensions.headerProfileSize / 2,
               child: SizedBox(
-                width: AppDimensions.iconButtonSize,
-                height: AppDimensions.iconButtonSize,
+                width: AppDimensions.headerProfileSize,
+                height: AppDimensions.headerProfileSize,
                 child: Stack(
                   alignment: Alignment.center,
                   clipBehavior: Clip.none,
@@ -132,92 +126,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppDimensions.smallSpacing),
-          Padding(
-            padding: const EdgeInsetsDirectional.only(
-              end: AppDimensions.pagePadding,
-            ),
-            child: HoverableButton(
-              child: InkResponse(
-                onTap: onProfilePressed ?? _openProfile,
-                radius: AppDimensions.headerProfileSize / 2,
-                child: Container(
-                  width: AppDimensions.headerProfileSize,
-                  height: AppDimensions.headerProfileSize,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary,
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Get.isRegistered<AuthSessionController>()
-                      ? Obx(() {
-                          Get.find<AuthSessionController>()
-                              .observeSharedAvatarUrl();
-                          return _buildProfileAvatar(profileImagePath);
-                        })
-                      : _buildProfileAvatar(profileImagePath),
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-  }
-
-  static Widget _buildProfileAvatar(String? profileImagePath) {
-    final String imagePath = _resolveProfileImagePath(profileImagePath);
-    if (imagePath.isEmpty) {
-      return const Icon(
-        Symbols.person,
-        size: AppDimensions.headerProfileIconSize,
-        color: AppColors.textLight,
-      );
-    }
-    return AppSafeImage(
-      path: imagePath,
-      fit: BoxFit.cover,
-      width: AppDimensions.headerProfileSize,
-      height: AppDimensions.headerProfileSize,
-      fallbackIcon: Symbols.person,
-      fallbackIconSize: AppDimensions.headerProfileIconSize,
-      backgroundColor: AppColors.primary,
-      iconColor: AppColors.textLight,
+        ),
+      ],
     );
-  }
-
-  /// Only the user's uploaded/network avatar — never a demo asset.
-  static String _resolveProfileImagePath(String? overridePath) {
-    final String? override = overridePath?.trim();
-    if (override != null && override.isNotEmpty) {
-      return override;
-    }
-
-    // Prefer the shared session cache (survives Profile route dispose).
-    if (Get.isRegistered<AuthSessionController>()) {
-      final String? fromSession = Get.find<AuthSessionController>()
-          .observeSharedAvatarUrl();
-      if (fromSession != null && fromSession.isNotEmpty) {
-        return fromSession;
-      }
-    }
-
-    // Never touch a closed ProfileController — Explore / shell offAllNamed can
-    // leave a stale registration briefly; reading Rx after onClose crashes.
-    if (Get.isRegistered<ProfileController>()) {
-      final ProfileController profile = Get.find<ProfileController>();
-      if (!profile.isClosed) {
-        final String? fromProfile = profile.profileAvatarUrl;
-        if (fromProfile != null && fromProfile.isNotEmpty) {
-          return fromProfile;
-        }
-      }
-    }
-
-    return '';
-  }
-
-  static void _openProfile() {
-    AppNavigation.goShell(AppRoutes.profile);
   }
 
   static void _openNotifications() {

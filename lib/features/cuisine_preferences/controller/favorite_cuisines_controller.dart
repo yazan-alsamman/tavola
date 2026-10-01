@@ -26,8 +26,6 @@ class FavoriteCuisinesController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Always paint chips immediately — never block first-launch on taxonomy.
-    _showFallbackOptions();
     unawaited(loadOccasionCategories());
   }
 
@@ -49,33 +47,18 @@ class FavoriteCuisinesController extends GetxController {
       final List<OccasionCategoryModel> items = await _taxonomyRepository
           .fetchOccasionCategories()
           .timeout(AppDimensions.homeCatalogLoadTimeout);
-      if (items.isNotEmpty) {
-        occasionOptions.assignAll(items);
-        _pruneInvalidSelections();
-        occasionCategoriesError.value = null;
-        return;
-      }
-      if (occasionOptions.isEmpty) {
-        _showFallbackOptions();
-      }
+      occasionOptions.assignAll(items);
+      _pruneInvalidSelections();
+      occasionCategoriesError.value = null;
     } on TimeoutException {
-      if (occasionOptions.isEmpty) {
-        _showFallbackOptions();
-      }
       if (occasionOptions.isEmpty) {
         occasionCategoriesError.value = AppStrings.networkTimeoutError;
       }
     } on ApiException catch (error) {
       if (occasionOptions.isEmpty) {
-        _showFallbackOptions();
-      }
-      if (occasionOptions.isEmpty) {
         occasionCategoriesError.value = error.message;
       }
     } catch (_) {
-      if (occasionOptions.isEmpty) {
-        _showFallbackOptions();
-      }
       if (occasionOptions.isEmpty) {
         occasionCategoriesError.value = AppStrings.networkUnexpectedError;
       }
@@ -114,10 +97,5 @@ class FavoriteCuisinesController extends GetxController {
             item.name == occasion || item.slug == occasion,
       ),
     );
-  }
-
-  void _showFallbackOptions() {
-    occasionOptions.assignAll(OccasionCategoryModel.fallbackItems());
-    _pruneInvalidSelections();
   }
 }

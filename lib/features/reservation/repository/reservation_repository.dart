@@ -48,6 +48,7 @@ class ReservationRepository {
       <CustomerReservationModel>[].obs;
 
   bool _serverListsHydrated = false;
+  bool _historyLoaded = false;
 
   List<CustomerReservationModel> get activeReservations {
     if (_serverListsHydrated) {
@@ -59,7 +60,7 @@ class ReservationRepository {
   }
 
   List<CustomerReservationModel> get historyReservations {
-    if (_serverListsHydrated) {
+    if (_serverListsHydrated || _historyLoaded) {
       return historyReservationsList.toList(growable: false);
     }
     return myReservations
@@ -70,6 +71,7 @@ class ReservationRepository {
   /// Clears bookings when the account/session changes.
   void clearSessionState() {
     _serverListsHydrated = false;
+    _historyLoaded = false;
     myReservations.clear();
     upcomingReservations.clear();
     historyReservationsList.clear();
@@ -196,26 +198,54 @@ class ReservationRepository {
   }
 
   /// `GET /reservations/my/history`
+  ///
+  /// Every row the history endpoint returns is kept, for any status.
+  /// Pages continue while a page is full, newest reservation date first.
   Future<List<CustomerReservationModel>> fetchMyHistory({
     int page = AppDimensions.apiDefaultPage,
-    int limit = AppDimensions.apiDefaultLimit,
+    int limit = AppDimensions.reservationsHistoryPageLimit,
   }) async {
     await _ensureAuthenticated();
-    final ApiResponse<List<CustomerReservationModel>> response =
-        await _apiClient.get<List<CustomerReservationModel>>(
-          AppUrls.reservationsMyHistoryPath,
-          queryParameters: <String, dynamic>{
-            _pageQueryKey: page,
-            _limitQueryKey: limit,
-          },
-          parseData: _parseReservationItems,
-        );
-    final List<CustomerReservationModel> covered = await _withDiscoveryCovers(
-      response.data,
-    );
-    historyReservationsList.assignAll(covered);
-    _mergeIntoMyReservations(covered);
-    return covered;
+    final int pageSize = limit < 1
+        ? AppDimensions.reservationsHistoryPageLimit
+        : limit;
+    final List<CustomerReservationModel> collected =
+        <CustomerReservationModel>[];
+    final Set<String> seenIds = <String>{};
+    int nextPage = page < 1 ? AppDimensions.apiDefaultPage : page;
+    final int lastPage =
+        nextPage + AppDimensions.reservationsHistoryMaxPages - 1;
+    while (nextPage <= lastPage) {
+      final ApiResponse<List<CustomerReservationModel>> response =
+          await _apiClient.get<List<CustomerReservationModel>>(
+            AppUrls.reservationsMyHistoryPath,
+            queryParameters: <String, dynamic>{
+              _pageQueryKey: nextPage,
+              _limitQueryKey: pageSize,
+              AppUrls.reservationsSortQueryKey:
+                  AppStrings.apiReservationsSortReservationDate,
+              AppUrls.reservationsOrderQueryKey:
+                  AppStrings.apiReservationsOrderDesc,
+            },
+            parseData: _parseReservationItems,
+          );
+      final List<CustomerReservationModel> covered = await _withDiscoveryCovers(
+        response.data,
+      );
+      for (final CustomerReservationModel item in covered) {
+        if (seenIds.add(item.reservationId)) {
+          collected.add(item);
+        }
+      }
+      if (covered.length < pageSize) {
+        break;
+      }
+      nextPage += 1;
+    }
+    historyReservationsList.assignAll(collected);
+    _historyLoaded = true;
+    _mergeIntoMyReservations(collected);
+    return collected;
   }
 
   /// Loads upcoming + history for Profile tabs (parallel).

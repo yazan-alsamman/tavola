@@ -37,26 +37,6 @@ class AuthSessionController extends GetxController implements GuestModeReader {
   /// App-bar Login CTA: guest-only, never while a real session exists.
   bool get shouldShowGuestLoginButton => isAnonymousGuest;
 
-  /// Shared avatar URL from the permanent users cache (survives Profile dispose).
-  ///
-  /// Reading [UsersRepository.profileRx] inside Obx keeps the app bar in sync
-  /// without views touching the repository directly.
-  String? observeSharedAvatarUrl() {
-    // Touch session flags so AppBar Obx stays valid before UsersRepository
-    // exists (anonymous Guest Home skips profile registration).
-    isGuest.value;
-    hasAuthenticatedSession.value;
-    if (!Get.isRegistered<UsersRepository>()) {
-      return null;
-    }
-    final String? url = Get.find<UsersRepository>().profileRx.value?.avatarUrl
-        ?.trim();
-    if (url == null || url.isEmpty) {
-      return null;
-    }
-    return url;
-  }
-
   /// Aligns guest/session flags with Secure Storage tokens (app start / resume).
   ///
   /// When a Bearer token exists, also persists [SessionMode.authenticated] so
@@ -375,7 +355,6 @@ class AuthSessionController extends GetxController implements GuestModeReader {
       users.applyCustomerIdentityInMemory(
         username: username,
         phone: response.phone,
-        avatarUrl: response.avatarUrl,
       );
     } catch (error, stack) {
       if (kDebugMode) {
@@ -396,7 +375,6 @@ class AuthSessionController extends GetxController implements GuestModeReader {
       await users.rememberCustomerIdentity(
         username: value,
         phone: users.cachedProfile?.phone ?? '',
-        avatarUrl: users.cachedProfile?.avatarUrl,
       );
     } catch (_) {
       // Profile can still recover from `/users/me` later.
@@ -465,7 +443,6 @@ class AuthSessionController extends GetxController implements GuestModeReader {
       await Get.find<UsersRepository>().rememberCustomerIdentity(
         username: response.username,
         phone: response.phone,
-        avatarUrl: response.avatarUrl,
       );
       await Get.find<UsersRepository>().flushIdentityToDisk();
     } catch (_) {
@@ -476,7 +453,7 @@ class AuthSessionController extends GetxController implements GuestModeReader {
   /// True when a non-empty access token is available in the session store.
   Future<bool> hasAccessToken() => AuthAccessGuard.hasAccessToken();
 
-  /// Account-only gate (favorites, avatar, reservations, settings, …).
+  /// Account-only gate (favorites, reservations, settings, …).
   ///
   /// Opens Login when there is no Bearer token.
   /// Returns `true` when the caller may proceed with authenticated APIs.

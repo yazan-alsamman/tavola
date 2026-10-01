@@ -640,13 +640,10 @@ class AppTranslations extends Translations {
     'No reservations yet': 'No reservations yet',
     'Your upcoming tables will appear here — reserve a place and return for a refined overview of every seating.':
         'Your upcoming tables will appear here — reserve a place and return for a refined overview of every seating.',
-    'Could not upload avatar. Please try again.':
-        'Could not upload avatar. Please try again.',
     'Could not update preferences. Please try again.':
         'Could not update preferences. Please try again.',
     'Could not update profile. Please try again.':
         'Could not update profile. Please try again.',
-    'Change photo': 'Change photo',
     'Account details': 'Account details',
     'First name': 'First name',
     'Last name': 'Last name',
@@ -1484,13 +1481,10 @@ class AppTranslations extends Translations {
     'No reservations yet': 'لا توجد حجوزات بعد',
     'Your upcoming tables will appear here — reserve a place and return for a refined overview of every seating.':
         'ستظهر طاولاتك القادمة هنا — احجز مقعدًا وعد لعرض أنيق لكل جلسة.',
-    'Could not upload avatar. Please try again.':
-        'تعذر رفع الصورة. حاول مرة أخرى.',
     'Could not update preferences. Please try again.':
         'تعذر تحديث التفضيلات. حاول مرة أخرى.',
     'Could not update profile. Please try again.':
         'تعذر تحديث الملف الشخصي. حاول مرة أخرى.',
-    'Change photo': 'تغيير الصورة',
     'Account details': 'بيانات الحساب',
     'First name': 'الاسم الأول',
     'Last name': 'اسم العائلة',

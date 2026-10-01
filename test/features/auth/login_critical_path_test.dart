@@ -117,7 +117,6 @@ class _SlowIdentityUsers extends UsersRepository {
   Future<void> rememberCustomerIdentity({
     required String username,
     required String phone,
-    String? avatarUrl,
   }) async {
     identityStarted = true;
     await _identity.future;

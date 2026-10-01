@@ -85,6 +85,8 @@ class AppUrls {
   static const String reservationsPageQueryKey = 'page';
   static const String reservationsPageSizeQueryKey = 'pageSize';
   static const String reservationsLimitQueryKey = 'limit';
+  static const String reservationsSortQueryKey = 'sort';
+  static const String reservationsOrderQueryKey = 'order';
   static const String reservationsMyPath = '$reservationsPath/my';
   static const String reservationsMyUpcomingPath =
       '$reservationsMyPath/upcoming';
@@ -175,7 +177,6 @@ class AppUrls {
   /// Users self-service (Postman folder **Users**).
   static const String usersMePath = '/users/me';
   static const String usersMePreferencesPath = '$usersMePath/preferences';
-  static const String usersMeAvatarPath = '$usersMePath/avatar';
   static const String usersMeFavoritesPath = '$usersMePath/favorites';
   static const String usersMeExportPath = '$usersMePath/export';
   static const String usersMeCancelDeletionPath =
@@ -265,6 +266,20 @@ class AppUrls {
 
   /// `SearchRestaurantsQueryDto` / nearby free-text query key.
   static const String discoverySearchQueryKey = 'q';
+
+  /// Relational cuisine assignment.
+  ///
+  /// Same ids as `cuisineCategoryIds` on
+  /// `PATCH /restaurants/:id/cuisine-categories`. Customer Discovery filters
+  /// with this key; the restaurant route itself is organization-scoped.
+  static const String discoveryCuisineIdQueryKey = 'cuisineId';
+
+  /// Relational occasion assignment.
+  ///
+  /// Same ids as `occasionCategoryIds` on
+  /// `PATCH /restaurants/:id/occasion-categories`. Customer Discovery filters
+  /// with this key; the restaurant route itself is organization-scoped.
+  static const String discoveryOccasionIdQueryKey = 'occasionId';
 
   /// Discovery list pagination keys on live customer API.
   static const String discoveryPageQueryKey = 'page';

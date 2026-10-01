@@ -10,7 +10,7 @@ class OccasionCategoryModel {
     this.updatedAt,
   });
 
-  /// Canonical slugs from `GET /occasion-categories`.
+  /// Known slugs from `GET /occasion-categories`, used only to pick icons.
   static const String slugDateNight = 'date-night';
   static const String slugBusinessLunch = 'business-lunch';
   static const String slugFamily = 'family';
@@ -18,36 +18,6 @@ class OccasionCategoryModel {
   static const String slugGroupGathering = 'group-gathering';
   static const String slugCasual = 'casual';
   static const String slugFineDining = 'fine-dining';
-
-  /// Local chips when `GET /occasion-categories` is slow or unavailable.
-  static List<OccasionCategoryModel> fallbackItems() {
-    const List<String> slugs = <String>[
-      slugDateNight,
-      slugBusinessLunch,
-      slugFamily,
-      slugBirthday,
-      slugGroupGathering,
-      slugCasual,
-      slugFineDining,
-    ];
-    const List<String> names = <String>[
-      'Date Night',
-      'Business Lunch',
-      'Family',
-      'Birthday',
-      'Group Gathering',
-      'Casual',
-      'Fine Dining',
-    ];
-    return List<OccasionCategoryModel>.generate(slugs.length, (int index) {
-      return OccasionCategoryModel(
-        id: 'fallback-${slugs[index]}',
-        slug: slugs[index],
-        name: names[index],
-        sortOrder: index + 1,
-      );
-    }, growable: false);
-  }
 
   final String id;
   final String slug;

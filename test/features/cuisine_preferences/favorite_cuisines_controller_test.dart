@@ -77,35 +77,28 @@ void main() {
 
   tearDown(Get.reset);
 
-  test(
-    'shows fallback occasion chips immediately when taxonomy hangs',
-    () async {
-      final _HangingTaxonomyRepository taxonomy = _HangingTaxonomyRepository(
-        Get.find<ApiClient>(),
-      );
-      Get.put<TaxonomyRepository>(taxonomy);
+  test('does not invent occasion chips when taxonomy hangs', () async {
+    final _HangingTaxonomyRepository taxonomy = _HangingTaxonomyRepository(
+      Get.find<ApiClient>(),
+    );
+    Get.put<TaxonomyRepository>(taxonomy);
 
-      final FavoriteCuisinesController controller = FavoriteCuisinesController(
-        taxonomyRepository: taxonomy,
-      );
-      controller.onInit();
+    final FavoriteCuisinesController controller = FavoriteCuisinesController(
+      taxonomyRepository: taxonomy,
+    );
+    controller.onInit();
 
-      expect(controller.isLoadingOccasionCategories.value, isFalse);
-      expect(controller.occasionOptions, isNotEmpty);
-      expect(
-        controller.occasionOptions.length,
-        OccasionCategoryModel.fallbackItems().length,
-      );
-      expect(controller.occasionOptions.first.name, 'Date Night');
+    expect(controller.isLoadingOccasionCategories.value, isTrue);
+    expect(controller.occasionOptions, isEmpty);
 
-      taxonomy.completeWithError();
-      await controller.loadOccasionCategories();
-      expect(controller.isLoadingOccasionCategories.value, isFalse);
-      expect(controller.occasionOptions, isNotEmpty);
-    },
-  );
+    taxonomy.completeWithError();
+    await controller.loadOccasionCategories();
+    expect(controller.isLoadingOccasionCategories.value, isFalse);
+    expect(controller.occasionOptions, isEmpty);
+    expect(controller.occasionCategoriesError.value, isNotNull);
+  });
 
-  test('keeps fallback chips when taxonomy fails', () async {
+  test('shows an error and no invented chips when taxonomy fails', () async {
     final TaxonomyRepository taxonomy = _FailingTaxonomyRepository(
       Get.find<ApiClient>(),
     );
@@ -118,34 +111,12 @@ void main() {
     await controller.loadOccasionCategories();
 
     expect(controller.isLoadingOccasionCategories.value, isFalse);
-    expect(controller.occasionOptions, isNotEmpty);
-    expect(controller.occasionCategoriesError.value, isNull);
+    expect(controller.occasionOptions, isEmpty);
+    expect(controller.occasionCategoriesError.value, isNotNull);
   });
 
-  test(
-    'replaces fallback with live occasion taxonomy when available',
-    () async {
-      final TaxonomyRepository taxonomy = _LiveTaxonomyRepository(
-        Get.find<ApiClient>(),
-      );
-      Get.put<TaxonomyRepository>(taxonomy);
-
-      final FavoriteCuisinesController controller = FavoriteCuisinesController(
-        taxonomyRepository: taxonomy,
-      );
-      controller.onInit();
-      await controller.loadOccasionCategories();
-
-      expect(controller.occasionOptions.length, 2);
-      expect(
-        controller.occasionOptions.map((OccasionCategoryModel c) => c.name),
-        <String>['Date Night', 'Family'],
-      );
-    },
-  );
-
-  test('toggle selection works on fallback occasion chips', () async {
-    final TaxonomyRepository taxonomy = _FailingTaxonomyRepository(
+  test('shows occasion chips from the taxonomy response', () async {
+    final TaxonomyRepository taxonomy = _LiveTaxonomyRepository(
       Get.find<ApiClient>(),
     );
     Get.put<TaxonomyRepository>(taxonomy);
@@ -154,6 +125,26 @@ void main() {
       taxonomyRepository: taxonomy,
     );
     controller.onInit();
+    await controller.loadOccasionCategories();
+
+    expect(controller.occasionOptions.length, 2);
+    expect(
+      controller.occasionOptions.map((OccasionCategoryModel c) => c.name),
+      <String>['Date Night', 'Family'],
+    );
+  });
+
+  test('toggle selection works on taxonomy occasion chips', () async {
+    final TaxonomyRepository taxonomy = _LiveTaxonomyRepository(
+      Get.find<ApiClient>(),
+    );
+    Get.put<TaxonomyRepository>(taxonomy);
+
+    final FavoriteCuisinesController controller = FavoriteCuisinesController(
+      taxonomyRepository: taxonomy,
+    );
+    controller.onInit();
+    await controller.loadOccasionCategories();
 
     controller.toggleOccasion('Date Night');
     expect(controller.hasSelection, isTrue);

@@ -98,13 +98,10 @@ class AppStrings {
   static String get invalidUserPreferencesPayload =>
       'Invalid user preferences payload.'.tr;
   static String get userProfileEmpty => 'No profile available.'.tr;
-  static String get avatarUploadFailed =>
-      'Could not upload avatar. Please try again.'.tr;
   static String get preferencesUpdateFailed =>
       'Could not update preferences. Please try again.'.tr;
   static String get profileUpdateFailed =>
       'Could not update profile. Please try again.'.tr;
-  static String get changeAvatar => 'Change photo'.tr;
   static String get profileAccountDetails => 'Account details'.tr;
   static String get profileFirstName => 'First name'.tr;
   static String get profileLastName => 'Last name'.tr;
@@ -706,6 +703,10 @@ class AppStrings {
   static const String apiReservationStatusExpired = 'Expired';
   static const String apiReservationStatusNoShow = 'NoShow';
 
+  /// `GET /reservations/my/history` sort and order.
+  static const String apiReservationsSortReservationDate = 'reservationDate';
+  static const String apiReservationsOrderDesc = 'desc';
+
   /// `GET /reservations/available-slots` `data.outcome`.
   static const String apiReservationSlotsOutcomeAvailable = 'AVAILABLE';
   static const String apiReservationSlotsOutcomeClosed = 'CLOSED';
@@ -723,14 +724,6 @@ class AppStrings {
   static const String apiErrorTokenExist = 'exist';
   static const String apiErrorTokenRegister = 'register';
   static const String apiAvatarFieldAvatarUrl = 'avatarUrl';
-  static const String apiAvatarFieldAvatar = 'avatar';
-  static const String apiAvatarFieldImageUrl = 'imageUrl';
-  static const String apiAvatarFieldUrl = 'url';
-  static const String apiAvatarFieldPath = 'path';
-  static const String apiAvatarUploadFieldFile = 'file';
-  static const String apiAvatarUploadFieldAvatar = 'avatar';
-  static const String apiAvatarUploadFieldImage = 'image';
-  static const String apiAvatarUploadFieldProfileImage = 'profileImage';
 
   /// Shared media DTO field names (Discovery covers, logos, gallery, files).
   static const String apiMediaFieldUrl = 'url';

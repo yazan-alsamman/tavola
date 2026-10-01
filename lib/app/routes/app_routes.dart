@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../core/constants/app_dimensions.dart';
 import '../../core/utils/app_dependency.dart';
 import '../../features/cuisine_preferences/controller/favorite_cuisines_controller.dart';
 import '../../features/cuisine_preferences/view/favorite_cuisines_screen.dart';
@@ -13,7 +15,9 @@ import '../../features/concierge/controller/concierge_controller.dart';
 import '../../features/concierge/view/concierge_screen.dart';
 import '../../features/favorites/controller/favorites_controller.dart';
 import '../../features/favorites/view/favorites_screen.dart';
+import '../../features/home/controller/occasion_restaurants_controller.dart';
 import '../../features/home/view/home_screen.dart';
+import '../../features/home/view/occasion_restaurants_screen.dart';
 import '../../features/map/controller/restaurant_map_controller.dart';
 import '../../features/map/view/restaurant_map_screen.dart';
 import '../../features/notifications/controller/notifications_controller.dart';
@@ -75,6 +79,7 @@ class AppRoutes {
   static const String details = '/details';
   static const String restaurantMenu = '/restaurant-menu';
   static const String compareRestaurants = '/compare-restaurants';
+  static const String occasionRestaurants = '/occasion-restaurants';
   static const String initial = splash;
 
   static final routes = [
@@ -116,10 +121,7 @@ class AppRoutes {
         AppDependency.putPermanentIfAbsent(SignUpController.new);
       }),
     ),
-    GetPage(
-      name: logoutTransition,
-      page: () => const LogoutTransitionScreen(),
-    ),
+    GetPage(name: logoutTransition, page: () => const LogoutTransitionScreen()),
     GetPage(
       name: login,
       page: () => const LoginScreen(),
@@ -282,6 +284,17 @@ class AppRoutes {
       binding: BindingsBuilder(() {
         AppDependency.ensureCompareDependencies();
         AppDependency.putFresh(CompareController.new);
+      }),
+    ),
+    GetPage(
+      name: occasionRestaurants,
+      page: () => const OccasionRestaurantsScreen(),
+      customTransition: OccasionRestaurantsTransition(),
+      transitionDuration: AppDimensions.occasionRestaurantsTransitionDuration,
+      curve: Curves.easeOutCubic,
+      binding: BindingsBuilder(() {
+        AppDependency.ensureDiscoveryRepository();
+        AppDependency.putFresh(OccasionRestaurantsController.new);
       }),
     ),
   ];

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 
+import 'package:tavla/core/constants/app_strings.dart';
 import 'package:tavla/core/constants/app_urls.dart';
 import 'package:tavla/core/network/api_client.dart';
 import 'package:tavla/core/network/auth_token_reader.dart';
@@ -34,7 +35,9 @@ void main() {
                     <String, dynamic>{
                       'reservationId': upcoming ? 'up-1' : 'hist-1',
                       'restaurantId': 'rest-1',
-                      'restaurantName': upcoming ? 'Upcoming Spot' : 'Past Spot',
+                      'restaurantName': upcoming
+                          ? 'Upcoming Spot'
+                          : 'Past Spot',
                       'partySize': 2,
                       'status': upcoming ? 'Approved' : 'Completed',
                       'reservationStartTime': '2026-09-12T18:00:00.000Z',
@@ -63,6 +66,88 @@ void main() {
     expect(repo.historyReservations.single.reservationId, 'hist-1');
     expect(repo.activeReservations.single.isActive, isTrue);
     expect(repo.historyReservations.single.isActive, isFalse);
+  });
+
+  test('history follows full pages and keeps every returned status', () async {
+    Get.testMode = true;
+    final List<int> pages = <int>[];
+    Get.put<AuthTokenReader>(_TokenReader('access'));
+    final Dio dio = Dio(BaseOptions(baseUrl: AppUrls.apiBaseUrl));
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
+          if (!options.path.contains(AppUrls.reservationsMyHistoryPath)) {
+            handler.resolve(
+              Response<dynamic>(
+                requestOptions: options,
+                statusCode: 404,
+                data: <String, dynamic>{'success': false, 'message': 'skip'},
+              ),
+            );
+            return;
+          }
+          final int page =
+              options.queryParameters[AppUrls.reservationsPageQueryKey] as int;
+          pages.add(page);
+          expect(
+            options.queryParameters[AppUrls.reservationsSortQueryKey],
+            AppStrings.apiReservationsSortReservationDate,
+          );
+          expect(
+            options.queryParameters[AppUrls.reservationsOrderQueryKey],
+            AppStrings.apiReservationsOrderDesc,
+          );
+          final List<Map<String, dynamic>> items = page == 1
+              ? <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'reservationId': 'done',
+                    'restaurantId': 'rest-1',
+                    'status': 'Completed',
+                    'reservationStartTime': '2026-09-12T18:00:00.000Z',
+                  },
+                  <String, dynamic>{
+                    'reservationId': 'custom',
+                    'restaurantId': 'rest-1',
+                    'status': 'CheckedOut',
+                    'reservationStartTime': '2026-09-11T18:00:00.000Z',
+                  },
+                ]
+              : <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'reservationId': 'still-approved',
+                    'restaurantId': 'rest-1',
+                    'status': 'Approved',
+                    'reservationStartTime': '2026-09-10T18:00:00.000Z',
+                  },
+                ];
+          handler.resolve(
+            Response<dynamic>(
+              requestOptions: options,
+              statusCode: 200,
+              data: <String, dynamic>{
+                'success': true,
+                'message': 'ok',
+                'data': <String, dynamic>{'items': items},
+              },
+            ),
+          );
+        },
+      ),
+    );
+    Get.put(ApiClient(dio: dio, tokenReader: Get.find<AuthTokenReader>()));
+    final ReservationRepository repo = ReservationRepository(
+      Get.find<ApiClient>(),
+    );
+
+    await repo.fetchMyHistory(limit: 2);
+
+    expect(pages, <int>[1, 2]);
+    expect(
+      repo.historyReservations.map(
+        (item) => item.status,
+      ),
+      <String>['Completed', 'CheckedOut', 'Approved'],
+    );
   });
 
   test('fetchMyReservationById hits detail path', () async {
@@ -108,87 +193,92 @@ void main() {
     expect(detail.notes, 'Note');
   });
 
-  test('fetchReservations and fetchReservationById hit /reservations aliases', () async {
-    Get.testMode = true;
-    Get.put<AuthTokenReader>(_TokenReader('access'));
-    final List<String> hits = <String>[];
-    final Dio dio = Dio(BaseOptions(baseUrl: AppUrls.apiBaseUrl));
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
-          hits.add(options.path);
-          if (options.path == AppUrls.reservationsPath &&
-              options.method == 'GET') {
-            expect(
-              options.queryParameters[AppUrls.reservationsPageQueryKey],
-              isNotNull,
-            );
-            expect(
-              options.queryParameters[AppUrls.reservationsPageSizeQueryKey],
-              isNotNull,
-            );
-            handler.resolve(
-              Response<dynamic>(
-                requestOptions: options,
-                statusCode: 200,
-                data: <String, dynamic>{
-                  'success': true,
-                  'message': 'ok',
-                  'data': <String, dynamic>{
-                    'items': <dynamic>[
-                      <String, dynamic>{
-                        'reservationId': 'r1',
-                        'restaurantId': 'rest-1',
-                        'status': 'Approved',
+  test(
+    'fetchReservations and fetchReservationById hit /reservations aliases',
+    () async {
+      Get.testMode = true;
+      Get.put<AuthTokenReader>(_TokenReader('access'));
+      final List<String> hits = <String>[];
+      final Dio dio = Dio(BaseOptions(baseUrl: AppUrls.apiBaseUrl));
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest:
+              (RequestOptions options, RequestInterceptorHandler handler) {
+                hits.add(options.path);
+                if (options.path == AppUrls.reservationsPath &&
+                    options.method == 'GET') {
+                  expect(
+                    options.queryParameters[AppUrls.reservationsPageQueryKey],
+                    isNotNull,
+                  );
+                  expect(
+                    options.queryParameters[AppUrls
+                        .reservationsPageSizeQueryKey],
+                    isNotNull,
+                  );
+                  handler.resolve(
+                    Response<dynamic>(
+                      requestOptions: options,
+                      statusCode: 200,
+                      data: <String, dynamic>{
+                        'success': true,
+                        'message': 'ok',
+                        'data': <String, dynamic>{
+                          'items': <dynamic>[
+                            <String, dynamic>{
+                              'reservationId': 'r1',
+                              'restaurantId': 'rest-1',
+                              'status': 'Approved',
+                            },
+                          ],
+                        },
                       },
-                    ],
-                  },
-                },
-              ),
-            );
-            return;
-          }
-          if (options.path == AppUrls.reservationsDetailPath('r1') &&
-              options.method == 'GET') {
-            handler.resolve(
-              Response<dynamic>(
-                requestOptions: options,
-                statusCode: 200,
-                data: <String, dynamic>{
-                  'success': true,
-                  'message': 'ok',
-                  'data': <String, dynamic>{
-                    'reservationId': 'r1',
-                    'restaurantId': 'rest-1',
-                    'status': 'Approved',
-                  },
-                },
-              ),
-            );
-            return;
-          }
-          handler.reject(
-            DioException(
-              requestOptions: options,
-              type: DioExceptionType.badResponse,
-            ),
-          );
-        },
-      ),
-    );
-    Get.put(ApiClient(dio: dio, tokenReader: Get.find<AuthTokenReader>()));
+                    ),
+                  );
+                  return;
+                }
+                if (options.path == AppUrls.reservationsDetailPath('r1') &&
+                    options.method == 'GET') {
+                  handler.resolve(
+                    Response<dynamic>(
+                      requestOptions: options,
+                      statusCode: 200,
+                      data: <String, dynamic>{
+                        'success': true,
+                        'message': 'ok',
+                        'data': <String, dynamic>{
+                          'reservationId': 'r1',
+                          'restaurantId': 'rest-1',
+                          'status': 'Approved',
+                        },
+                      },
+                    ),
+                  );
+                  return;
+                }
+                handler.reject(
+                  DioException(
+                    requestOptions: options,
+                    type: DioExceptionType.badResponse,
+                  ),
+                );
+              },
+        ),
+      );
+      Get.put(ApiClient(dio: dio, tokenReader: Get.find<AuthTokenReader>()));
 
-    final ReservationRepository repo = ReservationRepository(
-      Get.find<ApiClient>(),
-    );
-    final list = await repo.fetchReservations();
-    final detail = await repo.fetchReservationById('r1');
+      final ReservationRepository repo = ReservationRepository(
+        Get.find<ApiClient>(),
+      );
+      final list = await repo.fetchReservations();
+      final detail = await repo.fetchReservationById('r1');
 
-    expect(hits, contains(AppUrls.reservationsPath));
-    expect(hits, contains(AppUrls.reservationsDetailPath('r1')));
-    expect(list.single.reservationId, 'r1');
-    expect(detail.reservationId, 'r1');
-  });
+      expect(hits, contains(AppUrls.reservationsPath));
+      expect(hits, contains(AppUrls.reservationsDetailPath('r1')));
+      expect(list.single.reservationId, 'r1');
+      expect(detail.reservationId, 'r1');
+    },
+  );
 }
 
 class _TokenReader implements AuthTokenReader {

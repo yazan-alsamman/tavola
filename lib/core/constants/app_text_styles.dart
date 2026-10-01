@@ -175,9 +175,17 @@ class AppTextStyles {
   );
 
   static TextStyle get profileName => AppFonts.heading(
-    fontSize: 18,
-    fontWeight: FontWeight.w700,
+    fontSize: AppDimensions.profileIdentityNameFontSize,
+    fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
+    height: AppDimensions.profileIdentityNameLineHeight,
+  );
+
+  static TextStyle get profileIdentityMeta => AppFonts.ui(
+    fontSize: AppDimensions.profileIdentityMetaFontSize,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+    height: AppDimensions.profileIdentityMetaLineHeight,
   );
 
   static TextStyle get partnerTitle => AppFonts.heading(
