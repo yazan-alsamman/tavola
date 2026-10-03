@@ -1,0 +1,8 @@
+# Copy to android/key.properties (git-ignored) and fill in.
+# The keystore's SHA1 must match the upload key shown in Play Console
+# (Setup > App integrity > Upload key certificate).
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+# Path is relative to the android/ folder.
+storeFile=upload-keystore.jks
