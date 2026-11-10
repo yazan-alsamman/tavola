@@ -370,16 +370,65 @@ class ProfileController extends GetxController {
     await WriteReviewSheet.open(
       restaurantName: item.restaurantName,
       onPickImage: _pickReviewImagePath,
-      onSubmit:
-          ({required int rating, required String comment, String? imagePath}) {
-            return submitReview(
-              reservationId: item.reservationId,
-              rating: rating,
-              comment: comment,
-              imagePath: imagePath,
-            );
-          },
+      onSubmit: (ReviewDraft draft) => submitReview(
+        reservationId: item.reservationId,
+        rating: draft.axes.roundedAverage,
+        comment: draft.comment,
+        axes: draft.axes,
+        privateNote: draft.privateNote,
+        imagePath: draft.imagePath,
+      ),
     );
+  }
+
+  /// The restaurant reopened the review (`openForRerating`): rate again via
+  /// `PUT /reviews/:id`, pre-filled with the current review.
+  Future<void> openRerateReview(ReservationHistoryItemModel item) async {
+    final ReviewModel? review = reviewForReservation(item.reservationId);
+    if (review == null || !review.hasId || !review.openForRerating) {
+      return;
+    }
+    if (!await _requireSignIn()) {
+      return;
+    }
+    await WriteReviewSheet.open(
+      restaurantName: item.restaurantName,
+      onPickImage: _pickReviewImagePath,
+      initialReview: review,
+      isRerate: true,
+      onSubmit: (ReviewDraft draft) => rerateReview(review, draft),
+    );
+  }
+
+  Future<bool> rerateReview(ReviewModel review, ReviewDraft draft) async {
+    if (isReviewBusy.value) {
+      return false;
+    }
+    isReviewBusy.value = true;
+    try {
+      await _reviewsRepository.rerateReview(
+        reviewId: review.reviewId,
+        reservationId: review.reservationId,
+        rating: draft.axes.roundedAverage,
+        comment: draft.comment,
+        axes: draft.axes,
+        privateNote: draft.privateNote,
+      );
+      if (!isClosed) {
+        Get.snackbar(AppStrings.rateYourVisit, AppStrings.reviewUpdated);
+      }
+      return true;
+    } on ApiException catch (error) {
+      Get.snackbar(AppStrings.rateYourVisit, error.message);
+      return false;
+    } catch (_) {
+      Get.snackbar(AppStrings.rateYourVisit, AppStrings.reviewSubmitFailed);
+      return false;
+    } finally {
+      if (!isClosed) {
+        isReviewBusy.value = false;
+      }
+    }
   }
 
   Future<String?> _pickReviewImagePath() async {
@@ -401,6 +450,8 @@ class ProfileController extends GetxController {
     required String reservationId,
     required int rating,
     required String comment,
+    ReviewAxesModel? axes,
+    String privateNote = '',
     String? imagePath,
   }) async {
     if (isReviewBusy.value) {
@@ -412,6 +463,8 @@ class ProfileController extends GetxController {
         reservationId: reservationId,
         rating: rating,
         comment: comment,
+        axes: axes,
+        privateNote: privateNote,
       );
       final String path = (imagePath ?? '').trim();
       if (path.isNotEmpty && review.hasId) {
@@ -493,6 +546,16 @@ class ProfileController extends GetxController {
       availabilityLabel: reservation.status,
       isAvailable: reservation.isActive,
     );
+  }
+
+  /// The offer tag on a booking, or null for an ordinary booking.
+  String? offerLabelFor(CustomerReservationModel reservation) {
+    if (!reservation.hasOffer) {
+      return null;
+    }
+    return reservation.offerTitle.isNotEmpty
+        ? AppStrings.offerTag(reservation.offerTitle)
+        : AppStrings.specialOffer;
   }
 
   List<(String, String)> detailsForReservation(
@@ -648,6 +711,7 @@ class ProfileController extends GetxController {
           guests: item.guests > 0 ? '${item.guests}' : '',
           // Keep raw API status (never a translated label) for review gating.
           status: item.status,
+          offerLabel: offerLabelFor(item),
         ),
       ),
     );

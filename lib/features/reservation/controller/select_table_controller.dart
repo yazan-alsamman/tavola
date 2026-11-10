@@ -376,7 +376,17 @@ class SelectTableController extends GetxController {
           restaurantName: reservation.restaurantName.value,
           startTimeIso: window.startTimeIso,
           endTimeIso: window.endTimeIso,
+          offerId: reservation.offerId.value,
+          offerTitle: reservation.offerTitle.value,
         );
+        if (reservation.offerId.value != null &&
+            created.reportsOffer &&
+            !created.hasOffer) {
+          Get.snackbar(
+            AppStrings.confirmReservation,
+            AppStrings.offerNotApplied,
+          );
+        }
       }
       _showLocalConfirmation(
         table,

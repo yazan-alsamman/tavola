@@ -192,6 +192,14 @@ class AppDimensions {
   static const int reviewMinRating = 1;
   static const int reviewMaxRating = 5;
   static const int reviewCommentMaxLength = 500;
+  static const int reviewAxisCommentMaxLength = 1000;
+  static const int reviewPrivateNoteMaxLength = 1000;
+  static const double reviewAxisStarSize = 26.0;
+
+  /// Branch price level runs 1–4 (backend ADR-046).
+  static const int priceLevelMax = 4;
+  static const double priceLevelStarSize = 14.0;
+  static const double priceLevelEmptyOnDarkAlpha = 0.35;
   static const int reviewCommentExcerptMaxLength = 120;
   static const int reviewsMaxSyncPages = 10;
   static const double detailsReviewImageSize = 72.0;

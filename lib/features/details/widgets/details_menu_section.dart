@@ -6,6 +6,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../common/widgets/app_safe_image.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_fonts.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../model/menu_category_model.dart';
@@ -104,6 +105,8 @@ class DetailsMenuSection extends StatelessWidget {
   }
 
   Widget _buildItem(MenuItemModel item) {
+    final bool arabic = AppFonts.isArabicLocale();
+    final String secondaryName = item.secondaryName(arabic: arabic);
     return Padding(
       padding: const EdgeInsets.only(bottom: AppDimensions.regularSpacing),
       child: _MenuGlassCard(
@@ -123,11 +126,21 @@ class DetailsMenuSection extends StatelessWidget {
                       const SizedBox(height: AppDimensions.smallSpacing),
                     ],
                     Text(
-                      item.name,
+                      item.displayName(arabic: arabic),
                       style: AppTextStyles.detailsMenuItemName,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (secondaryName.isNotEmpty)
+                      Text(
+                        secondaryName,
+                        textDirection: arabic
+                            ? TextDirection.ltr
+                            : TextDirection.rtl,
+                        style: AppTextStyles.detailsMenuItemDescription,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     if (item.description.isNotEmpty) ...[
                       const SizedBox(height: AppDimensions.tinySpacing),
                       Text(
@@ -170,10 +183,7 @@ class DetailsMenuSection extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: <Color>[
-                      AppColors.secondaryLight,
-                      AppColors.accent,
-                    ],
+                    colors: <Color>[AppColors.secondaryLight, AppColors.accent],
                   ),
                 ),
                 child: const Center(
@@ -246,10 +256,7 @@ class _MenuGlassCard extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: <Color>[
-                AppColors.surface75,
-                AppColors.surfaceAlt90,
-              ],
+              colors: <Color>[AppColors.surface75, AppColors.surfaceAlt90],
             ),
             borderRadius: radius,
             border: Border.all(

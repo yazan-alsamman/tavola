@@ -1,12 +1,10 @@
+import '../../../core/constants/app_strings.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/utils/media_url_resolver.dart';
 
 /// Review image from submit / list / get payloads.
 class ReviewImageModel {
-  const ReviewImageModel({
-    required this.reviewImageId,
-    required this.url,
-  });
+  const ReviewImageModel({required this.reviewImageId, required this.url});
 
   final String reviewImageId;
   final String url;
@@ -39,6 +37,80 @@ class ReviewImageModel {
   }
 }
 
+/// Stars and an optional comment for one axis (backend ADR-045).
+class ReviewAxisModel {
+  const ReviewAxisModel({required this.rating, this.comment = ''});
+
+  final int rating;
+  final String comment;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    AppStrings.apiReviewRatingField: rating,
+    if (comment.trim().isNotEmpty)
+      AppStrings.apiReviewCommentField: comment.trim(),
+  };
+
+  static ReviewAxisModel? fromJson(Object? raw) {
+    if (raw is! Map) {
+      return null;
+    }
+    final Map<String, dynamic> map = Map<String, dynamic>.from(raw);
+    final int rating = ReviewModel._readRating(map['rating']);
+    if (rating <= 0) {
+      return null;
+    }
+    return ReviewAxisModel(
+      rating: rating,
+      comment: ApiException.coerceString(map['comment']).trim(),
+    );
+  }
+}
+
+/// Service, place and food: the three axes a guest rates (backend ADR-045).
+class ReviewAxesModel {
+  const ReviewAxesModel({
+    required this.service,
+    required this.place,
+    required this.food,
+  });
+
+  final ReviewAxisModel service;
+  final ReviewAxisModel place;
+  final ReviewAxisModel food;
+
+  List<ReviewAxisModel> get all => <ReviewAxisModel>[service, place, food];
+
+  /// Whole stars of the average, as the backend derives `rating`.
+  int get roundedAverage =>
+      ((service.rating + place.rating + food.rating) / 3).round();
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    AppStrings.apiReviewAxisService: service.toJson(),
+    AppStrings.apiReviewAxisPlace: place.toJson(),
+    AppStrings.apiReviewAxisFood: food.toJson(),
+  };
+
+  static ReviewAxesModel? fromJson(Object? raw) {
+    if (raw is! Map) {
+      return null;
+    }
+    final Map<String, dynamic> map = Map<String, dynamic>.from(raw);
+    final ReviewAxisModel? service = ReviewAxisModel.fromJson(
+      map[AppStrings.apiReviewAxisService],
+    );
+    final ReviewAxisModel? place = ReviewAxisModel.fromJson(
+      map[AppStrings.apiReviewAxisPlace],
+    );
+    final ReviewAxisModel? food = ReviewAxisModel.fromJson(
+      map[AppStrings.apiReviewAxisFood],
+    );
+    if (service == null || place == null || food == null) {
+      return null;
+    }
+    return ReviewAxesModel(service: service, place: place, food: food);
+  }
+}
+
 /// Customer/public review DTO from Reviews endpoints.
 class ReviewModel {
   const ReviewModel({
@@ -50,6 +122,8 @@ class ReviewModel {
     this.comment = '',
     this.images = const <ReviewImageModel>[],
     this.createdAt,
+    this.axes,
+    this.openForRerating = false,
   });
 
   final String reviewId;
@@ -60,6 +134,12 @@ class ReviewModel {
   final String comment;
   final List<ReviewImageModel> images;
   final DateTime? createdAt;
+
+  /// Null for a single-rating review (app 1.0.2 and older reviews).
+  final ReviewAxesModel? axes;
+
+  /// The restaurant reopened this review; its guest may rate again (PUT).
+  final bool openForRerating;
 
   bool get hasId => reviewId.trim().isNotEmpty;
 
@@ -72,6 +152,8 @@ class ReviewModel {
     String? comment,
     List<ReviewImageModel>? images,
     DateTime? createdAt,
+    ReviewAxesModel? axes,
+    bool? openForRerating,
   }) {
     return ReviewModel(
       reviewId: reviewId ?? this.reviewId,
@@ -82,6 +164,8 @@ class ReviewModel {
       comment: comment ?? this.comment,
       images: images ?? this.images,
       createdAt: createdAt ?? this.createdAt,
+      axes: axes ?? this.axes,
+      openForRerating: openForRerating ?? this.openForRerating,
     );
   }
 
@@ -92,9 +176,7 @@ class ReviewModel {
     ]);
     final Object? restaurantRaw = json['restaurant'];
     String restaurantId = _firstNonEmpty(<Object?>[json['restaurantId']]);
-    String restaurantName = _firstNonEmpty(<Object?>[
-      json['restaurantName'],
-    ]);
+    String restaurantName = _firstNonEmpty(<Object?>[json['restaurantName']]);
     if (restaurantRaw is Map) {
       final Map<String, dynamic> restaurant = Map<String, dynamic>.from(
         restaurantRaw,
@@ -128,6 +210,8 @@ class ReviewModel {
       createdAt: _asDateTime(
         json['createdAt'] ?? json['created_at'] ?? json['submittedAt'],
       ),
+      axes: ReviewAxesModel.fromJson(json[AppStrings.apiReviewAxesField]),
+      openForRerating: json['openForRerating'] == true,
     );
   }
 

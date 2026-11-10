@@ -8,6 +8,7 @@ class ReservationHistoryItemModel {
     required this.time,
     required this.guests,
     required this.status,
+    this.offerLabel,
   });
 
   final String reservationId;
@@ -18,6 +19,9 @@ class ReservationHistoryItemModel {
   final String time;
   final String guests;
   final String status;
+
+  /// Set when the booking was made under an offer.
+  final String? offerLabel;
 
   /// Any history row with a reservation id shows the review CTA.
   /// `POST /reviews` still enforces completed reservations server-side.

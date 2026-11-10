@@ -3,6 +3,7 @@ import '../../../core/constants/app_urls.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../branches/model/branch_model.dart';
+import '../../discovery/model/restaurant_offer_model.dart';
 import '../../discovery/repository/discovery_repository.dart';
 import '../../home/model/restaurant_model.dart';
 import '../model/menu_item_model.dart';
@@ -64,6 +65,9 @@ class RestaurantDetailsRepository {
         ? AppStrings.ratingUnavailable
         : averageRating.toStringAsFixed(1);
     final List<String> galleryImageUrls = await _loadGalleryImageUrls(id);
+    final List<RestaurantOfferModel> offers = restaurant.hasActiveOffer
+        ? await _loadBranchOffers(id, primary?.id ?? '')
+        : const <RestaurantOfferModel>[];
 
     final RestaurantDetailModel detail = RestaurantDetailModel(
       restaurantId: restaurant.id,
@@ -82,9 +86,33 @@ class RestaurantDetailsRepository {
       todayHoursLabel: todayHoursLabel,
       isOpenNow: isOpenNow,
       hasWorkingHours: hasWorkingHours,
+      priceLevel: primary?.priceLevel,
+      offers: offers,
     );
     _detailsById[id] = detail;
     return detail;
+  }
+
+  /// Running public offers (`GET /discovery/restaurants/:id/offers`) that a
+  /// booking at [branchId] can use. A failed load only hides the section.
+  Future<List<RestaurantOfferModel>> _loadBranchOffers(
+    String restaurantId,
+    String branchId,
+  ) async {
+    try {
+      final List<RestaurantOfferModel> offers = await _discovery.listOffers(
+        restaurantId,
+      );
+      return List<RestaurantOfferModel>.unmodifiable(<RestaurantOfferModel>[
+        for (final RestaurantOfferModel offer in offers)
+          if (offer.offerId.isNotEmpty &&
+              (offer.isPublished || offer.status.trim().isEmpty) &&
+              (branchId.isEmpty || offer.coversBranch(branchId)))
+            offer,
+      ]);
+    } catch (_) {
+      return const <RestaurantOfferModel>[];
+    }
   }
 
   /// Public `GET /restaurants/:id/gallery`, including a guest with no token.

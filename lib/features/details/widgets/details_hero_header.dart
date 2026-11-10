@@ -9,6 +9,9 @@ import '../../../common/widgets/hoverable_button.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../common/widgets/app_safe_image.dart';
+import '../../../common/widgets/offer_tag.dart';
+import '../../../common/widgets/price_level_stars.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../home/model/restaurant_model.dart';
 import '../model/restaurant_detail_model.dart';
@@ -28,6 +31,17 @@ class DetailsHeroHeader extends StatelessWidget {
   final String ratingLabel;
   final bool isFavorite;
   final VoidCallback onFavoritePressed;
+
+  /// The offer beside the name: the single running offer's title, or the
+  /// generic label when there are several (or the list is not loaded yet).
+  String get offerLabel {
+    if (detail.offers.length == 1 && detail.offers.first.title.isNotEmpty) {
+      return detail.offers.first.title;
+    }
+    return detail.offers.isNotEmpty || restaurant.hasActiveOffer
+        ? AppStrings.specialOffer
+        : '';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,9 +130,40 @@ class DetailsHeroHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(restaurant.name, style: AppTextStyles.detailsHeroTitle),
+                  Wrap(
+                    spacing: AppDimensions.smallSpacing,
+                    runSpacing: AppDimensions.tinySpacing,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        restaurant.name,
+                        style: AppTextStyles.detailsHeroTitle,
+                      ),
+                      if (offerLabel.isNotEmpty)
+                        OfferTag(label: offerLabel, onDark: true),
+                    ],
+                  ),
                   const SizedBox(height: AppDimensions.compactSpacing),
-                  Text(ratingLabel, style: AppTextStyles.detailsHeroRating),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          ratingLabel,
+                          style: AppTextStyles.detailsHeroRating,
+                        ),
+                      ),
+                      if (detail.priceLevel != null) ...[
+                        const SizedBox(width: AppDimensions.regularSpacing),
+                        PriceLevelStars(
+                          level: detail.priceLevel,
+                          filledColor: AppColors.textLight,
+                          emptyColor: AppColors.textLight.withValues(
+                            alpha: AppDimensions.priceLevelEmptyOnDarkAlpha,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                   const SizedBox(height: AppDimensions.tinySpacing),
                   Text(
                     detail.locationBlurb,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_safe_image.dart';
 import 'hoverable_button.dart';
 import 'hoverable_card.dart';
+import 'offer_tag.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
@@ -148,7 +149,16 @@ class RestaurantCard extends StatelessWidget {
                       Row(
                         children: [
                           Expanded(
-                            child: Text(restaurant.name, style: titleStyle),
+                            child: Wrap(
+                              spacing: AppDimensions.smallSpacing,
+                              runSpacing: AppDimensions.tinySpacing,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(restaurant.name, style: titleStyle),
+                                if (restaurant.hasActiveOffer)
+                                  OfferTag(label: AppStrings.specialOffer),
+                              ],
+                            ),
                           ),
                           const Icon(
                             Symbols.arrow_forward_ios,

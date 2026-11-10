@@ -334,8 +334,11 @@ class ReservationRepository {
     String imageUrl = '',
     String? startTimeIso,
     String? endTimeIso,
+    String? offerId,
+    String offerTitle = '',
   }) async {
     await _ensureAuthenticated();
+    final String? offer = offerId?.trim();
     final ApiResponse<CustomerReservationModel> response = await _apiClient
         .post<CustomerReservationModel>(
           AppUrls.reservationsPath,
@@ -349,6 +352,8 @@ class ReservationRepository {
             'reservationEndTime': _reservationInstant(endTime, endTimeIso),
             'guests': guests,
             if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+            if (offer != null && offer.isNotEmpty)
+              AppStrings.apiReservationOfferIdField: offer,
           },
           options: Options(
             headers: <String, dynamic>{
@@ -374,6 +379,10 @@ class ReservationRepository {
         returned: response.data.guests,
         tableCapacity: tableCapacity,
       ),
+      // The response carries only the id; the title is the one we booked with.
+      offerTitle: response.data.hasOffer && response.data.offerTitle.isEmpty
+          ? offerTitle.trim()
+          : null,
     );
     _upsert(created);
     if (created.isActive) {

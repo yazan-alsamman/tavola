@@ -39,6 +39,10 @@ class ReservationController extends GetxController {
   final RxString restaurantName = ''.obs;
   final RxString branchId = ''.obs;
   final RxnString rescheduleReservationId = RxnString();
+
+  /// The offer the customer is booking with, if any (never on reschedule).
+  final RxnString offerId = RxnString();
+  final RxString offerTitle = ''.obs;
   final RxList<ReservationTimeSlot> availabilitySlots =
       <ReservationTimeSlot>[].obs;
   final RxList<String> timeSlots = <String>[].obs;
@@ -69,6 +73,13 @@ class ReservationController extends GetxController {
           (rescheduleId != null && rescheduleId.isNotEmpty)
           ? rescheduleId
           : null;
+      final String? offer = args.offerId?.trim();
+      if (rescheduleReservationId.value == null &&
+          offer != null &&
+          offer.isNotEmpty) {
+        offerId.value = offer;
+        offerTitle.value = args.offerTitle?.trim() ?? '';
+      }
     } else if (args is RestaurantModel) {
       restaurantId.value = args.id;
       restaurantName.value = args.name;

@@ -95,6 +95,8 @@ class _ScriptedReservationRepository extends ReservationRepository {
     String imageUrl = '',
     String? startTimeIso,
     String? endTimeIso,
+    String? offerId,
+    String offerTitle = '',
   }) async {
     lastStartTimeIso = startTimeIso;
     lastEndTimeIso = endTimeIso;

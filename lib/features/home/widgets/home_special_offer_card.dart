@@ -9,6 +9,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
+import '../../discovery/model/offer_terms.dart';
 import '../../discovery/model/restaurant_offer_model.dart';
 import '../controller/home_controller.dart';
 import '../model/restaurant_model.dart';
@@ -48,10 +49,7 @@ class HomeSpecialOfferCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                AppSafeImage(
-                  path: imagePath,
-                  fit: BoxFit.cover,
-                ),
+                AppSafeImage(path: imagePath, fit: BoxFit.cover),
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -69,13 +67,27 @@ class HomeSpecialOfferCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: AppTextStyles.promoTitle),
+                      Text(
+                        title,
+                        style: AppTextStyles.promoTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: AppDimensions.tinySpacing),
+                      Text(
+                        _scheduleLine(offer),
+                        style: AppTextStyles.promoBody.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       const SizedBox(height: AppDimensions.smallSpacing),
                       Flexible(
                         child: Text(
                           description,
                           style: AppTextStyles.promoBody,
-                          maxLines: 3,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -87,7 +99,8 @@ class HomeSpecialOfferCard extends StatelessWidget {
                           height: AppDimensions.iconButtonSize,
                           child: HoverableButton(
                             child: ElevatedButton(
-                              onPressed: controller.openFeaturedOfferReservation,
+                              onPressed:
+                                  controller.openFeaturedOfferReservation,
                               style: AppButtonStyles.filledHover(
                                 ElevatedButton.styleFrom(
                                   textStyle:
@@ -104,8 +117,7 @@ class HomeSpecialOfferCard extends StatelessWidget {
                               ),
                               child: Text(
                                 AppStrings.bookNow,
-                                style:
-                                    AppTextStyles.restaurantCardActionButton,
+                                style: AppTextStyles.restaurantCardActionButton,
                               ),
                             ),
                           ),
@@ -120,5 +132,18 @@ class HomeSpecialOfferCard extends StatelessWidget {
         ),
       );
     });
+  }
+
+  /// "20% off · Sunday, Monday · 18:00 – 22:00" (ADR-047 terms).
+  static String _scheduleLine(RestaurantOfferModel offer) {
+    return <String>[
+      OfferTerms.discountLabel(offer),
+      OfferTerms.daysLabel(offer),
+      // Keep the clock range left-to-right inside Arabic text.
+      if (offer.hasHourLimit)
+        '\u2066${OfferTerms.hoursLabel(offer)}\u2069'
+      else
+        OfferTerms.hoursLabel(offer),
+    ].where((String part) => part.isNotEmpty).join(' · ');
   }
 }

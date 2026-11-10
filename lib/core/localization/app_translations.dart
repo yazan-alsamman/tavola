@@ -914,6 +914,36 @@ class AppTranslations extends Translations {
     'Your table is reserved at Otako Sushi. Share the code with your guests and arrive ready to unwind.':
         'Your table is reserved at Otako Sushi. Share the code with your guests and arrive ready to unwind.',
     'Yuzu Uni Toast': 'Yuzu Uni Toast',
+    'Current offers': 'Current offers',
+    'Offer days': 'Offer days',
+    'Offer hours': 'Offer hours',
+    'Every day': 'Every day',
+    'All day': 'All day',
+    ', ': ', ',
+    'Selected branches only': 'Selected branches only',
+    'Once per customer': 'Once per customer',
+    'Limited places': 'Limited places',
+    'Book with this offer': 'Book with this offer',
+    'This booking did not meet the offer terms, so it was booked at the regular price.':
+        'This booking did not meet the offer terms, so it was booked at the regular price.',
+    '@value% off': '@value% off',
+    '@value off': '@value off',
+    'From @count guests': 'From @count guests',
+    'Until @date': 'Until @date',
+    'Offer: @title': 'Offer: @title',
+    'Price level @level of @max': 'Price level @level of @max',
+    'Service': 'Service',
+    'Place': 'Place',
+    'Food': 'Food',
+    'Rate each part from 1 to 5.': 'Rate each part from 1 to 5.',
+    'Add a comment (optional)': 'Add a comment (optional)',
+    'Private note to the restaurant': 'Private note to the restaurant',
+    'Only the restaurant sees this. It is never published.':
+        'Only the restaurant sees this. It is never published.',
+    'Rate again': 'Rate again',
+    'The restaurant invited you to rate your visit again.':
+        'The restaurant invited you to rate your visit again.',
+    'Review updated successfully.': 'Review updated successfully.',
   };
 
   static const Map<String, String> _ar = {
@@ -1745,5 +1775,35 @@ class AppTranslations extends Translations {
     'Your table is reserved at Otako Sushi. Share the code with your guests and arrive ready to unwind.':
         'تم حجز طاولتك في Otako Sushi. شارك الرمز مع ضيوفك وصل مستعدًا للاسترخاء.',
     'Yuzu Uni Toast': 'توست يوزو وأوني',
+    'Current offers': 'العروض الحالية',
+    'Offer days': 'أيام العرض',
+    'Offer hours': 'ساعات العرض',
+    'Every day': 'كل الأيام',
+    'All day': 'طوال اليوم',
+    ', ': '، ',
+    'Selected branches only': 'في فروع محددة فقط',
+    'Once per customer': 'مرة واحدة لكل زبون',
+    'Limited places': 'عدد الحجوزات محدود',
+    'Book with this offer': 'احجز بهذا العرض',
+    'This booking did not meet the offer terms, so it was booked at the regular price.':
+        'هذا الحجز لا يحقق شروط العرض، لذلك تم بالسعر العادي.',
+    '@value% off': 'خصم @value%',
+    '@value off': 'خصم @value',
+    'From @count guests': 'من @count أشخاص فأكثر',
+    'Until @date': 'حتى @date',
+    'Offer: @title': 'عرض: @title',
+    'Price level @level of @max': 'مستوى الأسعار @level من @max',
+    'Service': 'الخدمة',
+    'Place': 'المكان',
+    'Food': 'الطعام',
+    'Rate each part from 1 to 5.': 'قيّم كل جانب من 1 إلى 5.',
+    'Add a comment (optional)': 'أضف تعليقاً (اختياري)',
+    'Private note to the restaurant': 'ملاحظة خاصة للمطعم',
+    'Only the restaurant sees this. It is never published.':
+        'يراها المطعم فقط ولا تُنشر.',
+    'Rate again': 'قيّم مجدداً',
+    'The restaurant invited you to rate your visit again.':
+        'دعاك المطعم لإعادة تقييم زيارتك.',
+    'Review updated successfully.': 'تم تحديث تقييمك.',
   };
 }

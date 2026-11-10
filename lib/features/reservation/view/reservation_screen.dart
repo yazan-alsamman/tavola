@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../common/widgets/hoverable_button.dart';
+import '../../../common/widgets/offer_tag.dart';
 import '../../../common/widgets/tavola_refresh.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -61,6 +62,22 @@ class ReservationScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: AppTextStyles.reservationPreferencesSubtitle,
                       ),
+                      Obx(() {
+                        if (controller.offerId.value == null) {
+                          return const SizedBox.shrink();
+                        }
+                        final String title = controller.offerTitle.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            top: AppDimensions.regularSpacing,
+                          ),
+                          child: OfferTag(
+                            label: title.isNotEmpty
+                                ? AppStrings.offerTag(title)
+                                : AppStrings.specialOffer,
+                          ),
+                        );
+                      }),
                       const SizedBox(height: AppDimensions.sectionSpacing),
                       ReservationDinersPanel(controller: controller),
                       const SizedBox(height: AppDimensions.sectionSpacing),
