@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../common/widgets/app_safe_image.dart';
 import '../../../common/widgets/hoverable_card.dart';
+import '../../../common/widgets/offer_tag.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
@@ -24,6 +25,7 @@ class ProfileReservationHistoryCard extends StatelessWidget {
     this.existingReview,
     this.onWriteReview,
     this.onDeleteReview,
+    this.onRerateReview,
     this.isReviewBusy = false,
   });
 
@@ -31,6 +33,7 @@ class ProfileReservationHistoryCard extends StatelessWidget {
   final ReviewModel? existingReview;
   final VoidCallback? onWriteReview;
   final VoidCallback? onDeleteReview;
+  final VoidCallback? onRerateReview;
   final bool isReviewBusy;
 
   @override
@@ -175,6 +178,12 @@ class ProfileReservationHistoryCard extends StatelessWidget {
                                     ),
                                   ],
                                 ),
+                                if (item.offerLabel != null) ...[
+                                  const SizedBox(
+                                    height: AppDimensions.smallSpacing,
+                                  ),
+                                  OfferTag(label: item.offerLabel!),
+                                ],
                                 const SizedBox(
                                   height: AppDimensions.regularSpacing,
                                 ),
@@ -220,6 +229,7 @@ class ProfileReservationHistoryCard extends StatelessWidget {
                           existingReview: existingReview,
                           onWriteReview: onWriteReview!,
                           onDeleteReview: onDeleteReview!,
+                          onRerateReview: onRerateReview,
                           isBusy: isReviewBusy,
                         ),
                     ],

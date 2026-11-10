@@ -323,6 +323,24 @@ class ApiClient {
     );
   }
 
+  Future<ApiResponse<T>> put<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    required T Function(Object? raw) parseData,
+    Options? options,
+  }) {
+    return _request(
+      () => _dio.put<dynamic>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      ),
+      parseData: parseData,
+    );
+  }
+
   Future<ApiResponse<T>> patch<T>(
     String path, {
     Object? data,

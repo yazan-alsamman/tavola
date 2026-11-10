@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../common/widgets/offer_tag.dart';
 import '../../../common/widgets/app_safe_image.dart';
 import '../../../common/widgets/hoverable_card.dart';
 import '../../../core/constants/app_colors.dart';
@@ -22,6 +23,7 @@ class ProfileReservationCard extends StatelessWidget {
     this.onReschedule,
     this.statusLabel,
     this.reservationStatus,
+    this.offerLabel,
   });
 
   final RestaurantModel restaurant;
@@ -34,6 +36,9 @@ class ProfileReservationCard extends StatelessWidget {
 
   /// Stored backend reservation status. Used only to color [statusLabel].
   final String? reservationStatus;
+
+  /// Shown under the name when the booking was made under an offer.
+  final String? offerLabel;
 
   static const List<IconData> _detailIcons = [
     Symbols.calendar_today,
@@ -125,6 +130,11 @@ class ProfileReservationCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.reservationTitle,
                             ),
+                            if (offerLabel != null &&
+                                offerLabel!.trim().isNotEmpty) ...[
+                              const SizedBox(height: AppDimensions.tinySpacing),
+                              OfferTag(label: offerLabel!),
+                            ],
                             if (statusLabel != null &&
                                 statusLabel!.trim().isNotEmpty) ...[
                               SizedBox(

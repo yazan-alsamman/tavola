@@ -16,6 +16,7 @@ class ProfileReservationHistoryPanel extends StatelessWidget {
     required this.reviewForReservation,
     required this.onWriteReview,
     required this.onDeleteReview,
+    this.onRerateReview,
     this.isReviewBusy = false,
   });
 
@@ -23,6 +24,7 @@ class ProfileReservationHistoryPanel extends StatelessWidget {
   final ReviewModel? Function(String reservationId) reviewForReservation;
   final void Function(ReservationHistoryItemModel item) onWriteReview;
   final void Function(ReservationHistoryItemModel item) onDeleteReview;
+  final void Function(ReservationHistoryItemModel item)? onRerateReview;
   final bool isReviewBusy;
 
   @override
@@ -71,6 +73,9 @@ class ProfileReservationHistoryPanel extends StatelessWidget {
             existingReview: reviewForReservation(item.reservationId),
             onWriteReview: () => onWriteReview(item),
             onDeleteReview: () => onDeleteReview(item),
+            onRerateReview: onRerateReview == null
+                ? null
+                : () => onRerateReview!(item),
             isReviewBusy: isReviewBusy,
           ),
         ),

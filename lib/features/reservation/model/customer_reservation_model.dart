@@ -18,6 +18,9 @@ class CustomerReservationModel {
     this.reservationEndTime,
     this.notes,
     this.imageUrl = '',
+    this.offerId = '',
+    this.offerTitle = '',
+    this.reportsOffer = false,
   });
 
   final String reservationId;
@@ -32,6 +35,18 @@ class CustomerReservationModel {
   final DateTime? reservationEndTime;
   final String? notes;
   final String imageUrl;
+
+  /// The offer this booking counts toward (backend ADR-042/047): `offer` on
+  /// `/my*` list items, `offerId` on the flat shape. Empty for an ordinary
+  /// booking, and on older backends that send neither.
+  final String offerId;
+  final String offerTitle;
+
+  /// Whether the response had an `offer`/`offerId` field at all. A backend
+  /// older than ADR-042 sends neither, which says nothing about the offer.
+  final bool reportsOffer;
+
+  bool get hasOffer => offerId.isNotEmpty;
 
   /// Open bookings are API `Pending` or `Approved` only.
   bool get isActive => ReservationStatusApi.isOpen(status);
@@ -51,6 +66,8 @@ class CustomerReservationModel {
     DateTime? reservationEndTime,
     String? notes,
     String? imageUrl,
+    String? offerId,
+    String? offerTitle,
   }) {
     return CustomerReservationModel(
       reservationId: reservationId ?? this.reservationId,
@@ -65,6 +82,9 @@ class CustomerReservationModel {
       reservationEndTime: reservationEndTime ?? this.reservationEndTime,
       notes: notes ?? this.notes,
       imageUrl: imageUrl ?? this.imageUrl,
+      offerId: offerId ?? this.offerId,
+      offerTitle: offerTitle ?? this.offerTitle,
+      reportsOffer: reportsOffer,
     );
   }
 
@@ -93,6 +113,14 @@ class CustomerReservationModel {
 
     final int guests = partySizeFromJson(json);
 
+    final Object? offerRaw = json['offer'];
+    final Map<String, dynamic>? offer = offerRaw is Map
+        ? Map<String, dynamic>.from(offerRaw)
+        : null;
+    final String offerId = ApiException.coerceString(
+      offer?['offerId'] ?? json['offerId'],
+    ).trim();
+
     final String notesRaw = ApiException.coerceString(
       json['specialRequest'] ?? json['notes'],
     );
@@ -112,6 +140,11 @@ class CustomerReservationModel {
       reservationEndTime: _parseDate(json['reservationEndTime']),
       notes: notesRaw.isEmpty ? null : notesRaw,
       imageUrl: parsedImage.isNotEmpty ? parsedImage : imageUrl,
+      offerId: offerId,
+      offerTitle: offerId.isEmpty
+          ? ''
+          : ApiException.coerceString(offer?['title']).trim(),
+      reportsOffer: json.containsKey('offer') || json.containsKey('offerId'),
     );
   }
 

@@ -1,3 +1,4 @@
+import '../../discovery/model/restaurant_offer_model.dart';
 import 'menu_item_model.dart';
 import 'opening_hours_day_model.dart';
 
@@ -15,6 +16,8 @@ class RestaurantDetailModel {
     this.todayHoursLabel = '',
     this.isOpenNow = false,
     this.hasWorkingHours = false,
+    this.priceLevel,
+    this.offers = const <RestaurantOfferModel>[],
   });
 
   final String restaurantId;
@@ -36,6 +39,12 @@ class RestaurantDetailModel {
   /// True when a working-hours payload was loaded (even if all days closed).
   final bool hasWorkingHours;
 
+  /// The booked (primary) branch's price level, 1–4 (backend ADR-046).
+  final int? priceLevel;
+
+  /// Running public offers that cover the booked branch.
+  final List<RestaurantOfferModel> offers;
+
   RestaurantDetailModel copyWith({
     String? restaurantId,
     String? rating,
@@ -49,6 +58,8 @@ class RestaurantDetailModel {
     String? todayHoursLabel,
     bool? isOpenNow,
     bool? hasWorkingHours,
+    int? priceLevel,
+    List<RestaurantOfferModel>? offers,
   }) {
     return RestaurantDetailModel(
       restaurantId: restaurantId ?? this.restaurantId,
@@ -63,6 +74,8 @@ class RestaurantDetailModel {
       todayHoursLabel: todayHoursLabel ?? this.todayHoursLabel,
       isOpenNow: isOpenNow ?? this.isOpenNow,
       hasWorkingHours: hasWorkingHours ?? this.hasWorkingHours,
+      priceLevel: priceLevel ?? this.priceLevel,
+      offers: offers ?? this.offers,
     );
   }
 }

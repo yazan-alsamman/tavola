@@ -249,6 +249,7 @@ class ProfileScreen extends StatelessWidget {
                                 controller.reviewForReservation,
                             onWriteReview: controller.openWriteReview,
                             onDeleteReview: controller.deleteReviewForItem,
+                            onRerateReview: controller.openRerateReview,
                             isReviewBusy: controller.isReviewBusy.value,
                           );
                         }
@@ -338,6 +339,9 @@ class ProfileScreen extends StatelessWidget {
                                 ),
                                 statusLabel: reservation.customerStatusLabel,
                                 reservationStatus: reservation.status,
+                                offerLabel: controller.offerLabelFor(
+                                  reservation,
+                                ),
                                 onReschedule: () => controller
                                     .rescheduleReservation(reservation),
                                 onCancel: () => controller.cancelReservation(

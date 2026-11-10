@@ -103,11 +103,14 @@ class ReviewsRepository {
     return response.data;
   }
 
-  /// `POST /reviews` — body: reservationId, rating, comment.
+  /// `POST /reviews` — body: reservationId, comment, and either the three
+  /// [axes] (ADR-045; the server derives `rating`) or a single `rating`.
   Future<ReviewModel> submitReview({
     required String reservationId,
     required int rating,
     required String comment,
+    ReviewAxesModel? axes,
+    String privateNote = '',
   }) async {
     await _ensureAuthenticated();
     final String id = reservationId.trim();
@@ -115,28 +118,94 @@ class ReviewsRepository {
     if (id.isEmpty) {
       throw StateError(AppStrings.invalidReviewPayload);
     }
-    if (rating < AppDimensions.reviewMinRating ||
-        rating > AppDimensions.reviewMaxRating) {
-      throw StateError(AppStrings.invalidReviewRating);
-    }
+    final int effectiveRating = axes?.roundedAverage ?? rating;
+    _validateRatings(effectiveRating, axes);
 
     final ApiResponse<ReviewModel> response = await _apiClient
         .post<ReviewModel>(
           AppUrls.reviewsPath,
           data: <String, dynamic>{
             AppStrings.apiReviewReservationIdField: id,
-            AppStrings.apiReviewRatingField: rating,
-            AppStrings.apiReviewCommentField: trimmedComment,
+            ..._contentBody(effectiveRating, trimmedComment, axes, privateNote),
           },
           parseData: (Object? raw) => ReviewModel.fromSubmitData(
             raw,
             reservationId: id,
-            rating: rating,
+            rating: effectiveRating,
             comment: trimmedComment,
           ),
         );
     _upsertMyReview(response.data);
     return response.data;
+  }
+
+  /// `PUT /reviews/:id` — rate again a review the restaurant reopened
+  /// (`openForRerating`). Same body as submit, without `reservationId`.
+  Future<ReviewModel> rerateReview({
+    required String reviewId,
+    required String reservationId,
+    required int rating,
+    required String comment,
+    ReviewAxesModel? axes,
+    String privateNote = '',
+  }) async {
+    await _ensureAuthenticated();
+    final String id = reviewId.trim();
+    if (id.isEmpty) {
+      throw StateError(AppStrings.invalidReviewPayload);
+    }
+    final String trimmedComment = comment.trim();
+    final int effectiveRating = axes?.roundedAverage ?? rating;
+    _validateRatings(effectiveRating, axes);
+
+    final ApiResponse<ReviewModel> response = await _apiClient.put<ReviewModel>(
+      AppUrls.reviewPath(id),
+      data: _contentBody(effectiveRating, trimmedComment, axes, privateNote),
+      parseData: (Object? raw) => ReviewModel.fromSubmitData(
+        raw,
+        reservationId: reservationId.trim(),
+        rating: effectiveRating,
+        comment: trimmedComment,
+      ),
+    );
+    final ReviewModel? previous = reviewForReservation(reservationId);
+    final ReviewModel updated = response.data.copyWith(
+      reservationId: response.data.reservationId.isNotEmpty
+          ? response.data.reservationId
+          : reservationId.trim(),
+      images: response.data.images.isEmpty ? previous?.images : null,
+    );
+    _upsertMyReview(updated);
+    return updated;
+  }
+
+  static void _validateRatings(int rating, ReviewAxesModel? axes) {
+    final Iterable<int> ratings = axes == null
+        ? <int>[rating]
+        : axes.all.map((ReviewAxisModel axis) => axis.rating);
+    for (final int value in ratings) {
+      if (value < AppDimensions.reviewMinRating ||
+          value > AppDimensions.reviewMaxRating) {
+        throw StateError(AppStrings.invalidReviewRating);
+      }
+    }
+  }
+
+  static Map<String, dynamic> _contentBody(
+    int rating,
+    String comment,
+    ReviewAxesModel? axes,
+    String privateNote,
+  ) {
+    return <String, dynamic>{
+      if (axes != null)
+        AppStrings.apiReviewAxesField: axes.toJson()
+      else
+        AppStrings.apiReviewRatingField: rating,
+      AppStrings.apiReviewCommentField: comment,
+      if (privateNote.trim().isNotEmpty)
+        AppStrings.apiReviewPrivateNoteField: privateNote.trim(),
+    };
   }
 
   /// `POST /reviews/:id/images` multipart field `file`.

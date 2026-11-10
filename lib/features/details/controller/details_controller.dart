@@ -19,6 +19,7 @@ import '../../reservation/model/reservation_route_args.dart';
 import '../../reviews/model/review_model.dart';
 import '../../reviews/model/reviews_page_model.dart';
 import '../../reviews/repository/reviews_repository.dart';
+import '../../discovery/model/restaurant_offer_model.dart';
 import '../model/details_route_args.dart';
 import '../model/restaurant_detail_model.dart';
 import '../repository/restaurant_details_repository.dart';
@@ -221,9 +222,7 @@ class DetailsController extends GetxController {
       update([reviewsUpdateId]);
     }
 
-    final int page = reset
-        ? AppDimensions.apiDefaultPage
-        : _reviewsPage + 1;
+    final int page = reset ? AppDimensions.apiDefaultPage : _reviewsPage + 1;
 
     try {
       final ReviewsPageModel pageModel = await _reviewsRepository
@@ -343,7 +342,11 @@ class DetailsController extends GetxController {
     update([detailsUpdateId, reviewsUpdateId]);
   }
 
-  Future<void> openReservation() async {
+  /// Books under [offer]: the reservation sends its `offerId` (ADR-042).
+  Future<void> openReservationWithOffer(RestaurantOfferModel offer) =>
+      openReservation(offer: offer);
+
+  Future<void> openReservation({RestaurantOfferModel? offer}) async {
     if (Get.isRegistered<AuthSessionController>() &&
         !await Get.find<AuthSessionController>()
             .requireSignInForProtectedAction()) {
@@ -358,6 +361,8 @@ class DetailsController extends GetxController {
       arguments: ReservationRouteArgs(
         restaurantId: restaurant.id,
         restaurantName: restaurant.name,
+        offerId: offer?.offerId,
+        offerTitle: offer?.title,
       ),
     );
   }

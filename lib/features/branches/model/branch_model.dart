@@ -6,6 +6,7 @@ class BranchModel {
     required this.address,
     this.latitude,
     this.longitude,
+    this.priceLevel,
   });
 
   final String id;
@@ -14,6 +15,10 @@ class BranchModel {
   final String address;
   final double? latitude;
   final double? longitude;
+
+  /// Price level 1–4 computed from this branch's menu (backend ADR-046);
+  /// null until the branch has prices.
+  final int? priceLevel;
 
   bool get hasCoordinates => latitude != null && longitude != null;
 
@@ -35,6 +40,12 @@ class BranchModel {
       address: (json['address'] as String?)?.trim() ?? '',
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
+      priceLevel: _readPriceLevel(json['priceLevel']),
     );
+  }
+
+  static int? _readPriceLevel(Object? raw) {
+    final int? level = raw is num ? raw.toInt() : int.tryParse('${raw ?? ''}');
+    return level != null && level >= 1 ? level : null;
   }
 }

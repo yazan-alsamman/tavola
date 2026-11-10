@@ -4,6 +4,8 @@ class ReservationRouteArgs {
     required this.restaurantName,
     this.rescheduleReservationId,
     this.guests,
+    this.offerId,
+    this.offerTitle,
   });
 
   final String restaurantId;
@@ -14,4 +16,9 @@ class ReservationRouteArgs {
 
   /// Party size already booked. Reschedule keeps this instead of the default.
   final int? guests;
+
+  /// Set when the customer books from an offer. Sent as `offerId` on create;
+  /// the backend keeps it only when the booking meets the offer's terms.
+  final String? offerId;
+  final String? offerTitle;
 }

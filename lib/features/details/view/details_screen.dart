@@ -10,6 +10,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_button_styles.dart';
 import '../controller/details_controller.dart';
+import '../widgets/details_offers_section.dart';
 import '../widgets/details_about_section.dart';
 import '../widgets/details_amenities_section.dart';
 import '../widgets/details_hero_header.dart';
@@ -105,7 +106,7 @@ class DetailsScreen extends StatelessWidget {
                 top: AppDimensions.restaurantCardActionTopSpacing,
               ),
               child: RestaurantCardActionButtons(
-                onReservationPressed: controller.openReservation,
+                onReservationPressed: () => controller.openReservation(),
                 onMenuPressed: controller.openMenu,
                 onChatPressed: controller.openChat,
               ),
@@ -117,6 +118,13 @@ class DetailsScreen extends StatelessWidget {
                 children: [
                   DetailsAboutSection(about: controller.detail.about),
                   const SizedBox(height: AppDimensions.sectionSpacing),
+                  if (controller.detail.offers.isNotEmpty) ...[
+                    DetailsOffersSection(
+                      offers: controller.detail.offers,
+                      onBookWithOffer: controller.openReservationWithOffer,
+                    ),
+                    const SizedBox(height: AppDimensions.sectionSpacing),
+                  ],
                   DetailsAmenitiesSection(
                     amenities: controller.detail.amenities,
                   ),
@@ -140,7 +148,7 @@ class DetailsScreen extends StatelessWidget {
                     width: double.infinity,
                     child: HoverableButton(
                       child: ElevatedButton(
-                        onPressed: controller.openReservation,
+                        onPressed: () => controller.openReservation(),
                         style: AppButtonStyles.filledHover(
                           ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryDark,

@@ -16,13 +16,42 @@ class ProfileReservationReviewSection extends StatelessWidget {
     required this.existingReview,
     required this.onWriteReview,
     required this.onDeleteReview,
+    this.onRerateReview,
     this.isBusy = false,
   });
 
   final ReviewModel? existingReview;
   final VoidCallback onWriteReview;
   final VoidCallback onDeleteReview;
+
+  /// Shown only while the restaurant has the review open for re-rating.
+  final VoidCallback? onRerateReview;
   final bool isBusy;
+
+  static List<Widget> _axisRows(ReviewAxesModel axes) {
+    final List<(String, ReviewAxisModel)> rows = <(String, ReviewAxisModel)>[
+      (AppStrings.reviewAxisService, axes.service),
+      (AppStrings.reviewAxisPlace, axes.place),
+      (AppStrings.reviewAxisFood, axes.food),
+    ];
+    return <Widget>[
+      for (final (String label, ReviewAxisModel axis) in rows)
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppDimensions.tinySpacing),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTextStyles.reservationReviewComment,
+                ),
+              ),
+              ReviewStarRating(rating: axis.rating, enabled: false),
+            ],
+          ),
+        ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +75,10 @@ class ProfileReservationReviewSection extends StatelessWidget {
             style: AppTextStyles.reservationReviewEyebrow,
           ),
           const SizedBox(height: AppDimensions.smallSpacing),
-          ReviewStarRating(rating: review.rating, enabled: false),
+          if (review.axes == null)
+            ReviewStarRating(rating: review.rating, enabled: false)
+          else
+            ..._axisRows(review.axes!),
           if (review.comment.trim().isNotEmpty) ...[
             const SizedBox(height: AppDimensions.smallSpacing),
             Text(
@@ -54,6 +86,29 @@ class ProfileReservationReviewSection extends StatelessWidget {
               style: AppTextStyles.reservationReviewComment,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          if (review.openForRerating && onRerateReview != null) ...[
+            const SizedBox(height: AppDimensions.regularSpacing),
+            Text(
+              AppStrings.reviewReopenedNotice,
+              style: AppTextStyles.reservationReviewComment,
+            ),
+            const SizedBox(height: AppDimensions.smallSpacing),
+            HoverableButton(
+              child: FilledButton.icon(
+                onPressed: isBusy ? null : onRerateReview,
+                icon: const Icon(
+                  Symbols.star,
+                  size: AppDimensions.smallIconSize,
+                  fill: 1,
+                ),
+                label: Text(AppStrings.rateAgain),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primaryDark,
+                  foregroundColor: AppColors.textLight,
+                ),
+              ),
             ),
           ],
           const SizedBox(height: AppDimensions.smallSpacing),

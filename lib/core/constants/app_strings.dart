@@ -551,6 +551,38 @@ class AppStrings {
   static String get invalidOfferPayload => 'Invalid offer payload.'.tr;
   static const String offerStatusPublished = 'Published';
 
+  // Offer terms and booking with an offer (CR WJ-R-2026-002, round 2).
+  static const String offerDiscountTypePercentage = 'Percentage';
+  static const String apiReservationOfferIdField = 'offerId';
+  static String get currentOffers => 'Current offers'.tr;
+  static String get offerDays => 'Offer days'.tr;
+  static String get offerHours => 'Offer hours'.tr;
+  static String get offerEveryDay => 'Every day'.tr;
+  static String get offerAllDay => 'All day'.tr;
+  static String get offerListSeparator => ', '.tr;
+  static String get offerSelectedBranches => 'Selected branches only'.tr;
+  static String get offerOncePerCustomer => 'Once per customer'.tr;
+  static String get offerLimitedPlaces => 'Limited places'.tr;
+  static String get bookWithOffer => 'Book with this offer'.tr;
+  static String get offerNotApplied =>
+      'This booking did not meet the offer terms, so it was booked at the regular price.'
+          .tr;
+  static String offerPercentOff(String value) =>
+      '@value% off'.trParams(<String, String>{'value': value});
+  static String offerAmountOff(String value) =>
+      '@value off'.trParams(<String, String>{'value': value});
+  static String offerMinPartySize(int count) =>
+      'From @count guests'.trParams(<String, String>{'count': '$count'});
+  static String offerUntil(String date) =>
+      'Until @date'.trParams(<String, String>{'date': date});
+  static String offerTag(String title) =>
+      'Offer: @title'.trParams(<String, String>{'title': title});
+  static String priceLevelOutOf(int level) =>
+      'Price level @level of @max'.trParams(<String, String>{
+        'level': '$level',
+        'max': '${AppDimensions.priceLevelMax}',
+      });
+
   static String get profileUserName => 'Joan Pedro ';
   static String get exploreMoreRestaurantsDescription =>
       'Curated kitchens, seasonal menus, and dining rooms chosen for craft, atmosphere, and lasting quality.'
@@ -924,6 +956,25 @@ class AppStrings {
   static String get invalidReviewPayload => 'Invalid review payload.'.tr;
   static String get invalidReviewRating => 'Choose a rating from 1 to 5.'.tr;
   static String get reviewsLoadFailed => 'Could not load your reviews.'.tr;
+
+  // Three-axis review (backend ADR-045).
+  static String get reviewAxisService => 'Service'.tr;
+  static String get reviewAxisPlace => 'Place'.tr;
+  static String get reviewAxisFood => 'Food'.tr;
+  static String get reviewAxesHint => 'Rate each part from 1 to 5.'.tr;
+  static String get reviewAxisCommentHint => 'Add a comment (optional)'.tr;
+  static String get reviewPrivateNote => 'Private note to the restaurant'.tr;
+  static String get reviewPrivateNoteHint =>
+      'Only the restaurant sees this. It is never published.'.tr;
+  static String get rateAgain => 'Rate again'.tr;
+  static String get reviewReopenedNotice =>
+      'The restaurant invited you to rate your visit again.'.tr;
+  static String get reviewUpdated => 'Review updated successfully.'.tr;
+  static const String apiReviewAxesField = 'axes';
+  static const String apiReviewPrivateNoteField = 'privateNote';
+  static const String apiReviewAxisService = 'service';
+  static const String apiReviewAxisPlace = 'place';
+  static const String apiReviewAxisFood = 'food';
   static const String reservationHistoryRestaurantIdOne = 'local-olive-oak';
   static const String reservationHistoryRestaurantIdTwo = 'local-otako-sushi';
   static const String reservationHistoryRestaurantIdThree =

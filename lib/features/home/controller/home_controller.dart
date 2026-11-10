@@ -707,6 +707,8 @@ class HomeController extends GetxController {
         restaurantName: restaurant.name.isNotEmpty
             ? restaurant.name
             : AppStrings.specialOffer,
+        offerId: featuredOffer.value?.offerId,
+        offerTitle: featuredOffer.value?.title,
       ),
     );
   }
